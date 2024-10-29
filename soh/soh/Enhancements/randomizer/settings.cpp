@@ -1388,7 +1388,7 @@ void Settings::CreateOptions() {
         { "Miscellaneous Settings:Sunlight Arrows", RSK_SUNLIGHT_ARROWS },
         // TODO: Ammo Drop settings
         { "World Settings:Bombchu Drops", RSK_ENABLE_BOMBCHU_DROPS },
-        { "World Settings:Bombchus in Logic", RSK_BOMBCHUS_IN_LOGIC },
+        { "World Settings:Bombchu Bag", RSK_BOMBCHU_BAG },
         { "Shuffle Settings:Link's Pocket", RSK_LINKS_POCKET },
         { "World Settings:MQ Dungeon Setting", RSK_MQ_DUNGEON_RANDOM },
         { "World Settings:MQ Dungeon Count", RSK_MQ_DUNGEON_COUNT },
