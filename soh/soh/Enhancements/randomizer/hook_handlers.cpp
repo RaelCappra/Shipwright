@@ -8,6 +8,8 @@
 #include "soh/Enhancements/randomizer/fishsanity.h"
 #include "soh/Enhancements/game-interactor/GameInteractor.h"
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
+#include "soh/ImGuiUtils.h"
+#include "soh/Notification/Notification.h"
 
 extern "C" {
 #include "macros.h"
@@ -19,6 +21,7 @@ extern "C" {
 #include "src/overlays/actors/ovl_En_Cow/z_en_cow.h"
 #include "src/overlays/actors/ovl_En_Shopnuts/z_en_shopnuts.h"
 #include "src/overlays/actors/ovl_En_Dns/z_en_dns.h"
+#include "src/overlays/actors/ovl_En_Gb/z_en_gb.h"
 #include "src/overlays/actors/ovl_Item_B_Heart/z_item_b_heart.h"
 #include "src/overlays/actors/ovl_En_Ko/z_en_ko.h"
 #include "src/overlays/actors/ovl_En_Mk/z_en_mk.h"
@@ -50,8 +53,8 @@ extern "C" {
 extern SaveContext gSaveContext;
 extern PlayState* gPlayState;
 extern void func_8084DFAC(PlayState* play, Player* player);
-extern void func_80835DAC(PlayState* play, Player* player, PlayerActionFunc actionFunc, s32 flags);
-extern s32 func_80836898(PlayState* play, Player* player, PlayerFuncA74 func);
+extern void Player_SetupActionPreserveAnimMovement(PlayState* play, Player* player, PlayerActionFunc actionFunc, s32 flags);
+extern s32 Player_SetupWaitForPutAway(PlayState* play, Player* player, AfterPutAwayFunc func);
 }
 
 #define RAND_GET_OPTION(option) Rando::Context::GetInstance()->GetOption(option).GetSelectedOptionIndex()
@@ -252,7 +255,7 @@ void RandomizerOnPlayerUpdateForRCQueueHandler() {
 
     // If we're in a cutscene, don't queue
     Player* player = GET_PLAYER(gPlayState);
-    if (Player_InBlockingCsMode(gPlayState, player) || player->stateFlags1 & PLAYER_STATE1_IN_ITEM_CS || player->stateFlags1 & PLAYER_STATE1_GETTING_ITEM || player->stateFlags1 & PLAYER_STATE1_ITEM_OVER_HEAD) {
+    if (Player_InBlockingCsMode(gPlayState, player) || player->stateFlags1 & PLAYER_STATE1_IN_ITEM_CS || player->stateFlags1 & PLAYER_STATE1_GETTING_ITEM || player->stateFlags1 & PLAYER_STATE1_CARRYING_ACTOR) {
         return;
     }
 
@@ -297,7 +300,7 @@ void RandomizerOnPlayerUpdateForItemQueueHandler() {
     if (randomizerQueuedCheck == RC_UNKNOWN_CHECK) return;
 
     Player* player = GET_PLAYER(gPlayState);
-    if (player == NULL || Player_InBlockingCsMode(gPlayState, player) || player->stateFlags1 & PLAYER_STATE1_IN_ITEM_CS || player->stateFlags1 & PLAYER_STATE1_GETTING_ITEM || player->stateFlags1 & PLAYER_STATE1_ITEM_OVER_HEAD) {
+    if (player == NULL || Player_InBlockingCsMode(gPlayState, player) || player->stateFlags1 & PLAYER_STATE1_IN_ITEM_CS || player->stateFlags1 & PLAYER_STATE1_GETTING_ITEM || player->stateFlags1 & PLAYER_STATE1_CARRYING_ACTOR) {
         return;
     }
 
@@ -306,7 +309,7 @@ void RandomizerOnPlayerUpdateForItemQueueHandler() {
     if (player->stateFlags1 & PLAYER_STATE1_IN_WATER) {
         // Allow the player to receive the item while swimming
         player->stateFlags2 |= PLAYER_STATE2_UNDERWATER;
-        Player_ActionChange_2(player, gPlayState);
+        Player_ActionHandler_2(player, gPlayState);
     }
 }
 
@@ -342,7 +345,7 @@ void RandomizerOnItemReceiveHandler(GetItemEntry receivedItemEntry) {
         static uint32_t updateHook;
         updateHook = GameInteractor::Instance->RegisterGameHook<GameInteractor::OnPlayerUpdate>([]() {
             Player* player = GET_PLAYER(gPlayState);
-            if (player == NULL || Player_InBlockingCsMode(gPlayState, player) || player->stateFlags1 & PLAYER_STATE1_IN_ITEM_CS || player->stateFlags1 & PLAYER_STATE1_GETTING_ITEM || player->stateFlags1 & PLAYER_STATE1_ITEM_OVER_HEAD) {
+            if (player == NULL || Player_InBlockingCsMode(gPlayState, player) || player->stateFlags1 & PLAYER_STATE1_IN_ITEM_CS || player->stateFlags1 & PLAYER_STATE1_GETTING_ITEM || player->stateFlags1 & PLAYER_STATE1_CARRYING_ACTOR) {
                 return;
             }
 
@@ -604,7 +607,7 @@ void Player_Action_8084E6D4_override(Player* player, PlayState* play) {
 }
 
 void func_8083A434_override(PlayState* play, Player* player) {
-    func_80835DAC(play, player, Player_Action_8084E6D4_override, 0);
+    Player_SetupActionPreserveAnimMovement(play, player, Player_Action_8084E6D4_override, 0);
     player->stateFlags1 |= PLAYER_STATE1_GETTING_ITEM | PLAYER_STATE1_IN_CUTSCENE;
 }
 
@@ -643,7 +646,7 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
             RandomizerSetChestGameRandomizerInf(rc);
 
             Player* player = GET_PLAYER(gPlayState);
-            func_80836898(gPlayState, player, func_8083A434_override);
+            Player_SetupWaitForPutAway(gPlayState, player, func_8083A434_override);
 
             *should = false;
             break;
@@ -836,6 +839,20 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
                         Randomizer_Item_Give(gPlayState, item00->itemEntry);
                     }
                 }
+
+                if (item00->itemEntry.modIndex == MOD_NONE) {
+                    Notification::Emit({
+                        .itemIcon = GetTextureForItemId(item00->itemEntry.itemId),
+                        .message = "You found ",
+                        .suffix = SohUtils::GetItemName(item00->itemEntry.itemId),
+                    });
+                } else if (item00->itemEntry.modIndex == MOD_RANDOMIZER) {
+                    Notification::Emit({
+                        .message = "You found ",
+                        .suffix = Rando::StaticData::RetrieveItem((RandomizerGet)item00->itemEntry.getItemId).GetName().english,
+                    });
+                }
+
                 // This is typically called when you close the text box after getting an item, in case a previous
                 // function hid the interface.
                 Interface_ChangeAlpha(gSaveContext.unk_13EE);
@@ -904,6 +921,16 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
             *should = false;
             break;
         }
+        case VB_GIVE_ITEM_FROM_POE_COLLECTOR: {
+            EnGb* enGb = va_arg(args, EnGb*);
+            if (!Flags_GetRandomizerInf(RAND_INF_10_BIG_POES)) {
+                Flags_SetRandomizerInf(RAND_INF_10_BIG_POES);
+                enGb->dyna.actor.parent = NULL;
+                enGb->actionFunc = func_80A2FC0C;
+                *should = false;
+            }
+            break;
+        }
         case VB_CHECK_RANDO_PRICE_OF_CARPET_SALESMAN: {
             if (EnJs_RandoCanGetCarpetMerchantItem()){
                 *should = gSaveContext.rupees < OTRGlobals::Instance->gRandoContext->GetItemLocation(RC_WASTELAND_BOMBCHU_SALESMAN)->GetPrice();
@@ -967,19 +994,15 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
             }
             break;
         }
-        case VB_GIVE_ITEM_FROM_FROGS: {
+        case VB_FROGS_GO_TO_IDLE: {
             EnFr* enFr = va_arg(args, EnFr*);
 
-            // Skip GiveReward+SetIdle action func if the reward is an ice trap
-            if (enFr->actionFunc == (EnFrActionFunc)EnFr_GiveReward) {
-                RandomizerCheck rc = EnFr_RandomizerCheckFromSongIndex(enFr->songIndex);
-                GetItemEntry gi = Rando::Context::GetInstance()->GetFinalGIEntry(rc, true, (GetItemID)Rando::StaticData::GetLocation(rc)->GetVanillaItem());
-                if (gi.getItemId == RG_ICE_TRAP) {
-                    enFr->actionFunc = (EnFrActionFunc)EnFr_Idle;
-                }
+            if (
+                (enFr->songIndex >= FROG_STORMS && enFr->reward == GI_HEART_PIECE) || 
+                (enFr->songIndex < FROG_STORMS && enFr->reward == GI_RUPEE_PURPLE)
+            ) {
+                *should = true;
             }
-
-            *should = false;
             break;
         }
         case VB_TRADE_POCKET_CUCCO: {

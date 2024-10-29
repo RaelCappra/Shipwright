@@ -22,6 +22,7 @@ extern "C" {
 #include "src/overlays/actors/ovl_En_Tk/z_en_tk.h"
 #include "src/overlays/actors/ovl_En_Fu/z_en_fu.h"
 #include "src/overlays/actors/ovl_Bg_Spot02_Objects/z_bg_spot02_objects.h"
+#include "src/overlays/actors/ovl_Bg_Spot03_Taki/z_bg_spot03_taki.h"
 #include "src/overlays/actors/ovl_Bg_Hidan_Kousi/z_bg_hidan_kousi.h"
 #include "src/overlays/actors/ovl_Bg_Dy_Yoseizo/z_bg_dy_yoseizo.h"
 #include "src/overlays/actors/ovl_En_Dnt_Demo/z_en_dnt_demo.h"
@@ -99,6 +100,12 @@ void RateLimitedSuccessChime() {
         // func_80078884(NA_SE_SY_CORRECT_CHIME);
         successChimeCooldown = 120;
     }
+}
+
+bool ForcedDialogIsDisabled(ForcedDialogMode type) {
+    return (CVarGetInteger(CVAR_ENHANCEMENT("TimeSavers.SkipForcedDialog"),
+                           IS_RANDO ? FORCED_DIALOG_SKIP_ALL : FORCED_DIALOG_SKIP_NONE) &
+            type) != 0;
 }
 
 void TimeSaverOnGameFrameUpdateHandler() {
@@ -194,11 +201,17 @@ void TimeSaverOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_li
         case VB_PLAY_ONEPOINT_CS: {
             if (CVarGetInteger(CVAR_ENHANCEMENT("TimeSavers.SkipCutscene.OnePoint"), IS_RANDO)) {
                 s16* csId = va_arg(args, s16*);
+                BgSpot03Taki* taki = NULL;
                 switch (*csId) {
                     case 4180:
                     case 4100:
                         *should = false;
                         RateLimitedSuccessChime();
+                        taki = (BgSpot03Taki*)Actor_FindNearby(gPlayState, &GET_PLAYER(gPlayState)->actor,
+                                                               ACTOR_BG_SPOT03_TAKI, ACTORCAT_BG, 999.0f);
+                        if (taki != NULL) {
+                            func_8003EBF8(gPlayState, &gPlayState->colCtx.dyna, taki->dyna.bgId);
+                        }
                         break;
                     default:
                         SPDLOG_INFO("VB_PLAY_ONEPOINT_CS {}", *csId);
@@ -311,14 +324,14 @@ void TimeSaverOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_li
             break;
         case VB_WONDER_TALK: {
             //We want to show the frog hint if it is on, regardless of cutscene settings
-            if (CVarGetInteger(CVAR_ENHANCEMENT("TimeSavers.NoForcedDialog"), IS_RANDO) && 
+            if (ForcedDialogIsDisabled(FORCED_DIALOG_SKIP_NPC) &&
                 !(gPlayState->sceneNum == SCENE_ZORAS_RIVER && IS_RANDO && RAND_GET_OPTION(RSK_FROGS_HINT))) {
                 *should = false;
             }
             break;
         }
         case VB_NAVI_TALK: {
-            if (CVarGetInteger(CVAR_ENHANCEMENT("TimeSavers.NoForcedDialog"), IS_RANDO)) {
+            if (ForcedDialogIsDisabled(FORCED_DIALOG_SKIP_NAVI)) {
                 ElfMsg* naviTalk = va_arg(args, ElfMsg*);
                 if (((naviTalk->actor.params >> 8) & 0x3F) != 0x3F) {
                     Flags_SetSwitch(gPlayState, (naviTalk->actor.params >> 8) & 0x3F);
@@ -516,6 +529,11 @@ void TimeSaverOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_li
                 *should = false;
             }
             break;
+        case VB_FREEZE_ON_SKULL_TOKEN:
+            if (CVarGetInteger(CVAR_ENHANCEMENT("SkulltulaFreeze"), 0)) {
+                *should = false;
+            }
+            break;
         case VB_DAMPE_IN_GRAVEYARD_DESPAWN:
             if (CVarGetInteger(CVAR_ENHANCEMENT("DampeAllNight"), 0)) {
                 *should = LINK_IS_ADULT || gPlayState->sceneNum != SCENE_GRAVEYARD;
@@ -592,7 +610,11 @@ void TimeSaverOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_li
         case VB_PLAY_RAINBOW_BRIDGE_CS: {
             if (CVarGetInteger(CVAR_ENHANCEMENT("TimeSavers.SkipCutscene.Story"), IS_RANDO)) {
                 *should = false;
-                func_800F595C(NA_BGM_BRIDGE_TO_GANONS);
+                if (!Flags_GetEventChkInf(EVENTCHKINF_RAINBOW_BRIDGE_BUILT)) {
+                    func_800F595C(NA_BGM_BRIDGE_TO_GANONS);
+                    // This would have been set 2 frames later, but we're skipping now so the sound doesn't play twice
+                    Flags_SetEventChkInf(EVENTCHKINF_RAINBOW_BRIDGE_BUILT);
+                }
             }
             break;
         }
@@ -601,7 +623,7 @@ void TimeSaverOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_li
                 *should = false;
                 BossGanondrof* pg = va_arg(args, BossGanondrof*);
                 Player* player = GET_PLAYER(gPlayState);
-                if (pg != nullptr && pg->work[GND_ACTION_STATE] == DEATH_SPASM) {
+                if (pg->work[GND_ACTION_STATE] == DEATH_SPASM) {
                     // Skip to death scream animation and move ganondrof to middle
                     pg->deathState = DEATH_SCREAM;
                     pg->timers[0] = 50;
@@ -985,7 +1007,7 @@ void TimeSaverOnPlayerUpdateHandler() {
     if (vanillaQueuedItemEntry.itemId == ITEM_NONE) return;
 
     Player* player = GET_PLAYER(gPlayState);
-    if (player == NULL || Player_InBlockingCsMode(gPlayState, player) || player->stateFlags1 & PLAYER_STATE1_IN_ITEM_CS || player->stateFlags1 & PLAYER_STATE1_GETTING_ITEM || player->stateFlags1 & PLAYER_STATE1_ITEM_OVER_HEAD) {
+    if (player == NULL || Player_InBlockingCsMode(gPlayState, player) || player->stateFlags1 & PLAYER_STATE1_IN_ITEM_CS || player->stateFlags1 & PLAYER_STATE1_GETTING_ITEM || player->stateFlags1 & PLAYER_STATE1_CARRYING_ACTOR) {
         return;
     }
 
@@ -994,7 +1016,7 @@ void TimeSaverOnPlayerUpdateHandler() {
     if (player->stateFlags1 & PLAYER_STATE1_IN_WATER) {
         // Allow the player to receive the item while swimming
         player->stateFlags2 |= PLAYER_STATE2_UNDERWATER;
-        Player_ActionChange_2(player, gPlayState);
+        Player_ActionHandler_2(player, gPlayState);
     }
 }
 

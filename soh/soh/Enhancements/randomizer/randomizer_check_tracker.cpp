@@ -44,6 +44,7 @@ bool showOverworldTokens;
 bool showDungeonTokens;
 bool showBeans;
 bool showScrubs;
+bool showMajorScrubs;
 bool showMerchants;
 bool showBeehives;
 bool showCows;
@@ -73,7 +74,7 @@ bool fishsanityAgeSplit;
 bool initialized;
 bool doAreaScroll;
 bool previousShowHidden = false;
-bool hideShopRightChecks = true;
+bool hideShopUnshuffledChecks = true;
 bool hideTriforceCompleted = true;
 bool alwaysShowGS = false;
 
@@ -551,18 +552,6 @@ void CheckTrackerTransition(uint32_t sceneNum) {
     }
     if (!IsAreaSpoiled(currentArea) && (RandomizerCheckObjects::AreaIsOverworld(currentArea) || std::find(spoilingEntrances.begin(), spoilingEntrances.end(), gPlayState->nextEntranceIndex) != spoilingEntrances.end())) {
         SetAreaSpoiled(currentArea);
-    }
-}
-
-void CheckTrackerFrame() {
-    if (!GameInteractor::IsSaveLoaded()) {
-        return;
-    }
-    // TODO: Move to OnAmmoChange hook once it gets added.
-    if (!OTRGlobals::Instance->gRandoContext->GetItemLocation(RC_ZR_MAGIC_BEAN_SALESMAN)->HasObtained()) {
-        if (BEANS_BOUGHT >= 10) {
-            SetCheckCollected(RC_ZR_MAGIC_BEAN_SALESMAN);
-        }
     }
 }
 
@@ -1075,12 +1064,22 @@ bool UpdateFilters() {
 }
 
 bool ShouldShowCheck(RandomizerCheck check) {
+    auto itemLoc = Rando::Context::GetInstance()->GetItemLocation(check);
+    std::string search = (Rando::StaticData::GetLocation(check)->GetShortName() + " " +
+        Rando::StaticData::GetLocation(check)->GetName() + " " +
+        RandomizerCheckObjects::GetRCAreaName(Rando::StaticData::GetLocation(check)->GetArea()));
+    if (itemLoc->HasObtained() || itemLoc->GetCheckStatus() == RCSHOW_SCUMMED || 
+        (!mystery && (itemLoc->GetCheckStatus() == RCSHOW_IDENTIFIED || itemLoc->GetCheckStatus() == RCSHOW_SEEN) && itemLoc->GetPlacedRandomizerGet() != RG_ICE_TRAP)) {
+        search += " " + itemLoc->GetPlacedItemName().GetForLanguage(gSaveContext.language);
+    } else if (itemLoc->GetCheckStatus() == RCSHOW_IDENTIFIED && !mystery) {
+        search += OTRGlobals::Instance->gRandoContext->overrides[check].GetTrickName().GetForLanguage(gSaveContext.language);
+    } else if (itemLoc->GetCheckStatus() == RCSHOW_SEEN && !mystery) {
+        search += Rando::StaticData::RetrieveItem(OTRGlobals::Instance->gRandoContext->overrides[check].LooksLike()).GetName().GetForLanguage(gSaveContext.language);
+    }
     return (
-        IsVisibleInCheckTracker(check) && 
+        IsVisibleInCheckTracker(check) &&
         (checkSearch.Filters.Size == 0 ||
-        checkSearch.PassFilter((Rando::StaticData::GetLocation(check)->GetShortName() + " " +
-            Rando::StaticData::GetLocation(check)->GetName() + " " +
-            RandomizerCheckObjects::GetRCAreaName(Rando::StaticData::GetLocation(check)->GetArea())).c_str()))
+            checkSearch.PassFilter(search.c_str()))
     );
 }
 
@@ -1127,6 +1126,9 @@ void LoadSettings() {
         OTRGlobals::Instance->gRandomizer->GetRandoSettingValue(RSK_SHUFFLE_MERCHANTS) == RO_SHUFFLE_MERCHANTS_ALL
         : true;
     showScrubs = IS_RANDO ?
+        OTRGlobals::Instance->gRandomizer->GetRandoSettingValue(RSK_SHUFFLE_SCRUBS) == RO_SCRUBS_ALL
+        : false;
+    showMajorScrubs = IS_RANDO ?
         OTRGlobals::Instance->gRandomizer->GetRandoSettingValue(RSK_SHUFFLE_SCRUBS) != RO_SCRUBS_OFF
         : false;
     showMerchants = IS_RANDO ?
@@ -1233,6 +1235,9 @@ void LoadSettings() {
 
 bool IsCheckShuffled(RandomizerCheck rc) {
     Rando::Location* loc = Rando::StaticData::GetLocation(rc);
+    if (loc->GetRCType() == RCTYPE_SHOP) {
+        auto identity = OTRGlobals::Instance->gRandomizer->IdentifyShopItem(loc->GetScene(), loc->GetActorParams() + 1);
+    }
     if (IS_RANDO && OTRGlobals::Instance->gRandomizer->GetRandoSettingValue(RSK_LOGIC_RULES) != RO_LOGIC_VANILLA) {
         return
             (loc->GetArea() != RCAREA_INVALID) &&         // don't show Invalid locations
@@ -1246,14 +1251,15 @@ bool IsCheckShuffled(RandomizerCheck rc) {
                 loc->GetQuest() == RCQUEST_MQ && OTRGlobals::Instance->gRandoContext->GetDungeons()->GetDungeonFromScene(loc->GetScene())->IsMQ() ||
                 loc->GetQuest() == RCQUEST_VANILLA && OTRGlobals::Instance->gRandoContext->GetDungeons()->GetDungeonFromScene(loc->GetScene())->IsVanilla()
                 ) &&
-            (loc->GetRCType() != RCTYPE_SHOP || (showShops && loc->GetActorParams() > 0x03)) &&
+            (loc->GetRCType() != RCTYPE_SHOP ||
+                (showShops && OTRGlobals::Instance->gRandomizer->IdentifyShopItem(loc->GetScene(), loc->GetActorParams() + 1).enGirlAShopItem == 50)) &&
             (rc != RC_TRIFORCE_COMPLETED || !hideTriforceCompleted) &&
             (rc != RC_GIFT_FROM_SAGES || !IS_RANDO) &&
             (loc->GetRCType() != RCTYPE_SCRUB ||
                 showScrubs ||
-                rc == RC_LW_DEKU_SCRUB_NEAR_BRIDGE || // The 3 scrubs that are always randomized
+                (showMajorScrubs && (rc == RC_LW_DEKU_SCRUB_NEAR_BRIDGE || // The 3 scrubs that are always randomized
                 rc == RC_HF_DEKU_SCRUB_GROTTO ||
-                rc == RC_LW_DEKU_SCRUB_GROTTO_FRONT
+                rc == RC_LW_DEKU_SCRUB_GROTTO_FRONT))
                 ) &&
             (loc->GetRCType() != RCTYPE_MERCHANT || showMerchants) &&
             (loc->GetRCType() != RCTYPE_BEEHIVE || showBeehives) &&
@@ -1299,7 +1305,7 @@ bool IsVisibleInCheckTracker(RandomizerCheck rc) {
     auto loc = Rando::StaticData::GetLocation(rc);
     if (IS_RANDO) {
         return IsCheckShuffled(rc) || (loc->GetRCType() == RCTYPE_SKULL_TOKEN && alwaysShowGS) ||
-            (loc->GetRCType() == RCTYPE_SHOP && (showShops && (!hideShopRightChecks)));
+            (loc->GetRCType() == RCTYPE_SHOP && (showShops && (!hideShopUnshuffledChecks)));
     } else {
         return loc->IsVanillaCompletion() && (!loc->IsDungeon() || (loc->IsDungeon() && loc->GetQuest() == gSaveContext.questId));
     }
@@ -1410,7 +1416,7 @@ void DrawLocation(RandomizerCheck rc) {
         mainColor =
             !IsHeartPiece((GetItemID)Rando::StaticData::RetrieveItem(loc->GetVanillaItem()).GetItemID()) && !IS_RANDO
                 ? Color_Collected_Extra_Default
-                : Color_Main_Default;
+                : Color_Collected_Main;
         extraColor = Color_Collected_Extra_Default;
     } else if (status == RCSHOW_SAVED) {
         if (!showHidden && hideSaved) {
@@ -1419,7 +1425,7 @@ void DrawLocation(RandomizerCheck rc) {
         mainColor =
             !IsHeartPiece((GetItemID)Rando::StaticData::RetrieveItem(loc->GetVanillaItem()).GetItemID()) && !IS_RANDO
                 ? Color_Saved_Extra_Default
-                : Color_Main_Default;
+                : Color_Saved_Main;
         extraColor = Color_Saved_Extra_Default;
     } else if (skipped) {
         if (!showHidden && hideSkipped) {
@@ -1428,7 +1434,7 @@ void DrawLocation(RandomizerCheck rc) {
         mainColor =
             !IsHeartPiece((GetItemID)Rando::StaticData::RetrieveItem(loc->GetVanillaItem()).GetItemID()) && !IS_RANDO
                 ? Color_Skipped_Extra_Default
-                : Color_Main_Default;
+                : Color_Skipped_Main;
         extraColor = Color_Skipped_Extra_Default;
     } else if (status == RCSHOW_SEEN || status == RCSHOW_IDENTIFIED) {
         if (!showHidden && hideSeen) {
@@ -1437,7 +1443,7 @@ void DrawLocation(RandomizerCheck rc) {
         mainColor =
             !IsHeartPiece((GetItemID)Rando::StaticData::RetrieveItem(loc->GetVanillaItem()).GetItemID()) && !IS_RANDO
                 ? Color_Seen_Extra_Default
-                : Color_Main_Default;
+                : Color_Seen_Main;
         extraColor = Color_Seen_Extra_Default;
     } else if (status == RCSHOW_SCUMMED) {
         if (!showHidden && hideScummed) {
@@ -1446,7 +1452,7 @@ void DrawLocation(RandomizerCheck rc) {
         mainColor =
             !IsHeartPiece((GetItemID)Rando::StaticData::RetrieveItem(loc->GetVanillaItem()).GetItemID()) && !IS_RANDO
             ? Color_Scummed_Extra_Default
-            : Color_Main_Default;
+            : Color_Scummed_Main;
         extraColor = Color_Scummed_Extra_Default;
     } else if (status == RCSHOW_UNCHECKED) {
         if (!showHidden && hideUnchecked) {
@@ -1455,7 +1461,7 @@ void DrawLocation(RandomizerCheck rc) {
         mainColor =
             !IsHeartPiece((GetItemID)Rando::StaticData::RetrieveItem(loc->GetVanillaItem()).GetItemID()) && !IS_RANDO
                 ? Color_Unchecked_Extra_Default
-                : Color_Main_Default;
+                : Color_Unchecked_Main;
         extraColor = Color_Unchecked_Extra_Default;
     }
 
@@ -1695,14 +1701,14 @@ void CheckTrackerSettingsWindow::DrawElement() {
     }
     UIWidgets::EnhancementCheckbox("Vanilla/MQ Dungeon Spoilers", CVAR_TRACKER_CHECK("MQSpoilers"));
     UIWidgets::Tooltip("If enabled, Vanilla/MQ dungeons will show on the tracker immediately. Otherwise, Vanilla/MQ dungeon locations must be unlocked.");
-    if (UIWidgets::EnhancementCheckbox("Hide right-side shop item checks", CVAR_TRACKER_CHECK("HideRightShopChecks"), false, "", UIWidgets::CheckboxGraphics::Cross, true)) {
-        hideShopRightChecks = !hideShopRightChecks;
-        RecalculateAllAreaTotals();
+    if (UIWidgets::EnhancementCheckbox("Hide unshuffled shop item checks", CVAR_TRACKER_CHECK("HideUnshuffledShopChecks"), false, "", UIWidgets::CheckboxGraphics::Cross, true)) {
+        hideShopUnshuffledChecks = !hideShopUnshuffledChecks;
+        UpdateFilters();
     }
-    UIWidgets::Tooltip("If enabled, will prevent the tracker from displaying slots 1-4 in all shops.");
+    UIWidgets::Tooltip("If enabled, will prevent the tracker from displaying slots with non-shop-item shuffles.");
     if (UIWidgets::EnhancementCheckbox("Always show gold skulltulas", CVAR_TRACKER_CHECK("AlwaysShowGSLocs"), false, "")) {
         alwaysShowGS = !alwaysShowGS;
-        RecalculateAllAreaTotals();
+        UpdateFilters();
     }
     UIWidgets::Tooltip("If enabled, will show GS locations in the tracker regardless of tokensanity settings.");
     UIWidgets::EnhancementCheckbox("Show Logic", "gCheckTrackerOptionShowLogic");
@@ -1738,7 +1744,6 @@ void CheckTrackerWindow::InitElement() {
         Teardown();
     });
     GameInteractor::Instance->RegisterGameHook<GameInteractor::OnItemReceive>(CheckTrackerItemReceive);
-    GameInteractor::Instance->RegisterGameHook<GameInteractor::OnGameFrameUpdate>(CheckTrackerFrame);
     GameInteractor::Instance->RegisterGameHook<GameInteractor::OnTransitionEnd>(CheckTrackerTransition);
     GameInteractor::Instance->RegisterGameHook<GameInteractor::OnShopSlotChange>(CheckTrackerShopSlotChange);
     GameInteractor::Instance->RegisterGameHook<GameInteractor::OnSceneFlagSet>(CheckTrackerSceneFlagSet);
@@ -1775,7 +1780,7 @@ void CheckTrackerWindow::UpdateElement() {
     mystery                     = CVarGetInteger(CVAR_RANDOMIZER_ENHANCEMENT("MysteriousShuffle"), 0);
     showLogicTooltip            = CVarGetInteger("gCheckTrackerOptionShowLogic", 0);
 
-    hideShopRightChecks = CVarGetInteger(CVAR_TRACKER_CHECK("HideRightShopChecks"), 1);
+    hideShopUnshuffledChecks = CVarGetInteger(CVAR_TRACKER_CHECK("HideUnshuffledShopChecks"), 1);
     alwaysShowGS = CVarGetInteger(CVAR_TRACKER_CHECK("AlwaysShowGSLocs"), 0);
 }
 } // namespace CheckTracker
