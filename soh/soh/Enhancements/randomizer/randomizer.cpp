@@ -10,7 +10,9 @@
 #include <textures/icon_item_24_static/icon_item_24_static.h>
 #include "3drando/rando_main.hpp"
 #include "3drando/random.hpp"
-#include "3drando/custom_messages.hpp" 
+#include "soh/ResourceManagerHelpers.h"
+#include "soh/UIWidgets.hpp"
+#include "3drando/custom_messages.hpp"
 #include "../../UIWidgets.hpp"
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -40,9 +42,6 @@
 #include "soh/util.h"
 #include "fishsanity.h"
 #include "randomizerTypes.h"
-
-extern "C" uint32_t ResourceMgr_IsGameMasterQuest();
-extern "C" uint32_t ResourceMgr_IsSceneMasterQuest(s16 sceneNum);
 
 extern std::map<RandomizerCheckArea, std::string> rcAreaNames;
 
@@ -3151,6 +3150,8 @@ extern "C" u16 Randomizer_Item_Give(PlayState* play, GetItemEntry giEntry) {
                     case RG_BOTTLE_WITH_BIG_POE:
                         bottleItem = ITEM_BIG_POE;
                         break;
+                    default:
+                        break;
                 }
 
                 gSaveContext.inventory.items[SLOT_BOTTLE_1 + i] = bottleItem;
@@ -3250,6 +3251,8 @@ extern "C" u16 Randomizer_Item_Give(PlayState* play, GetItemEntry giEntry) {
             case RG_GANONS_CASTLE_KEY_RING:
                 mapIndex = SCENE_INSIDE_GANONS_CASTLE;
                 numOfKeysOnKeyring = GANONS_CASTLE_SMALL_KEY_MAX;
+                break;
+            default:
                 break;
         }
 

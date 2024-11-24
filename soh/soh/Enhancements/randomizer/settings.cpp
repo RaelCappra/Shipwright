@@ -445,6 +445,7 @@ void Settings::CreateOptions() {
     mTrickOptions[RT_WATER_BK_REGION] = TrickOption::LogicTrick(RCQUEST_VANILLA, RA_WATER_TEMPLE, {Tricks::Tag::INTERMEDIATE}, false, "Water Temple Boss Key Region with Hover Boots", "With precise Hover Boots movement it is possible to reach the boss key chest's region without needing the Longshot. It is not necessary to take damage from the spikes. The Gold Skulltula Token in the following room can also be obtained with just the Hover Boots.");
     mTrickOptions[RT_WATER_NORTH_BASEMENT_LEDGE_JUMP] = TrickOption::LogicTrick(RCQUEST_BOTH, RA_WATER_TEMPLE, {Tricks::Tag::INTERMEDIATE}, false, "Water Temple North Basement Ledge with Precise Jump", "In the northern basement there's a ledge from where, in vanilla Water Temple, boulders roll out into the room. Normally to jump directly to this ledge logically requires the Hover Boots, but with precise jump, it can be done without them. This trick applies to both Vanilla and Master Quest.");
     mTrickOptions[RT_WATER_BK_JUMP_DIVE] = TrickOption::LogicTrick(RCQUEST_VANILLA, RA_WATER_TEMPLE, {Tricks::Tag::NOVICE}, false, "Water Temple Boss Key Jump Dive", "Stand on the very edge of the raised corridor leading from the push block room to the rolling boulder corridor. Face the gold skulltula on the waterfall and jump over the boulder corridor floor into the pool of water, swimming right once underwater. This allows access to the boss key room without Iron boots.");
+    //Also used in MQ logic, but won't be relevent unless a way to enter tower without irons exists (likely a clip + swim)
     mTrickOptions[RT_WATER_FW_CENTRAL_GS] = TrickOption::LogicTrick(RCQUEST_VANILLA, RA_WATER_TEMPLE, {Tricks::Tag::NOVICE}, false, "Water Temple Central Pillar GS with Farore\'s Wind", "If you set Farore's Wind inside the central pillar and then return to that warp point after raising the water to the highest level, you can obtain this Skulltula Token with Hookshot or Boomerang.");
     mTrickOptions[RT_WATER_IRONS_CENTRAL_GS] = TrickOption::LogicTrick(RCQUEST_VANILLA, RA_WATER_TEMPLE, {Tricks::Tag::NOVICE}, false, "Water Temple Central Pillar GS with Iron Boots", "After opening the middle water level door into the central pillar, the door will stay unbarred so long as you do not leave the room -- even if you were to raise the water up to the highest level. With the Iron Boots to go through the door after the water has been raised, you can obtain the Skulltula Token with the Hookshot.");
     mTrickOptions[RT_WATER_CENTRAL_BOW] = TrickOption::LogicTrick(RCQUEST_VANILLA, RA_WATER_TEMPLE, {Tricks::Tag::ADVANCED}, false, "Water Temple Central Bow Target without Longshot or Hover Boots", "A very precise Bow shot can hit the eye switch from the floor above. Then, you can jump down into the hallway and make through it before the gate closes. It can also be done as child, using the Slingshot instead of the Bow.");
@@ -1772,22 +1773,67 @@ void Settings::UpdateOptionProperties() {
         }
     }
 
-    // Show mixed entrance pool options if mixed entrance pools are enabled at all.
-    if (CVarGetInteger(CVAR_RANDOMIZER_SETTING("MixedEntrances"), RO_GENERIC_OFF)) {
-        mOptions[RSK_MIXED_ENTRANCE_POOLS].RemoveFlag(IMFLAG_SEPARATOR_BOTTOM);
-        mOptions[RSK_MIX_DUNGEON_ENTRANCES].Unhide();
-        mOptions[RSK_MIX_BOSS_ENTRANCES].Unhide();
-        mOptions[RSK_MIX_OVERWORLD_ENTRANCES].Unhide();
-        mOptions[RSK_MIX_INTERIOR_ENTRANCES].Unhide();
-        mOptions[RSK_MIX_GROTTO_ENTRANCES].Unhide();
+    int dungeonShuffle = CVarGetInteger(CVAR_RANDOMIZER_SETTING("ShuffleDungeonsEntrances"), RO_DUNGEON_ENTRANCE_SHUFFLE_OFF);
+    int bossShuffle = CVarGetInteger(CVAR_RANDOMIZER_SETTING("ShuffleBossEntrances"), RO_BOSS_ROOM_ENTRANCE_SHUFFLE_OFF);
+    int overworldShuffle = CVarGetInteger(CVAR_RANDOMIZER_SETTING("ShuffleOverworldEntrances"), RO_GENERIC_OFF);
+    int interiorShuffle = CVarGetInteger(CVAR_RANDOMIZER_SETTING("ShuffleInteriorsEntrances"), RO_GENERIC_OFF);
+    int grottoShuffle = CVarGetInteger(CVAR_RANDOMIZER_SETTING("ShuffleGrottosEntrances"), RO_GENERIC_OFF);
+    
+    // Hide Mixed Entrances option if no applicable entrance shuffles are visible
+    if (!dungeonShuffle && !bossShuffle && !overworldShuffle && !interiorShuffle && !grottoShuffle) {
+        mOptions[RSK_MIXED_ENTRANCE_POOLS].Hide();
     } else {
+        mOptions[RSK_MIXED_ENTRANCE_POOLS].Unhide();
+    }
+    // Show mixed entrance pool options if mixed entrance pools are enabled, but only the ones that aren't off
+    if (CVarGetInteger(CVAR_RANDOMIZER_SETTING("MixedEntrances"), RO_GENERIC_OFF) == RO_GENERIC_OFF || mOptions[RSK_MIXED_ENTRANCE_POOLS].IsHidden()) {
         mOptions[RSK_MIXED_ENTRANCE_POOLS].AddFlag(IMFLAG_SEPARATOR_BOTTOM);
         mOptions[RSK_MIX_DUNGEON_ENTRANCES].Hide();
         mOptions[RSK_MIX_BOSS_ENTRANCES].Hide();
         mOptions[RSK_MIX_OVERWORLD_ENTRANCES].Hide();
         mOptions[RSK_MIX_INTERIOR_ENTRANCES].Hide();
         mOptions[RSK_MIX_GROTTO_ENTRANCES].Hide();
+    } else {
+        mOptions[RSK_MIXED_ENTRANCE_POOLS].RemoveFlag(IMFLAG_SEPARATOR_BOTTOM);
+        mOptions[RSK_MIX_DUNGEON_ENTRANCES].RemoveFlag(IMFLAG_SEPARATOR_BOTTOM);
+        mOptions[RSK_MIX_BOSS_ENTRANCES].RemoveFlag(IMFLAG_SEPARATOR_BOTTOM);
+        mOptions[RSK_MIX_OVERWORLD_ENTRANCES].RemoveFlag(IMFLAG_SEPARATOR_BOTTOM);
+        mOptions[RSK_MIX_INTERIOR_ENTRANCES].RemoveFlag(IMFLAG_SEPARATOR_BOTTOM);
+        mOptions[RSK_MIX_GROTTO_ENTRANCES].RemoveFlag(IMFLAG_SEPARATOR_BOTTOM);
+        RandomizerSettingKey lastKey = RSK_MIXED_ENTRANCE_POOLS;
+        if (CVarGetInteger(CVAR_RANDOMIZER_SETTING("ShuffleDungeonsEntrances"), RO_DUNGEON_ENTRANCE_SHUFFLE_OFF) == RO_DUNGEON_ENTRANCE_SHUFFLE_OFF) {
+            mOptions[RSK_MIX_DUNGEON_ENTRANCES].Hide();
+        } else {
+            mOptions[RSK_MIX_DUNGEON_ENTRANCES].Unhide();
+            lastKey = RSK_MIX_DUNGEON_ENTRANCES;
+        }
+        if (CVarGetInteger(CVAR_RANDOMIZER_SETTING("ShuffleBossEntrances"), RO_BOSS_ROOM_ENTRANCE_SHUFFLE_OFF) == RO_BOSS_ROOM_ENTRANCE_SHUFFLE_OFF) {
+            mOptions[RSK_MIX_BOSS_ENTRANCES].Hide();
+        } else {
+            mOptions[RSK_MIX_BOSS_ENTRANCES].Unhide();
+            lastKey = RSK_MIX_BOSS_ENTRANCES;
+        }
+        if (CVarGetInteger(CVAR_RANDOMIZER_SETTING("ShuffleOverworldEntrances"), RO_GENERIC_OFF) == RO_GENERIC_OFF) {
+            mOptions[RSK_MIX_OVERWORLD_ENTRANCES].Hide();
+        } else {
+            mOptions[RSK_MIX_OVERWORLD_ENTRANCES].Unhide();
+            lastKey = RSK_MIX_OVERWORLD_ENTRANCES;
+        }
+        if (CVarGetInteger(CVAR_RANDOMIZER_SETTING("ShuffleInteriorsEntrances"), RO_GENERIC_OFF) == RO_GENERIC_OFF) {
+            mOptions[RSK_MIX_INTERIOR_ENTRANCES].Hide();
+        } else {
+            mOptions[RSK_MIX_INTERIOR_ENTRANCES].Unhide();
+            lastKey = RSK_MIX_INTERIOR_ENTRANCES;
+        }
+        if (CVarGetInteger(CVAR_RANDOMIZER_SETTING("ShuffleGrottosEntrances"), RO_GENERIC_OFF) == RO_GENERIC_OFF) {
+            mOptions[RSK_MIX_GROTTO_ENTRANCES].Hide();
+        } else {
+            mOptions[RSK_MIX_GROTTO_ENTRANCES].Unhide();
+            lastKey = RSK_MIX_GROTTO_ENTRANCES;
+        }
+        mOptions[lastKey].AddFlag(IMFLAG_SEPARATOR_BOTTOM);
     }
+
     // Shuffle Weird Egg - Disabled when Skip Child Zelda is active
     if (CVarGetInteger(CVAR_RANDOMIZER_SETTING("SkipChildZelda"), RO_GENERIC_DONT_SKIP)) {
         mOptions[RSK_SHUFFLE_WEIRD_EGG].Disable("This option is disabled because \"Skip Child Zelda\" is enabled.");

@@ -8,6 +8,7 @@
 #include "soh/Enhancements/randomizer/randomizerTypes.h"
 #include "soh/Enhancements/enhancementTypes.h"
 #include "soh/OTRGlobals.h"
+#include "soh/cvar_prefixes.h"
 
 enum PresetEntryType {
     PRESET_ENTRY_TYPE_S32,
@@ -353,8 +354,6 @@ const std::vector<const char*> cheatCvars = {
     CVAR_DEVELOPER_TOOLS("SaveFileID"),
     CVAR_CHEAT("EnableBetaQuest"),
     CVAR_DEVELOPER_TOOLS("BetterDebugWarpScreen"),
-    CVAR_GENERAL("SwitchAge"),
-    CVAR_GENERAL("SwitchTimeline"),
     CVAR_CHEAT("NoRedeadFreeze"),
     CVAR_CHEAT("NoKeeseGuayTarget"),
     CVAR_CHEAT("BombTimerMultiplier"),

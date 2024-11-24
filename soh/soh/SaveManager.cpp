@@ -10,6 +10,7 @@
 #include "Enhancements/randomizer/item.h"
 
 #include "z64.h"
+#include "cvar_prefixes.h"
 #include "functions.h"
 #include "macros.h"
 #include <variables.h>
@@ -976,7 +977,7 @@ void SaveManager::InitFileDebug() {
         }
     }
 
-    gSaveContext.entranceIndex = ENTR_HYRULE_FIELD_0;
+    gSaveContext.entranceIndex = ENTR_HYRULE_FIELD_PAST_BRIDGE_SPAWN;
     gSaveContext.magicLevel = 0;
     gSaveContext.sceneFlags[5].swch = 0x40000000;
 }
@@ -1119,7 +1120,7 @@ void SaveManager::InitFileMaxed() {
         }
     }
 
-    gSaveContext.entranceIndex = ENTR_HYRULE_FIELD_0;
+    gSaveContext.entranceIndex = ENTR_HYRULE_FIELD_PAST_BRIDGE_SPAWN;
     gSaveContext.sceneFlags[5].swch = 0x40000000;
 }
 
