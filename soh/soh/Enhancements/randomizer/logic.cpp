@@ -611,7 +611,7 @@ namespace Rando {
             //RANDOTODO Dark link is buggy right now, retest when he is not
                 return CanJumpslash() || CanUse(RG_FAIRY_BOW);
             case RE_ANUBIS:
-                //there's a restoration that allows beating them with mirror shield + some way to trigger thier attack
+                //there's a restoration that allows beating them with mirror shield + some way to trigger their attack
                 return HasFireSource();
             case RE_BEAMOS:
                 return HasExplosives();

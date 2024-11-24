@@ -360,10 +360,10 @@ void Settings::CreateOptionDescriptions() {
         "This setting governs if the Bean Salesman, Medigoron, Granny and the Carpet Salesman "
         "sell a random item.\n"
         "Beans Only - Only the Bean Salesman will have a check, and a pack of Magic Beans will be added "
-        " to the item pool."
+        " to the item pool.\n"
         "All But Beans - Medigoron, Granny and the Carpet Salesman will have checks, "
         "A Giant's Knife and a pack of Bombchus will be added to the item pool, and "
-        "one of the bottles will contain a Blue Potion.\n\n"
+        "one of the bottles will contain a Blue Potion.\n"
         "All - Apply both effects.\n"
         "\n"
         "Granny's item will only be offered after you have traded in the Odd Mushroom when Shuffle Adult Trade is on. "
@@ -631,7 +631,7 @@ void Settings::CreateOptionDescriptions() {
     mOptionDescriptions[RSK_MASK_SHOP_HINT] = "Reading the mask shop sign will tell you rewards from showing masks at the Deku Theatre.";
     mOptionDescriptions[RSK_FULL_WALLETS] = "Start with a full wallet. All wallet upgrades come filled with rupees.";
     mOptionDescriptions[RSK_BOMBCHU_BAG] =
-        "Bombchu require thier own bag to be found before use. Without this setting, any Bombchu requirement"
+        "Bombchus require their own bag to be found before use. Without this setting, any Bombchu requirement"
         " is filled by Bomb Bag + a renewable source of Bombchus\n"
         "\n"
         "The first Bombchu you fing be a Bag containing 20 chus, and subsequent packs will have 10."
