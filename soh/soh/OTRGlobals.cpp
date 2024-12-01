@@ -137,6 +137,8 @@ Color_RGB8 zoraColor = { 0x00, 0xEC, 0x64 };
 
 float previousImGuiScale;
 
+bool prevAltAssets = false;
+
 // Same as NaviColor type from OoT src (z_actor.c), but modified to be sans alpha channel for Controller LED.
 typedef struct {
     Color_RGB8 inner;
@@ -297,6 +299,9 @@ OTRGlobals::OTRGlobals() {
     };
     // tell LUS to reserve 3 SoH specific threads (Game, Audio, Save)
     context = LUS::Context::CreateInstance("Ship of Harkinian", appShortName, "shipofharkinian.json", OTRFiles, {}, 3);
+    prevAltAssets = CVarGetInteger("gAltAssets", 0);
+    context->GetResourceManager()->SetAltAssetsEnabled(prevAltAssets);
+    SPDLOG_INFO("Starting Ship of Harkinian version {}", (char*)gBuildVersion);
 
     context->GetResourceManager()->GetResourceLoader()->RegisterResourceFactory(LUS::ResourceType::SOH_Animation, "Animation", std::make_shared<LUS::AnimationFactory>());
     context->GetResourceManager()->GetResourceLoader()->RegisterResourceFactory(LUS::ResourceType::SOH_PlayerAnimation, "PlayerAnimation", std::make_shared<LUS::PlayerAnimationFactory>());
@@ -1143,8 +1148,7 @@ extern "C" uint64_t GetUnixTimestamp() {
     auto time = std::chrono::system_clock::now();
     auto since_epoch = time.time_since_epoch();
     auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(since_epoch);
-    long now = millis.count();
-    return now;
+    return (uint64_t)millis.count();
 }
 
 // C->C++ Bridge
@@ -1235,7 +1239,7 @@ extern "C" void Graph_StartFrame() {
         }
 #endif
         case KbScancode::LUS_KB_TAB: {
-            ToggleAltAssetsAtEndOfFrame = true;
+            CVarSetInteger("gAltAssets", !CVarGetInteger("gAltAssets", 0));
             break;
         }
     }
@@ -1315,11 +1319,10 @@ extern "C" void Graph_ProcessGfxCommands(Gfx* commands) {
         }
     }
 
-    if (ToggleAltAssetsAtEndOfFrame) {
-        ToggleAltAssetsAtEndOfFrame = false;
-
-        // Actually update the CVar now before runing the alt asset update listeners
-        CVarSetInteger("gAltAssets", !CVarGetInteger("gAltAssets", 0));
+    bool curAltAssets = CVarGetInteger("gAltAssets", 0);
+    if (prevAltAssets != curAltAssets) {
+        prevAltAssets = curAltAssets;
+        LUS::Context::GetInstance()->GetResourceManager()->SetAltAssetsEnabled(curAltAssets);
         gfx_texture_cache_clear();
         LUS::SkeletonPatcher::UpdateSkeletons();
         GameInteractor::Instance->ExecuteHooks<GameInteractor::OnAssetAltChange>();
@@ -1495,10 +1498,14 @@ extern "C" uint8_t ResourceMgr_FileAltExists(const char* filePath) {
     return ExtensionCache.contains(path);
 }
 
+extern "C" bool ResourceMgr_IsAltAssetsEnabled() {
+    return LUS::Context::GetInstance()->GetResourceManager()->IsAltAssetsEnabled();
+}
+
 // Unloads a resource if an alternate version exists when alt assets are enabled
 // The resource is only removed from the internal cache to prevent it from used in the next resource lookup
 extern "C" void ResourceMgr_UnloadOriginalWhenAltExists(const char* resName) {
-    if (CVarGetInteger("gAltAssets", 0) && ResourceMgr_FileAltExists((char*) resName)) {
+    if (ResourceMgr_IsAltAssetsEnabled() && ResourceMgr_FileAltExists((char*) resName)) {
         ResourceMgr_UnloadResource((char*) resName);
     }
 }
@@ -1735,6 +1742,7 @@ extern "C" char* ResourceMgr_LoadArrayByName(const char* path)
     return (char*)res->Scalars.data();
 }
 
+// Return of LoadArrayByNameAsVec3s must be freed by the caller
 extern "C" char* ResourceMgr_LoadArrayByNameAsVec3s(const char* path) {
     auto res = std::static_pointer_cast<LUS::Array>(GetResourceByNameHandlingMQ(path));
 
@@ -1867,7 +1875,7 @@ extern "C" SkeletonHeader* ResourceMgr_LoadSkeletonByName(const char* path, Skel
         pathStr = pathStr.substr(sOtr.length());
     }
 
-    bool isAlt = CVarGetInteger("gAltAssets", 0);
+    bool isAlt = ResourceMgr_IsAltAssetsEnabled();
 
     if (isAlt) {
         pathStr = LUS::IResource::gAltAssetPrefix + pathStr;
@@ -2486,8 +2494,7 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
                 randoInf = RAND_INF_MERCHANTS_CARPET_SALESMAN;
             }
             messageEntry = OTRGlobals::Instance->gRandomizer->GetMerchantMessage(randoInf, textId, Randomizer_GetSettingValue(RSK_SHUFFLE_MERCHANTS) != RO_SHUFFLE_MERCHANTS_ON_HINT);
-        } else if (Randomizer_GetSettingValue(RSK_BOMBCHUS_IN_LOGIC) &&
-                   (textId == TEXT_BUY_BOMBCHU_10_DESC || textId == TEXT_BUY_BOMBCHU_10_PROMPT)) {
+        } else if (textId == TEXT_BUY_BOMBCHU_10_DESC || textId == TEXT_BUY_BOMBCHU_10_PROMPT) {
             messageEntry = CustomMessageManager::Instance->RetrieveMessage(customMessageTableID, textId);
         } else if (textId == TEXT_CURSED_SKULLTULA_PEOPLE) {
             actorParams = GET_PLAYER(play)->targetActor->params;
@@ -2595,6 +2602,24 @@ extern "C" void EntranceTracker_SetLastEntranceOverride(s16 entranceIndex) {
 
 extern "C" void Gfx_RegisterBlendedTexture(const char* name, u8* mask, u8* replacement) {
     gfx_register_blended_texture(name, mask, replacement);
+}
+
+extern "C" void Gfx_UnregisterBlendedTexture(const char* name) {
+    gfx_unregister_blended_texture(name);
+}
+
+extern "C" void Gfx_TextureCacheDelete(const uint8_t* texAddr) {
+    char* imgName = (char*)texAddr;
+
+    if (texAddr == nullptr) {
+        return;
+    }
+
+    if (ResourceMgr_OTRSigCheck(imgName)) {
+        texAddr = (const uint8_t*)GetResourceDataByNameHandlingMQ(imgName);
+    }
+
+    gfx_texture_cache_delete(texAddr);
 }
 
 void SoH_ProcessDroppedFiles(std::string filePath) {

@@ -120,6 +120,7 @@ void Ctx_ReadSaveFile(uintptr_t addr, void* dramAddr, size_t size);
 void Ctx_WriteSaveFile(uintptr_t addr, void* dramAddr, size_t size);
 
 uint64_t GetPerfCounter();
+bool ResourceMgr_IsAltAssetsEnabled();
 struct SkeletonHeader* ResourceMgr_LoadSkeletonByName(const char* path, SkelAnime* skelAnime);
 void ResourceMgr_UnregisterSkeleton(SkelAnime* skelAnime);
 void ResourceMgr_ClearSkeletons();
@@ -173,6 +174,8 @@ void Entrance_InitEntranceTrackingData(void);
 void EntranceTracker_SetCurrentGrottoID(s16 entranceIndex);
 void EntranceTracker_SetLastEntranceOverride(s16 entranceIndex);
 void Gfx_RegisterBlendedTexture(const char* name, u8* mask, u8* replacement);
+void Gfx_UnregisterBlendedTexture(const char* name);
+void Gfx_TextureCacheDelete(const uint8_t* addr);
 void SaveManager_ThreadPoolWait();
 void CheckTracker_OnMessageClose();
 
