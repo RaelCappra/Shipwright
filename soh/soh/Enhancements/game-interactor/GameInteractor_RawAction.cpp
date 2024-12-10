@@ -8,6 +8,7 @@
 extern "C" {
 #include "variables.h"
 #include "macros.h"
+#include "soh/cvar_prefixes.h"
 #include "functions.h"
 extern PlayState* gPlayState;
 }
@@ -476,7 +477,7 @@ void GameInteractor::RawAction::SetCosmeticsColor(uint8_t cosmeticCategory, uint
             break;
     }
 
-    Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesOnNextTick();
+    Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
     ApplyOrResetCustomGfxPatches();
 }
 

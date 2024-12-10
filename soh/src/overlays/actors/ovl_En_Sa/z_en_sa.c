@@ -3,6 +3,8 @@
 #include "objects/object_sa/object_sa.h"
 #include "scenes/overworld/spot04/spot04_scene.h"
 #include "scenes/overworld/spot05/spot05_scene.h"
+#include "soh/OTRGlobals.h"
+#include "soh/ResourceManagerHelpers.h"
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
 
 #define FLAGS (ACTOR_FLAG_TARGETABLE | ACTOR_FLAG_FRIENDLY | ACTOR_FLAG_UPDATE_WHILE_CULLED | ACTOR_FLAG_NO_FREEZE_OCARINA)
@@ -740,10 +742,10 @@ void EnSa_Update(Actor* thisx, PlayState* play) {
 
     if (this->actionFunc != func_80AF68E4) {
         if (CVarGetInteger(CVAR_ENHANCEMENT("DisableKokiriDrawDistance"), 0) != 0) {
-            this->alpha = func_80034DD4(&this->actor, play, this->alpha, 32767);
+            this->alpha = Actor_UpdateAlphaByDistance(&this->actor, play, this->alpha, 32767);
         }
         else {
-            this->alpha = func_80034DD4(&this->actor, play, this->alpha, 400.0f);
+            this->alpha = Actor_UpdateAlphaByDistance(&this->actor, play, this->alpha, 400.0f);
         }
     } else {
         this->alpha = 255;

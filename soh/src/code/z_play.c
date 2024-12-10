@@ -11,6 +11,9 @@
 #include <overlays/misc/ovl_kaleido_scope/z_kaleido_scope.h>
 #include "soh/Enhancements/enhancementTypes.h"
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
+#include "soh/OTRGlobals.h"
+#include "soh/ResourceManagerHelpers.h"
+#include "soh/SaveManager.h"
 #include "soh/framebuffer_effects.h"
 
 #include <libultraship/libultraship.h>
@@ -1325,15 +1328,16 @@ void Play_Draw(PlayState* play) {
     // Track render size when paused and that a copy was performed
     static u32 lastPauseWidth;
     static u32 lastPauseHeight;
-    static u8 hasCapturedPauseBuffer;
-    u8 recapturePauseBuffer = false;
+    static bool lastAltAssets;
+    static bool hasCapturedPauseBuffer;
+    bool recapturePauseBuffer = false;
 
-    // If the size has changed or dropped frames leading to the buffer not being copied,
+    // If the size has changed, alt assets toggled, or dropped frames leading to the buffer not being copied,
     // set the prerender state back to setup to copy a new frame.
-    // This requires not rendering kaleido during this copy to avoid kaleido being copied
+    // This requires not rendering kaleido during this copy to avoid kaleido itself being copied too.
     if ((R_PAUSE_MENU_MODE == 2 || R_PAUSE_MENU_MODE == 3) &&
         (lastPauseWidth != OTRGetGameRenderWidth() || lastPauseHeight != OTRGetGameRenderHeight() ||
-         !hasCapturedPauseBuffer)) {
+         lastAltAssets != ResourceMgr_IsAltAssetsEnabled() || !hasCapturedPauseBuffer)) {
         R_PAUSE_MENU_MODE = 1;
         recapturePauseBuffer = true;
     }
@@ -1592,6 +1596,7 @@ void Play_Draw(PlayState* play) {
                 // #region SOH [Port] Custom handling for pause prerender background capture
                 lastPauseWidth = OTRGetGameRenderWidth();
                 lastPauseHeight = OTRGetGameRenderHeight();
+                lastAltAssets = ResourceMgr_IsAltAssetsEnabled();
                 hasCapturedPauseBuffer = false;
 
                 FB_CopyToFramebuffer(&gfxP, 0, gPauseFrameBuffer, false, &hasCapturedPauseBuffer);
