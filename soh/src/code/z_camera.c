@@ -8,8 +8,6 @@
 
 #include "soh/frame_interpolation.h"
 
-#include <SDL2/SDL.h> //TODO (RR): don't import SDL in game code
-
 s16 Camera_ChangeSettingFlags(Camera* camera, s16 setting, s16 flags);
 s32 Camera_ChangeModeFlags(Camera* camera, s16 mode, u8 flags);
 s32 Camera_QRegInit(void);
@@ -1424,19 +1422,7 @@ s32 SetCameraManual(Camera* camera) {
     f32 newCamX = -D_8015BD7C->state.input[0].cur.right_stick_x * 10.0f;
     f32 newCamY = D_8015BD7C->state.input[0].cur.right_stick_y * 10.0f;
 
-    int mouseX, mouseY;
-    SDL_GetRelativeMouseState(&mouseX, &mouseY);
-    D_8015BD7C->state.input[0].cur.mouse_move_x = mouseX;
-    D_8015BD7C->state.input[0].cur.mouse_move_y = mouseY;
-
-    if (CVarGetInteger(CVAR_SETTING("EnableMouse"), 0) != 1) {
-        mouseX = 0.0f;
-        mouseY = 0.0f;
-    }
-
-    newCamX -= mouseX * 40.0f;
-    newCamY += mouseY * 40.0f;
-
+    Mouse_HandleThirdPerson(&newCamX, &newCamY);
 
     if ((fabsf(newCamX) >= 15.0f || fabsf(newCamY) >= 15.0f) && camera->play->manualCamera == false) {
         camera->play->manualCamera = true;
@@ -1501,19 +1487,16 @@ s32 Camera_Free(Camera* camera) {
 
     camera->animState = 0;
 
-    int mouseX, mouseY;
-    mouseX = D_8015BD7C->state.input[0].cur.mouse_move_x;
-    mouseY = D_8015BD7C->state.input[0].cur.mouse_move_y;
+    f32 newCamX = -D_8015BD7C->state.input[0].cur.right_stick_x * 10.0f;
+    f32 newCamY = +D_8015BD7C->state.input[0].cur.right_stick_y * 10.0f;
 
-    if (CVarGetInteger(CVAR_SETTING("EnableMouse"), 0) != 1 || 
-            /* Disable mouse movement when holding down the shield */
-            camera->player->stateFlags1 & 0x400000 ) {
-        mouseX = 0.0f;
-        mouseY = 0.0f;
+    /* Disable mouse movement when holding down the shield */
+    if (!(camera->player->stateFlags1 & 0x400000)) {
+        Mouse_HandleThirdPerson(&newCamX, &newCamY);
     }
 
-    f32 newCamX = (-D_8015BD7C->state.input[0].cur.right_stick_x * 10.0f - (mouseX * 40.0f)) * (CVarGetFloat(CVAR_SETTING("FreeLook.CameraSensitivity.X"), 1.0f));
-    f32 newCamY = (+D_8015BD7C->state.input[0].cur.right_stick_y * 10.0f + (mouseY * 40.0f)) * (CVarGetFloat(CVAR_SETTING("FreeLook.CameraSensitivity.Y"), 1.0f));
+    newCamX *= (CVarGetFloat(CVAR_SETTING("FreeLook.CameraSensitivity.X"), 1.0f));
+    newCamY *= (CVarGetFloat(CVAR_SETTING("FreeLook.CameraSensitivity.Y"), 1.0f));
 
     bool invertXAxis = (CVarGetInteger(CVAR_SETTING("FreeLook.InvertXAxis"), 0) && !CVarGetInteger(CVAR_ENHANCEMENT("MirroredWorld"), 0)) || (!CVarGetInteger(CVAR_SETTING("FreeLook.InvertXAxis"), 0) && CVarGetInteger(CVAR_ENHANCEMENT("MirroredWorld"), 0));
 

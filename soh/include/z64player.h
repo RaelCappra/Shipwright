@@ -924,11 +924,6 @@ typedef struct Player {
     /*        */ u8 ivanDamageMultiplier;
     // #endregion
 
-    /* 0x???? */ f32        mouseQuickspinX[5];
-    /* 0x???? */ f32        mouseQuickspinY[5];
-    /* 0x???? */ u8         quickspinCount;
-    // #endregion
-
 } Player; // size = 0xA94
 
 #endif

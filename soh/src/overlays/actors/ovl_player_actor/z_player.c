@@ -6,7 +6,6 @@
 
 #include <libultraship/libultra.h>
 #include "global.h"
-#include <SDL2/SDL.h> //TODO (RR): don't import SDL in game code
 
 #include "overlays/actors/ovl_Bg_Heavy_Block/z_bg_heavy_block.h"
 #include "overlays/actors/ovl_Door_Shutter/z_door_shutter.h"
@@ -2072,7 +2071,6 @@ void Player_ProcessControlStick(PlayState* play, Player* this) {
 
     sControlStickWorldYaw = Camera_GetInputDirYaw(GET_ACTIVE_CAM(play)) + sControlStickAngle;
 
-    this->quickspinCount = (this->quickspinCount + 1) % 5;
     this->controlStickDataIndex = (this->controlStickDataIndex + 1) % 4;
 
     if (sControlStickMagnitude < 55.0f) {
@@ -2083,12 +2081,8 @@ void Player_ProcessControlStick(PlayState* play, Player* this) {
         direction = (u16)((s16)(sControlStickWorldYaw - this->actor.shape.rot.y) + 0x2000) >> 14;
     }
 
-    if(CVarGetInteger(CVAR_SETTING("EnableMouse"), 0)){
-        f32 x = sControlInput->cur.touch_x;
-        f32 y = sControlInput->cur.touch_y;
-        this->mouseQuickspinX[this->quickspinCount] = x;
-        this->mouseQuickspinY[this->quickspinCount] = y;
-    }
+    Mouse_UpdateQuickspinCount();
+
     this->controlStickSpinAngles[this->controlStickDataIndex] = spinAngle;
     this->controlStickDirections[this->controlStickDataIndex] = direction;
 }
@@ -4280,7 +4274,6 @@ void func_80837530(PlayState* play, Player* this, s32 arg2) {
 s32 Player_CanSpinAttack(Player* this) {
     s8 sp3C[4];
     s8* iter;
-    s8 iterMouse;
     s8* iter2;
     s8 temp1;
     s8 temp2;
@@ -4290,42 +4283,16 @@ s32 Player_CanSpinAttack(Player* this) {
         return false;
     }
 
-    if(CVarGetInteger(CVAR_SETTING("EnableMouse"), 0)){ //mouse quickspin
-        iter2 = &sp3C[0];
-        u32 willSpin = 1;
-        for (i = 0; i < 4; i++, iter2++){
-            f32 relY = this->mouseQuickspinY[i + 1] - this->mouseQuickspinY[i];
-            f32 relX = this->mouseQuickspinX[i + 1] - this->mouseQuickspinX[i];
-            s16 aTan = Math_Atan2S(relY, -relX);
-            iterMouse = (u16)(aTan + 0x2000) >> 9;
-            if ((*iter2 = iterMouse) < 0) {
-                willSpin = 0;
-                break;
-            }
-            *iter2 *= 2;
-        }
-        temp1 = sp3C[0] - sp3C[1];
-        if (ABS(temp1) < 10) {
-            willSpin = 0;
-        }
-        iter2 = &sp3C[1];
-        for (i = 1; i < 3; i++, iter2++) {
-            temp2 = *iter2 - *(iter2 + 1);
-            if ((ABS(temp2) < 10) || (temp2 * temp1 < 0)) {
-                willSpin = 0;
-                break;
-            }
-        }
-        if (willSpin){
-            return 1;
-        }
-    }
     sp3C[0] = 0;
     sp3C[1] = 0;
     sp3C[2] = 0;
     sp3C[3] = 0;
     iter = &this->controlStickSpinAngles[0];
     iter2 = &sp3C[0];
+
+    if (Mouse_HandleQuickspin(iter2, sp3C)) {
+        return true;
+    }
 
     for (i = 0; i < 4; i++, iter++, iter2++) {
         if ((*iter2 = *iter) < 0) {
@@ -6478,13 +6445,7 @@ s32 Player_ActionHandler_11(Player* this, PlayState* play) {
         Player_DetachHeldActor(play, this);
 
         if (Player_SetupAction(play, this, Player_Action_80843188, 0)) {
-            /* MOD: move cursor to the middle on shield pull (RR) */
-            if (CVarGetInteger(CVAR_SETTING("EnableMouse"), 0)) {
-                u32 width = OTRGetCurrentWidth();
-                u32 height = OTRGetCurrentHeight();
-                OTRMoveCursor(width/2, height/2);
-            }
-            /* */
+            Mouse_RecenterCursor();
 
             this->stateFlags1 |= PLAYER_STATE1_SHIELDING;
 
@@ -9322,19 +9283,7 @@ void Player_Action_80843188(Player* this, PlayState* play) {
         sp54 = sControlInput->rel.stick_y * 100 * (CVarGetInteger(CVAR_SETTING("Controls.InvertShieldAimingYAxis"), 1) ? 1 : -1);
         sp50 = sControlInput->rel.stick_x * (CVarGetInteger(CVAR_ENHANCEMENT("MirroredWorld"), 0) ? 120 : -120) * (CVarGetInteger(CVAR_SETTING("Controls.InvertShieldAimingYAxis"), 0) ? -1 : 1);
         sp4E = this->actor.shape.rot.y - Camera_GetInputDirYaw(GET_ACTIVE_CAM(play));
-
-        if (CVarGetInteger(CVAR_SETTING("EnableMouse"), 0)) {
-            u32 width = OTRGetCurrentWidth();
-            u32 height = OTRGetCurrentHeight();
-            /*
-             * Y: -12800 ~ +12700
-             * X: -15360 ~ +15240
-             */
-            f32 xBound = 15360 / ((f32)width / 2);
-            f32 yBound = 12800 / ((f32)height / 2);
-            sp54 += +(sControlInput->cur.touch_y - (height) / 2) * yBound;
-            sp50 += +(sControlInput->cur.touch_x - (width) / 2) * xBound * (CVarGetInteger(CVAR_ENHANCEMENT("MirroredWorld"), 0) ? 1 : -1);
-        }
+        Mouse_HandleShield(&sp50, &sp54);
 
         sp40 = Math_CosS(sp4E);
         sp4C = (Math_SinS(sp4E) * sp50) + (sp54 * sp40);
@@ -12000,6 +11949,7 @@ void Player_UpdateCommon(Player* this, PlayState* play, Input* input) {
 
     sControlInput = input;
 
+    /* (LL) future reference for sensitivity modifiers
     if (CVarGetInteger("gEnableWalkModify", 0)) {
         f32 modifierValue = 1.0;
         if (CVarGetInteger("gWalkSpeedToggle", 0)) {
@@ -12023,6 +11973,8 @@ void Player_UpdateCommon(Player* this, PlayState* play, Input* input) {
             input->rel.stick_y *= modifierValue * ABS(sinf(Math_Atan2F(old_stick_x, old_stick_y)));
         }
     }
+    ***********************************
+    */
 
     if (this->unk_A86 < 0) {
         this->unk_A86++;
@@ -12802,25 +12754,8 @@ s16 func_8084ABD8(PlayState* play, Player* this, s32 arg2, s16 arg3) {
     s8 invertYAxisMulti = CVarGetInteger(CVAR_SETTING("Controls.InvertAimingYAxis"), 1) ? 1 : -1;
     f32 xAxisMulti = CVarGetFloat(CVAR_SETTING("FirstPersonCameraSensitivity.X"), 1.0f);
     f32 yAxisMulti = CVarGetFloat(CVAR_SETTING("FirstPersonCameraSensitivity.Y"), 1.0f);
-    /* TODO: Move all this mouse stuff somewhere more appropriate */
-    if(CVarGetInteger(CVAR_SETTING("EnableMouse"), 0)) {
-        int mouseX, mouseY;
-        SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
-        sControlInput->cur.mouse_move_x = mouseX;
-        sControlInput->cur.mouse_move_y = mouseY;
-        if (fabsf(sControlInput->cur.mouse_move_x) > 0) {
-            //printf("x:%d\n", sControlInput->cur.mouse_move_x);
-            this->actor.focus.rot.y -= (sControlInput->cur.mouse_move_x) * 12.0f * xAxisMulti *\
-                                       invertXAxisMulti;
-        }
-        if (fabsf(sControlInput->cur.mouse_move_y) > 0) {
-            //printf("y:%d\n", sControlInput->cur.mouse_move_y);
-            this->actor.focus.rot.x += (sControlInput->cur.mouse_move_y) * 12.0f * yAxisMulti *\
-                                       invertYAxisMulti;
-        }
-    }
-    /* ********************************************************** */
+    Mouse_HandleFirstPerson(this, invertXAxisMulti, invertYAxisMulti, xAxisMulti, yAxisMulti);
 
     if (!func_8002DD78(this) && !func_808334B4(this) && (arg2 == 0)) { // First person without weapon
         // Y Axis

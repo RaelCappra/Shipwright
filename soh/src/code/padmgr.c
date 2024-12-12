@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "soh/Enhancements/game-interactor/GameInteractor.h"
+#include "soh/Enhancements/controls/Mouse.h"
 #include "soh/OTRGlobals.h"
 #include "soh/ResourceManagerHelpers.h"
 
@@ -270,8 +271,6 @@ void PadMgr_ProcessInputs(PadMgr* padMgr) {
                 input->cur.button = 0;
                 input->cur.stick_x = 0;
                 input->cur.stick_y = 0;
-                input->cur.left_click = 0;
-                input->cur.right_click = 0;
 
                 input->cur.err_no = padnow1->err_no;
                 if (padMgr->ctrlrIsConnected[i]) {
@@ -307,11 +306,6 @@ void PadMgr_ProcessInputs(PadMgr* padMgr) {
         input->press.right_stick_x += (s8)(input->cur.right_stick_x - input->prev.right_stick_x);
         input->press.right_stick_y += (s8)(input->cur.right_stick_y - input->prev.right_stick_y);
         // #endregion
-        buttonDiff = input->prev.left_click != input->cur.left_click;
-        input->press.left_click = buttonDiff;
-    
-        buttonDiff = input->prev.right_click != input->cur.right_click;
-        input->press.right_click = buttonDiff;
 
     }
 
@@ -332,6 +326,8 @@ void PadMgr_HandleRetraceMsg(PadMgr* padMgr) {
     }
     osRecvMesg(queue, NULL, OS_MESG_BLOCK);
     osContGetReadData(padMgr->pads);
+
+    Mouse_UpdateAll();
 
     for (i = 0; i < __osMaxControllers; i++) {
         padMgr->padStatus[i].status = Controller_ShouldRumble(i);
