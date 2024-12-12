@@ -45,7 +45,7 @@ void Mouse_RecenterCursor() {
         u32 width = GetWindow()->GetWidth();
         u32 height = GetWindow()->GetHeight();
         //fetch the movecursor LUS PR
-        GetWindow()->SetMousePos({width/2, height/2});
+        GetWindow()->SetMousePos({(s32) (width/2), (s32) (height/2)});
     }
 }
 
