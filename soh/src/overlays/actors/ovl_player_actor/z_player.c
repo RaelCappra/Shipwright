@@ -29,6 +29,7 @@
 #include "soh/Enhancements/enhancementTypes.h"
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
 #include "soh/Enhancements/randomizer/randomizer_grotto.h"
+#include "soh/Enhancements/controls/Mouse.h"
 #include "soh/frame_interpolation.h"
 #include "soh/OTRGlobals.h"
 #include "soh/ResourceManagerHelpers.h"
@@ -2080,6 +2081,8 @@ void Player_ProcessControlStick(PlayState* play, Player* this) {
         spinAngle = (u16)(sControlStickAngle + 0x2000) >> 9;
         direction = (u16)((s16)(sControlStickWorldYaw - this->actor.shape.rot.y) + 0x2000) >> 14;
     }
+
+    Mouse_UpdateQuickspinCount();
 
     this->controlStickSpinAngles[this->controlStickDataIndex] = spinAngle;
     this->controlStickDirections[this->controlStickDataIndex] = direction;
@@ -4281,8 +4284,16 @@ s32 Player_CanSpinAttack(Player* this) {
         return false;
     }
 
+    sp3C[0] = 0;
+    sp3C[1] = 0;
+    sp3C[2] = 0;
+    sp3C[3] = 0;
     iter = &this->controlStickSpinAngles[0];
     iter2 = &sp3C[0];
+
+    if (Mouse_HandleQuickspin(iter2, sp3C)) {
+        return true;
+    }
 
     for (i = 0; i < 4; i++, iter++, iter2++) {
         if ((*iter2 = *iter) < 0) {
@@ -6435,6 +6446,8 @@ s32 Player_ActionHandler_11(Player* this, PlayState* play) {
         Player_DetachHeldActor(play, this);
 
         if (Player_SetupAction(play, this, Player_Action_80843188, 0)) {
+            Mouse_RecenterCursor();
+
             this->stateFlags1 |= PLAYER_STATE1_SHIELDING;
 
             if (!Player_IsChildWithHylianShield(this)) {
@@ -9271,6 +9284,7 @@ void Player_Action_80843188(Player* this, PlayState* play) {
         sp54 = sControlInput->rel.stick_y * 100 * (CVarGetInteger(CVAR_SETTING("Controls.InvertShieldAimingYAxis"), 1) ? 1 : -1);
         sp50 = sControlInput->rel.stick_x * (CVarGetInteger(CVAR_ENHANCEMENT("MirroredWorld"), 0) ? 120 : -120) * (CVarGetInteger(CVAR_SETTING("Controls.InvertShieldAimingYAxis"), 0) ? -1 : 1);
         sp4E = this->actor.shape.rot.y - Camera_GetInputDirYaw(GET_ACTIVE_CAM(play));
+        Mouse_HandleShield(&sp50, &sp54);
 
         sp40 = Math_CosS(sp4E);
         sp4C = (Math_SinS(sp4E) * sp50) + (sp54 * sp40);
@@ -12714,6 +12728,8 @@ s16 func_8084ABD8(PlayState* play, Player* this, s32 arg2, s16 arg3) {
     s8 invertYAxisMulti = CVarGetInteger(CVAR_SETTING("Controls.InvertAimingYAxis"), 1) ? 1 : -1;
     f32 xAxisMulti = CVarGetFloat(CVAR_SETTING("FirstPersonCameraSensitivity.X"), 1.0f);
     f32 yAxisMulti = CVarGetFloat(CVAR_SETTING("FirstPersonCameraSensitivity.Y"), 1.0f);
+
+    Mouse_HandleFirstPerson(this, invertXAxisMulti, invertYAxisMulti, xAxisMulti, yAxisMulti);
 
     if (!func_8002DD78(this) && !func_808334B4(this) && (arg2 == 0)) { // First person without weapon
         // Y Axis
