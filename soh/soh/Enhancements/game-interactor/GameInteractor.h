@@ -127,6 +127,7 @@ typedef enum {
     */
     VB_BE_ELIGIBLE_FOR_NOCTURNE_OF_SHADOW,
     // Opt: *EnGo2
+    VB_GORON_LINK_BE_SCARED,
     // Vanilla condition: CUR_CAPACITY(UPG_BOMB_BAG) >= 20 && this->waypoint > 7 && this->waypoint < 12
     VB_BE_ELIGIBLE_FOR_CHILD_ROLLING_GORON_REWARD,
     // Vanilla condition: !CHECK_OWNED_EQUIP_ALT(EQUIP_TYPE_SWORD, EQUIP_INV_SWORD_BIGGORON)
@@ -245,6 +246,11 @@ typedef enum {
     ```
     */
     VB_DRAW_AMMO_COUNT,
+    // Opt: *ObjTsubo
+    VB_POT_SETUP_DRAW,
+    VB_POT_DROP_ITEM,
+    // Opt: *ActorDoorShutter
+    VB_LOCK_BOSS_DOOR,
     // Vanilla condition: true
     VB_HAVE_OCARINA_NOTE_D4,
     // Vanilla condition: true
@@ -297,6 +303,10 @@ typedef enum {
     /*** Play Cutscenes ***/
 
     VB_PLAY_TRANSITION_CS,
+    VB_PLAY_GORON_FREE_CS,
+    VB_PLAY_FIRE_ARROW_CS,
+    // Vanilla condition: INV_CONTENT(ITEM_ARROW_FIRE) == ITEM_NONE
+    VB_SPAWN_FIRE_ARROW,
     // Opt: *EventChkInf flag
     VB_PLAY_ENTRANCE_CS,
     // Opt: *cutsceneId
@@ -364,6 +374,7 @@ typedef enum {
 
     /*** Give Items ***/
 
+    VB_FREEZE_ON_SKULL_TOKEN,
     // Opt: *EnBox
     VB_GIVE_ITEM_FROM_CHEST,
     // Opt: ItemID
@@ -372,7 +383,6 @@ typedef enum {
     VB_GIVE_ITEM_FROM_ITEM_00,
     // Opt: *EnSi
     VB_GIVE_ITEM_SKULL_TOKEN,
-    VB_FREEZE_ON_SKULL_TOKEN,
     // Opt: *EnCow
     VB_GIVE_ITEM_FROM_COW,
     // Opt: *EnDns
