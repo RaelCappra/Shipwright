@@ -272,7 +272,7 @@ extern "C" void Randomizer_DrawKeyRing(PlayState* play, GetItemEntry* getItemEnt
         Rando::SPIRIT_TEMPLE,
         Rando::SHADOW_TEMPLE,
         Rando::BOTTOM_OF_THE_WELL,
-        Rando::GERUDO_TRAINING_GROUNDS,
+        Rando::GERUDO_TRAINING_GROUND,
         (Rando::DungeonKey)0,
         Rando::GANONS_CASTLE,
         (Rando::DungeonKey)0,
