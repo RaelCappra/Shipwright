@@ -335,7 +335,7 @@ void BgHidanRock_Update(Actor* thisx, PlayState* play) {
 
     this->actionFunc(this, play);
     if (this->actionFunc == func_8088B79C) {
-        Actor_MoveForward(&this->dyna.actor);
+        Actor_MoveXZGravity(&this->dyna.actor);
         Actor_UpdateBgCheckInfo(play, &this->dyna.actor, 0.0f, 0.0f, 0.0f, 4);
     }
 
@@ -396,7 +396,7 @@ void BgHidanRock_Draw(Actor* thisx, PlayState* play) {
             SkinMatrix_Vec3fMtxFMultXYZ(&play->viewProjectionMtxF, &this->dyna.actor.home.pos, &this->unk_170);
         }
 
-        func_80078914(&this->unk_170, NA_SE_EV_FIRE_PILLAR - SFX_FLAG);
+        Sfx_PlaySfxAtPos(&this->unk_170, NA_SE_EV_FIRE_PILLAR - SFX_FLAG);
         func_8088BC40(play, this);
     }
 }

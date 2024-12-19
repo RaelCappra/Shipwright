@@ -8,8 +8,12 @@
 
 #include "soh/Enhancements/game-interactor/GameInteractor.h"
 #include "soh/Enhancements/randomizer/draw.h"
+#include "soh/Enhancements/Holiday/Fredomato.h"
+#include "soh/ResourceManagerHelpers.h"
 
 #include <stdlib.h>
+#include <soh_assets.h>
+#include "soh/Enhancements/Holiday/Archez.h"
 
 typedef struct {
     /* 0x00 */ u8 flag;
@@ -886,6 +890,16 @@ s32 Player_HoldsSlingshot(Player* this) {
     return this->heldItemAction == PLAYER_IA_SLINGSHOT;
 }
 
+// #region SOH [Enhancement]
+s32 Player_HoldsBoomerang(Player* this) {
+    return this->heldItemAction == PLAYER_IA_BOOMERANG;
+}
+
+s32 Player_AimsBoomerang(Player* this) {
+    return Player_HoldsBoomerang(this) && (this->unk_834 != 0);
+}
+// #endregion
+
 s32 func_8008F128(Player* this) {
     return Player_HoldsHookshot(this) && (this->heldActor == NULL);
 }
@@ -1044,10 +1058,18 @@ void* sMouthTextures[] = {
 };
 #endif
 
+// Original colors
+//Color_RGB8 sTunicColors[] = {
+//    { 30, 105, 27 },
+//    { 100, 20, 0 },
+//    { 0, 60, 100 },
+//};
+
+// Overwrite to red tunic as default for Holidays in Hyrule build
 Color_RGB8 sTunicColors[] = {
-    { 30, 105, 27 },
-    { 100, 20, 0 },
-    { 0, 60, 100 },
+    { 255, 0, 0 },
+    { 255, 0, 0 },
+    { 255, 0, 0 },
 };
 
 Color_RGB8 sGauntletColors[] = {
@@ -1402,6 +1424,10 @@ s32 Player_OverrideLimbDrawGameplayDefault(PlayState* play, s32 limbIndex, Gfx**
                 sLeftHandType = PLAYER_MODELTYPE_LH_CLOSED;
             }
 
+            if (sLeftHandType != PLAYER_MODELTYPE_LH_OPEN && sLeftHandType != PLAYER_MODELTYPE_LH_CLOSED) {
+                SkipOverrideNextLimb();
+            }
+
             *dList = ResourceMgr_LoadGfxByName(dLists[sDListsLodOffset]);
         } else if (limbIndex == PLAYER_LIMB_R_HAND) {
             Gfx** dLists = this->rightHandDLists;
@@ -1413,8 +1439,13 @@ s32 Player_OverrideLimbDrawGameplayDefault(PlayState* play, s32 limbIndex, Gfx**
                 sRightHandType = PLAYER_MODELTYPE_RH_CLOSED;
             }
 
+            if (sRightHandType != PLAYER_MODELTYPE_RH_OPEN && sRightHandType != PLAYER_MODELTYPE_RH_CLOSED) {
+                SkipOverrideNextLimb();
+            }
+
             *dList = ResourceMgr_LoadGfxByName(dLists[sDListsLodOffset]);
         } else if (limbIndex == PLAYER_LIMB_SHEATH) {
+            SkipOverrideNextLimb();
             Gfx** dLists = this->sheathDLists;
 
             if ((this->sheathType == PLAYER_MODELTYPE_SHEATH_18) || (this->sheathType == PLAYER_MODELTYPE_SHEATH_19)) {
@@ -1471,10 +1502,13 @@ s32 Player_OverrideLimbDrawGameplayFirstPerson(PlayState* play, s32 limbIndex, G
             }
             *dList = sFirstPersonLeftHandDLs[handOutDlIndex];
         } else if (limbIndex == PLAYER_LIMB_R_SHOULDER) {
+            SkipOverrideNextLimb();
             *dList = sFirstPersonRightShoulderDLs[gSaveContext.linkAge];
         } else if (limbIndex == PLAYER_LIMB_R_FOREARM) {
+            SkipOverrideNextLimb();
             *dList = sFirstPersonForearmDLs[gSaveContext.linkAge];
         } else if (limbIndex == PLAYER_LIMB_R_HAND) {
+            SkipOverrideNextLimb();
             s32 firstPersonWeaponIndex = gSaveContext.linkAge;
             if (CVarGetInteger(CVAR_ENHANCEMENT("BowSlingshotAmmoFix"), 0) || CVarGetInteger(CVAR_ENHANCEMENT("EquipmentAlwaysVisible"), 0)) {
                 if (Player_HoldsBow(this)) {
@@ -1586,7 +1620,7 @@ void func_800906D4(PlayState* play, Player* this, Vec3f* newTipPos) {
 void Player_DrawGetItemIceTrap(PlayState* play, Player* this, Vec3f* refPos, s32 drawIdPlusOne, f32 height) {
     OPEN_DISPS(play->state.gfxCtx);
 
-    if (CVarGetInteger(CVAR_GENERAL("LetItSnow"), 0)) {
+    if (CVarGetInteger("gLetItSnow", 0)) {
         Gfx_SetupDL_25Opa(play->state.gfxCtx);
 
         Matrix_Scale(0.2f, 0.2f, 0.2f, MTXMODE_APPLY);
@@ -1752,7 +1786,7 @@ Vec3f sLeftHandArrowVec3 = { 398.0f, 1419.0f, 244.0f };
 
 BowStringData sBowStringData[] = {
     { gLinkAdultBowStringDL, { 0.0f, -360.4f, 0.0f } },       // bow
-    { gLinkChildSlinghotStringDL, { 606.0f, 236.0f, 0.0f } }, // slingshot
+    { gLinkChildSlingshotStringDL, { 606.0f, 236.0f, 0.0f } }, // slingshot
 };
 
 Vec3f sRightHandLimbModelShieldQuadVertices[] = {
@@ -1788,8 +1822,57 @@ Vec3f sLeftRightFootLimbModelFootPos[] = {
 void Player_PostLimbDrawGameplay(PlayState* play, s32 limbIndex, Gfx** dList, Vec3s* rot, void* thisx) {
     Player* this = (Player*)thisx;
 
+    const Vec3s BoomerangViewAdult = { -31200, -9200, 17000 };
+    const Vec3s BoomerangViewChild = { -31200, -8700, 17000 };
+
     if (*dList != NULL) {
         Matrix_MultVec3f(&sZeroVec, D_80160000);
+    }
+
+    if (CVarGetInteger("gLetItSnow", 0) && !(this->stateFlags1 & PLAYER_STATE1_FIRST_PERSON) && !(this->stateFlags2 & PLAYER_STATE2_CRAWLING)) {
+        if (limbIndex == PLAYER_LIMB_HEAD) {
+            OPEN_DISPS(play->state.gfxCtx);
+
+            Matrix_Push();
+            if (LINK_IS_ADULT) {
+                Matrix_RotateZYX(24000, -16000, -7000, MTXMODE_APPLY);
+                Matrix_Translate(32.0f, 0.0f, 0.0f, MTXMODE_APPLY);
+                Matrix_Scale(1.0f, 1.0f, 1.0f, MTXMODE_APPLY);
+                gSPMatrix(POLY_OPA_DISP++, MATRIX_NEWMTX(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+                gSPDisplayList(POLY_OPA_DISP++, gLinkAdultHatTrimDL);
+            } else {
+                Matrix_RotateZYX(24000, -16000, -7000, MTXMODE_APPLY);
+                Matrix_Translate(32.0f, 0.0f, 0.0f, MTXMODE_APPLY);
+                Matrix_Scale(1.0f, 1.0f, 1.0f, MTXMODE_APPLY);
+                gSPMatrix(POLY_OPA_DISP++, MATRIX_NEWMTX(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+                gSPDisplayList(POLY_OPA_DISP++, gLinkChildHatTrimDL);
+            }
+
+            Matrix_Pop();
+
+            CLOSE_DISPS(play->state.gfxCtx);
+        }
+
+        if (limbIndex == PLAYER_LIMB_HAT) {
+            OPEN_DISPS(play->state.gfxCtx);
+
+            Matrix_Push();
+            if (LINK_IS_ADULT) {
+                Matrix_RotateZYX(0, 0, 17500, MTXMODE_APPLY);
+                Matrix_Translate(-195.0f, 1500.0f, -95.0f, MTXMODE_APPLY);
+                Matrix_Scale(2.0f, 2.0f, 2.0f, MTXMODE_APPLY);
+            } else {
+                Matrix_RotateZYX(0, 0, 27000, MTXMODE_APPLY);
+                Matrix_Translate(-950.0f, 2600.0f, -75.0f, MTXMODE_APPLY);
+                Matrix_Scale(2.0f, 2.0f, 2.0f, MTXMODE_APPLY);
+            }
+
+            gSPMatrix(POLY_OPA_DISP++, MATRIX_NEWMTX(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+            gSPDisplayList(POLY_OPA_DISP++, gLinkAdultPompomDL);
+            Matrix_Pop();
+
+            CLOSE_DISPS(play->state.gfxCtx);
+        }
     }
 
     if (limbIndex == PLAYER_LIMB_L_HAND) {
@@ -1949,6 +2032,8 @@ void Player_PostLimbDrawGameplay(PlayState* play, s32 limbIndex, Gfx** dList, Ve
                             play, this, ((this->heldItemAction == PLAYER_IA_HOOKSHOT) ? 38600.0f : 77600.0f) * CVarGetFloat(CVAR_CHEAT("HookshotReachMultiplier"), 1.0f));
                     }
                 }
+
+            // #region SOH [Enhancement]            
             } else if (CVarGetInteger(CVAR_ENHANCEMENT("BowReticle"), 0) && (
                         (this->heldItemAction == PLAYER_IA_BOW_FIRE) ||
                         (this->heldItemAction == PLAYER_IA_BOW_ICE) ||
@@ -1967,6 +2052,21 @@ void Player_PostLimbDrawGameplay(PlayState* play, s32 limbIndex, Gfx** dList, Ve
                         Player_DrawHookshotReticle(play, this, RETICLE_MAX);
                     }
                 }
+            } else if (CVarGetInteger(CVAR_ENHANCEMENT("BoomerangReticle"), 0) && (this->heldItemAction == PLAYER_IA_BOOMERANG)) {
+                if (Player_HoldsBoomerang(this)) {
+                    if (LINK_IS_ADULT) {
+                        Matrix_RotateZYX(BoomerangViewAdult.x, BoomerangViewAdult.y, BoomerangViewAdult.z,
+                                         MTXMODE_APPLY);
+                    } else {
+                        Matrix_RotateZYX(BoomerangViewChild.x, BoomerangViewChild.y, BoomerangViewChild.z, MTXMODE_APPLY);
+                    }
+
+                    if (Player_AimsBoomerang(this)) {
+                        Matrix_Translate(500.0f, 300.0f, 0.0f, MTXMODE_APPLY);
+                        Player_DrawHookshotReticle(play, this, RETICLE_MAX);
+                    }
+                }
+            // #endregion
             }
 
             if ((this->unk_862 != 0) || ((func_8002DD6C(this) == 0) && (heldActor != NULL))) {

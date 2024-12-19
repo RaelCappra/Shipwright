@@ -244,25 +244,32 @@ void EnClearTag_Init(Actor* thisx, PlayState* play) {
     if (this->actor.params == CLEAR_TAG_LASER) {
         this->state = CLEAR_TAG_STATE_LASER;
         this->timers[CLEAR_TAG_TIMER_LASER_DEATH] = 70;
-        this->actor.speedXZ = 35.0f;
-        func_8002D908(&this->actor);
-        for (j = 0; j <= 0; j++) {
-            func_8002D7EC(&this->actor);
+        if (CVarGetInteger("gHoliday.AGreenSpoon.EvilGossipStone", 0)) {
+            this->actor.scale.x = 0.4f;
+            this->actor.scale.y = 0.4f;
+            this->actor.scale.z = 2.0f;
+            this->actor.speedXZ = MAX(10.0f, Actor_WorldDistXZToActor(thisx, &GET_PLAYER(gPlayState)->actor) * 0.33f);
+        } else {
+            this->actor.speedXZ = 35.0f;
+            Actor_UpdateVelocityXYZ(&this->actor);
+            for (j = 0; j <= 0; j++) {
+                Actor_UpdatePos(&this->actor);
+            }
+            this->actor.scale.x = 0.4f;
+            this->actor.scale.y = 0.4f;
+            this->actor.scale.z = 2.0f;
+            this->actor.speedXZ = 70.0f;
         }
-        this->actor.scale.x = 0.4f;
-        this->actor.scale.y = 0.4f;
-        this->actor.scale.z = 2.0f;
-        this->actor.speedXZ = 70.0f;
         this->actor.shape.rot.x = -this->actor.shape.rot.x;
 
-        func_8002D908(&this->actor);
+        Actor_UpdateVelocityXYZ(&this->actor);
         Collider_SetCylinder(play, &this->collider, &this->actor, &sLaserCylinderInit);
         Audio_PlayActorSound2(&this->actor, NA_SE_IT_SWORD_REFLECT_MG);
     } else { // Initialize the Arwing.
 
         // Change Arwing to regular enemy instead of boss with enemy randomizer and crowd control.
         // This way Arwings will be considered for "clear enemy" rooms properly.
-        if (CVarGetInteger(CVAR_ENHANCEMENT("RandomizedEnemies"), 0) || (CVarGetInteger(CVAR_REMOTE("Scheme"), GI_SCHEME_SAIL) == GI_SCHEME_CROWD_CONTROL && CVarGetInteger(CVAR_REMOTE("Enabled"), 0))) {
+        if (CVarGetInteger(CVAR_ENHANCEMENT("RandomizedEnemies"), 0) || (CVarGetInteger(CVAR_REMOTE_CROWD_CONTROL("Enabled"), 0))) {
             Actor_ChangeCategory(play, &play->actorCtx, thisx, ACTORCAT_ENEMY);
         }
 
@@ -495,7 +502,7 @@ void EnClearTag_Update(Actor* thisx, PlayState* play2) {
                 this->actor.shape.rot.x = -this->actor.shape.rot.x;
 
                 // Update the Arwing's velocity.
-                func_8002D908(&this->actor);
+                Actor_UpdateVelocityXYZ(&this->actor);
                 this->actor.velocity.x += this->acceleration.x;
                 this->actor.velocity.y += this->acceleration.y;
                 this->actor.velocity.z += this->acceleration.z;
@@ -517,7 +524,7 @@ void EnClearTag_Update(Actor* thisx, PlayState* play2) {
                     this->crashingTimer--;
                 }
 
-                func_8002D7EC(&this->actor);
+                Actor_UpdatePos(&this->actor);
 
                 Actor_SetFocus(&this->actor, 0.0f);
 
@@ -562,7 +569,7 @@ void EnClearTag_Update(Actor* thisx, PlayState* play2) {
                 break;
 
             case CLEAR_TAG_STATE_LASER:
-                func_8002D7EC(&this->actor);
+                Actor_UpdatePos(&this->actor);
 
                 // Check if the laser has hit a target.
                 if (this->collider.base.atFlags & AT_HIT) {
@@ -570,12 +577,21 @@ void EnClearTag_Update(Actor* thisx, PlayState* play2) {
                 }
 
                 // Set laser collider properties.
-                this->collider.dim.radius = 23;
-                this->collider.dim.height = 25;
-                this->collider.dim.yShift = -10;
-                Collider_UpdateCylinder(&this->actor, &this->collider);
-                CollisionCheck_SetAT(play, &play->colChkCtx, &this->collider.base);
-                Actor_UpdateBgCheckInfo(play, &this->actor, 50.0f, 80.0f, 100.0f, 5);
+                if (CVarGetInteger("gHoliday.AGreenSpoon.EvilGossipStone", 0)) {
+                    this->collider.dim.radius = 10;
+                    this->collider.dim.height = 25;
+                    this->collider.dim.yShift = -10;
+                    Collider_UpdateCylinder(&this->actor, &this->collider);
+                    CollisionCheck_SetAT(play, &play->colChkCtx, &this->collider.base);
+                    Actor_UpdateBgCheckInfo(play, &this->actor, 10.0f, 10.0f, 10.0f, 5);
+                } else {
+                    this->collider.dim.radius = 23;
+                    this->collider.dim.height = 25;
+                    this->collider.dim.yShift = -10;
+                    Collider_UpdateCylinder(&this->actor, &this->collider);
+                    CollisionCheck_SetAT(play, &play->colChkCtx, &this->collider.base);
+                    Actor_UpdateBgCheckInfo(play, &this->actor, 50.0f, 80.0f, 100.0f, 5);
+                }
 
                 // Check if the laser has hit a target, timed out, or hit the ground.
                 if (this->actor.bgCheckFlags & 9 || hasAtHit || this->timers[CLEAR_TAG_TIMER_LASER_DEATH] == 0) {

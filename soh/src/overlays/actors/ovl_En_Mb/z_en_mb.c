@@ -7,6 +7,9 @@
 #include "z_en_mb.h"
 #include "objects/object_mb/object_mb.h"
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
+#include "soh/ResourceManagerHelpers.h"
+
+#include "soh/Enhancements/Holiday/Archez.h"
 
 /*
  * This actor can have three behaviors:
@@ -1467,7 +1470,7 @@ void EnMb_Update(Actor* thisx, PlayState* play) {
     EnMb_CheckColliding(this, play);
     if (thisx->colChkInfo.damageEffect != ENMB_DMGEFF_FREEZE) {
         this->actionFunc(this, play);
-        Actor_MoveForward(thisx);
+        Actor_MoveXZGravity(thisx);
         Actor_UpdateBgCheckInfo(play, thisx, 40.0f, 40.0f, 70.0f, 0x1D);
         Actor_SetFocus(thisx, thisx->scale.x * 4500.0f);
         Collider_UpdateCylinder(thisx, &this->hitbox);
@@ -1550,6 +1553,22 @@ void EnMb_PostLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3s* rot, 
     }
 }
 
+s32 EnMb_OverrideLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3f* pos, Vec3s* rot, void* thisx) {
+    EnMb* this = (EnMb*)thisx;
+
+    if (this->actor.params == ENMB_TYPE_CLUB) {
+        if (limbIndex == ENMB_LIMB_LHAND) {
+            SkipOverrideNextLimb();
+        }
+    } else {
+        if (limbIndex == ENMB_LIMB_RHAND) {
+            SkipOverrideNextLimb();
+        }
+    }
+
+    return 0;
+}
+
 void EnMb_Draw(Actor* thisx, PlayState* play) {
     static Vec3f frontShieldingTriModel0[] = {
         { 4000.0f, 7000.0f, 3500.0f },
@@ -1569,7 +1588,7 @@ void EnMb_Draw(Actor* thisx, PlayState* play) {
     EnMb* this = (EnMb*)thisx;
 
     Gfx_SetupDL_25Opa(play->state.gfxCtx);
-    SkelAnime_DrawSkeletonOpa(play, &this->skelAnime, NULL, EnMb_PostLimbDraw, thisx);
+    SkelAnime_DrawSkeletonOpa(play, &this->skelAnime, EnMb_OverrideLimbDraw, EnMb_PostLimbDraw, thisx);
 
     if (thisx->params != ENMB_TYPE_CLUB) {
         if (this->attack > ENMB_ATTACK_NONE) {

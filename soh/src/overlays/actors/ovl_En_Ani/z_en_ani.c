@@ -6,7 +6,10 @@
 
 #include "z_en_ani.h"
 #include "objects/object_ani/object_ani.h"
+#include "soh/OTRGlobals.h"
+#include "soh/ResourceManagerHelpers.h"
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
+#include "soh_assets.h"
 
 #define FLAGS (ACTOR_FLAG_TARGETABLE | ACTOR_FLAG_FRIENDLY)
 
@@ -247,7 +250,7 @@ void EnAni_Update(Actor* thisx, PlayState* play) {
 
     Collider_UpdateCylinder(&this->actor, &this->collider);
     CollisionCheck_SetOC(play, &play->colChkCtx, &this->collider.base);
-    Actor_MoveForward(&this->actor);
+    Actor_MoveXZGravity(&this->actor);
     Actor_UpdateBgCheckInfo(play, &this->actor, 0.0f, 0.0f, 0.0f, 4);
     if ((play->csCtx.state != CS_STATE_IDLE) && (play->csCtx.npcActions[0] != NULL)) {
         switch (this->unk_2AA) {
@@ -269,7 +272,7 @@ void EnAni_Update(Actor* thisx, PlayState* play) {
         }
 
         if (play->csCtx.frames == 100) {
-            func_800788CC(NA_SE_IT_EARTHQUAKE);
+            Sfx_PlaySfxCentered2(NA_SE_IT_EARTHQUAKE);
         }
     } else {
         if (SkelAnime_Update(&this->skelAnime) != 0) {
@@ -315,6 +318,21 @@ void EnAni_PostLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3s* rot,
 
     if (limbIndex == 15) {
         Matrix_MultVec3f(&sMultVec, &this->actor.focus.pos);
+    }
+
+    if (CVarGetInteger("gLetItSnow", 0)) {
+        if (limbIndex == 15) {
+            OPEN_DISPS(play->state.gfxCtx);
+            Matrix_Push();
+            Matrix_RotateZYX(1992, 0, 2656, MTXMODE_APPLY);
+            Matrix_Translate(972.973f, 40.541f, 0.0f, MTXMODE_APPLY);
+            Matrix_Scale(0.965f, 0.965f, 0.965f, MTXMODE_APPLY);
+            gDPSetEnvColor(POLY_OPA_DISP++, 255, 0, 255, 255);
+            gSPMatrix(POLY_OPA_DISP++, MATRIX_NEWMTX(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+            gSPDisplayList(POLY_OPA_DISP++, gPaperCrownGenericDL);
+            Matrix_Pop();
+            CLOSE_DISPS(play->state.gfxCtx);
+        }
     }
 }
 

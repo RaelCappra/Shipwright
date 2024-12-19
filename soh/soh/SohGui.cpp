@@ -33,15 +33,16 @@
 #include "soh/resource/type/Skeleton.h"
 #include "libultraship/libultraship.h"
 
-#ifdef ENABLE_REMOTE_CONTROL
-#include "Enhancements/crowd-control/CrowdControl.h"
-#include "Enhancements/game-interactor/GameInteractor_Sail.h"
-#endif
-
 #include "Enhancements/game-interactor/GameInteractor.h"
 #include "Enhancements/cosmetics/authenticGfxPatches.h"
 #include "Enhancements/resolution-editor/ResolutionEditor.h"
 #include "Enhancements/debugger/MessageViewer.h"
+#include "soh/Notification/Notification.h"
+#include "soh/Enhancements/Holiday/Caladius.h"
+#include "soh/Enhancements/TimeDisplay/TimeDisplay.h"
+#ifdef ENABLE_REMOTE_CONTROL
+#include "soh/Network/Anchor/Anchor.h"
+#endif
 
 bool isBetaQuestEnabled = false;
 
@@ -134,9 +135,17 @@ namespace SohGui {
     std::shared_ptr<EntranceTrackerWindow> mEntranceTrackerWindow;
     std::shared_ptr<ItemTrackerSettingsWindow> mItemTrackerSettingsWindow;
     std::shared_ptr<ItemTrackerWindow> mItemTrackerWindow;
+    std::shared_ptr<TimeSplitWindow> mTimeSplitWindow;
+    std::shared_ptr<PlandomizerWindow> mPlandomizerWindow;
     std::shared_ptr<RandomizerSettingsWindow> mRandomizerSettingsWindow;
     std::shared_ptr<AdvancedResolutionSettings::AdvancedResolutionSettingsWindow> mAdvancedResolutionSettingsWindow;
     std::shared_ptr<SohModalWindow> mModalWindow;
+    std::shared_ptr<Notification::Window> mNotificationWindow;
+    std::shared_ptr<CaladiusWindow> mCaladiusWindow;
+    std::shared_ptr<TimeDisplayWindow> mTimeDisplayWindow;
+#ifdef ENABLE_REMOTE_CONTROL    
+    std::shared_ptr<AnchorRoomWindow> mAnchorRoomWindow;
+#endif
 
     void SetupGuiElements() {
         auto gui = Ship::Context::GetInstance()->GetWindow()->GetGui();
@@ -146,9 +155,9 @@ namespace SohGui {
 
         if (gui->GetMenuBar() && !gui->GetMenuBar()->IsVisible()) {
 #if defined(__SWITCH__) || defined(__WIIU__)
-            gui->GetGameOverlay()->TextDrawNotification(30.0f, true, "Press - to access enhancements menu");
+            Notification::Emit({ .message = "Press - to access enhancements menu", .remainingTime = 10.0f });
 #else
-            gui->GetGameOverlay()->TextDrawNotification(30.0f, true, "Press F1 to access enhancements menu");
+            Notification::Emit({ .message = "Press F1 to access enhancements menu", .remainingTime = 10.0f });
 #endif
         }
 
@@ -210,17 +219,34 @@ namespace SohGui {
         gui->AddGuiWindow(mItemTrackerSettingsWindow);
         mRandomizerSettingsWindow = std::make_shared<RandomizerSettingsWindow>(CVAR_WINDOW("RandomizerSettings"), "Randomizer Settings", ImVec2(920, 600));
         gui->AddGuiWindow(mRandomizerSettingsWindow);
+        mTimeSplitWindow = std::make_shared<TimeSplitWindow>(CVAR_WINDOW("TimeSplitEnabled"), "Time Splits", ImVec2(450, 660));
+        gui->AddGuiWindow(mTimeSplitWindow);
+        mPlandomizerWindow = std::make_shared<PlandomizerWindow>(CVAR_WINDOW("PlandomizerWindow"), "Plandomizer Editor", ImVec2(850, 760));
+        gui->AddGuiWindow(mPlandomizerWindow);
         mAdvancedResolutionSettingsWindow = std::make_shared<AdvancedResolutionSettings::AdvancedResolutionSettingsWindow>(CVAR_WINDOW("AdvancedResolutionEditor"), "Advanced Resolution Settings", ImVec2(497, 599));
         gui->AddGuiWindow(mAdvancedResolutionSettingsWindow);
         mModalWindow = std::make_shared<SohModalWindow>(CVAR_WINDOW("ModalWindow"), "Modal Window");
         gui->AddGuiWindow(mModalWindow);
         mModalWindow->Show();
+        mNotificationWindow = std::make_shared<Notification::Window>(CVAR_WINDOW("Notifications"), "Notifications Window");
+        gui->AddGuiWindow(mNotificationWindow);
+        mNotificationWindow->Show();
+        mCaladiusWindow = std::make_shared<CaladiusWindow>(CVAR_WINDOW("Holiday Cal"), "Holiday Cal");
+        gui->AddGuiWindow(mCaladiusWindow);
+        mCaladiusWindow->Show();
+        mTimeDisplayWindow = std::make_shared<TimeDisplayWindow>(CVAR_WINDOW("TimeDisplayEnabled"), "Additional Timers");
+        gui->AddGuiWindow(mTimeDisplayWindow);
+#ifdef ENABLE_REMOTE_CONTROL
+        mAnchorRoomWindow = std::make_shared<AnchorRoomWindow>(CVAR_WINDOW("AnchorRoom"), "Anchor Room");
+        gui->AddGuiWindow(mAnchorRoomWindow);
+#endif
     }
 
     void Destroy() {
         auto gui = Ship::Context::GetInstance()->GetWindow()->GetGui();
         gui->RemoveAllGuiWindows();
         
+        mNotificationWindow = nullptr;
         mModalWindow = nullptr;
         mAdvancedResolutionSettingsWindow = nullptr;
         mRandomizerSettingsWindow = nullptr;
@@ -247,6 +273,13 @@ namespace SohGui {
         mSohMenuBar = nullptr;
         mInputViewer = nullptr;
         mInputViewerSettings = nullptr;
+        mTimeSplitWindow = nullptr;
+        mCaladiusWindow = nullptr;
+        mPlandomizerWindow = nullptr;
+        mTimeDisplayWindow = nullptr;
+#ifdef ENABLE_REMOTE_CONTROL
+        mAnchorRoomWindow = nullptr;
+#endif
     }
 
     void RegisterPopup(std::string title, std::string message, std::string button1, std::string button2, std::function<void()> button1callback, std::function<void()> button2callback) {

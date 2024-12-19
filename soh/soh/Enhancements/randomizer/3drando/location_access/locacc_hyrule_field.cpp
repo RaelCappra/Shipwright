@@ -68,6 +68,8 @@ void RegionTable_Init_HyruleField() {
                   LOCATION(RC_HF_GS_COW_GROTTO,           logic->HasFireSource() && logic->HookshotOrBoomerang()),
                   LOCATION(RC_HF_COW_GROTTO_COW,          logic->HasFireSource() && logic->CanUse(RG_EPONAS_SONG)),
                   LOCATION(RC_HF_COW_GROTTO_GOSSIP_STONE, logic->HasFireSource()),
+                  LOCATION(RC_HF_COW_GROTTO_POT_1,        logic->HasFireSource() && logic->CanBreakPots()),
+                  LOCATION(RC_HF_COW_GROTTO_POT_2,        logic->HasFireSource() && logic->CanBreakPots()),
                 }, {
                   //Exits
                   Entrance(RR_HYRULE_FIELD, {[]{return true;}}),
@@ -120,11 +122,11 @@ void RegionTable_Init_HyruleField() {
                 }, {
                   //Locations
                   LOCATION(RC_LH_UNDERWATER_ITEM,        logic->IsChild && logic->HasItem(RG_SILVER_SCALE)),
-                  LOCATION(RC_LH_SUN,                    logic->IsAdult && logic->WaterTempleClear && logic->CanUse(RG_FAIRY_BOW)),
+                  LOCATION(RC_LH_SUN,                    logic->IsAdult && ((logic->WaterTempleClear && logic->HasItem(RG_BRONZE_SCALE)) || logic->CanUse(RG_DISTANT_SCARECROW)) && logic->CanUse(RG_FAIRY_BOW)),
                   LOCATION(RC_LH_FREESTANDING_POH,       logic->IsAdult && (logic->CanUse(RG_SCARECROW) || CanPlantBean(RR_LAKE_HYLIA))),
-                  LOCATION(RC_LH_GS_BEAN_PATCH,          logic->CanSpawnSoilSkull() && logic->CanAttack()),
-                  LOCATION(RC_LH_GS_LAB_WALL,            logic->IsChild && (logic->HookshotOrBoomerang() || (ctx->GetTrickOption(RT_LH_LAB_WALL_GS) && logic->CanJumpslashExceptHammer())) && logic->AtNight && logic->CanGetNightTimeGS()),
-                  LOCATION(RC_LH_GS_SMALL_ISLAND,        logic->IsChild && logic->CanAttack() && logic->AtNight && logic->CanGetNightTimeGS()),
+                  LOCATION(RC_LH_GS_BEAN_PATCH,          logic->CanSpawnSoilSkull() && logic->CanGetEnemyDrop(RE_GOLD_SKULLTULA)),
+                  LOCATION(RC_LH_GS_LAB_WALL,            logic->IsChild && (logic->CanGetEnemyDrop(RE_GOLD_SKULLTULA, ED_BOOMERANG) || (ctx->GetTrickOption(RT_LH_LAB_WALL_GS) && logic->CanJumpslashExceptHammer())) && logic->AtNight && logic->CanGetNightTimeGS()),
+                  LOCATION(RC_LH_GS_SMALL_ISLAND,        logic->IsChild && logic->CanGetEnemyDrop(RE_GOLD_SKULLTULA) && logic->AtNight && logic->CanGetNightTimeGS() && logic->HasItem(RG_BRONZE_SCALE)),
                   LOCATION(RC_LH_GS_TREE,                logic->IsAdult && logic->CanUse(RG_LONGSHOT) && logic->AtNight && logic->CanGetNightTimeGS()),
                   LOCATION(RC_LH_LAB_GOSSIP_STONE,       true),
                   LOCATION(RC_LH_SOUTHEAST_GOSSIP_STONE, true),
@@ -134,7 +136,7 @@ void RegionTable_Init_HyruleField() {
                   Entrance(RR_HYRULE_FIELD,          {[]{return true;}}),
                   Entrance(RR_ZORAS_DOMAIN,          {[]{return logic->IsChild && (logic->HasItem(RG_SILVER_SCALE) || logic->CanUse(RG_IRON_BOOTS));}}),
                   Entrance(RR_LH_OWL_FLIGHT,         {[]{return logic->IsChild;}}),
-                  Entrance(RR_LH_FISHING_ISLAND,     {[]{return logic->IsChild || logic->CanUse(RG_SCARECROW) || CanPlantBean(RR_LAKE_HYLIA) || logic->WaterTempleClear;}}),
+                  Entrance(RR_LH_FISHING_ISLAND,     {[]{return ((logic->IsChild || logic->WaterTempleClear) && logic->HasItem(RG_BRONZE_SCALE)) || (logic->IsAdult && (logic->CanUse(RG_SCARECROW) || CanPlantBean(RR_LAKE_HYLIA)));}}),
                   Entrance(RR_LH_LAB,                {[]{return true;}}),
                   Entrance(RR_WATER_TEMPLE_ENTRYWAY, {[]{return logic->CanUse(RG_HOOKSHOT) && ((logic->CanUse(RG_IRON_BOOTS) || (ctx->GetTrickOption(RT_LH_WATER_HOOKSHOT) && logic->HasItem(RG_GOLDEN_SCALE))) || (logic->IsAdult && logic->CanUse(RG_LONGSHOT) && logic->HasItem(RG_GOLDEN_SCALE)));}}),
                   Entrance(RR_LH_GROTTO,             {[]{return true;}}),
@@ -142,8 +144,8 @@ void RegionTable_Init_HyruleField() {
 
   areaTable[RR_LH_FISHING_ISLAND] = Region("LH Fishing Island", "Lake Hylia", {RA_LAKE_HYLIA}, DAY_NIGHT_CYCLE, {}, {}, {
                   //Exits
-                  Entrance(RR_LAKE_HYLIA,      {[]{return true;}}),
-                  Entrance(RR_LH_FISHING_HOLE, {[]{return true;}}),
+                  Entrance(RR_LAKE_HYLIA,      {[]{return logic->HasItem(RG_BRONZE_SCALE);}}),
+                  Entrance(RR_LH_FISHING_POND, {[]{return true;}}),
   });
 
   areaTable[RR_LH_OWL_FLIGHT] = Region("LH Owl Flight", "Lake Hylia", {RA_LAKE_HYLIA}, NO_DAY_NIGHT_CYCLE, {}, {}, {
@@ -162,7 +164,7 @@ void RegionTable_Init_HyruleField() {
   });
 
   // TODO: should some of these helpers be done via events instead?
-  areaTable[RR_LH_FISHING_HOLE] = Region("LH Fishing Hole", "LH Fishing Hole", {}, DAY_NIGHT_CYCLE, {}, {
+  areaTable[RR_LH_FISHING_POND] = Region("LH Fishing Hole", "LH Fishing Hole", {}, DAY_NIGHT_CYCLE, {}, {
                   //Locations
                   LOCATION(RC_LH_CHILD_FISHING,  logic->CanUse(RG_FISHING_POLE) && logic->IsChild),
                   LOCATION(RC_LH_CHILD_FISH_1,   logic->CanUse(RG_FISHING_POLE) && (logic->IsChild || ctx->GetOption(RSK_FISHSANITY_AGE_SPLIT))),
@@ -228,6 +230,13 @@ void RegionTable_Init_HyruleField() {
                   LOCATION(RC_LLR_GS_RAIN_SHED,    logic->IsChild && logic->AtNight && logic->CanGetNightTimeGS()),
                   LOCATION(RC_LLR_GS_HOUSE_WINDOW, logic->IsChild && logic->HookshotOrBoomerang() && logic->AtNight && logic->CanGetNightTimeGS()),
                   LOCATION(RC_LLR_GS_BACK_WALL,    logic->IsChild && logic->HookshotOrBoomerang() && logic->AtNight && logic->CanGetNightTimeGS()),
+                  LOCATION(RC_LLR_FRONT_POT_1,     logic->IsChild && logic->CanBreakPots()),
+                  LOCATION(RC_LLR_FRONT_POT_2,     logic->IsChild && logic->CanBreakPots()),
+                  LOCATION(RC_LLR_FRONT_POT_3,     logic->IsChild && logic->CanBreakPots()),
+                  LOCATION(RC_LLR_FRONT_POT_4,     logic->IsChild && logic->CanBreakPots()),
+                  LOCATION(RC_LLR_RAIN_SHED_POT_1, logic->IsChild && logic->CanBreakPots()),
+                  LOCATION(RC_LLR_RAIN_SHED_POT_2, logic->IsChild && logic->CanBreakPots()),
+                  LOCATION(RC_LLR_RAIN_SHED_POT_3, logic->IsChild && logic->CanBreakPots()),
                 }, {
                   //Exits
                   Entrance(RR_HYRULE_FIELD,     {[]{return true;}}),
@@ -240,6 +249,9 @@ void RegionTable_Init_HyruleField() {
   areaTable[RR_LLR_TALONS_HOUSE] = Region("LLR Talons House", "LLR Talons House", {}, NO_DAY_NIGHT_CYCLE, {}, {
                   //Locations
                   LOCATION(RC_LLR_TALONS_CHICKENS, logic->HasItem(RG_CHILD_WALLET) && logic->IsChild && logic->AtDay && logic->HasItem(RG_ZELDAS_LETTER)),
+                  LOCATION(RC_LLR_TALONS_HOUSE_POT_1, logic->CanBreakPots()),
+                  LOCATION(RC_LLR_TALONS_HOUSE_POT_2, logic->CanBreakPots()),
+                  LOCATION(RC_LLR_TALONS_HOUSE_POT_3, logic->CanBreakPots()),
                 }, {
                   //Exits
                   Entrance(RR_LON_LON_RANCH, {[]{return true;}}),

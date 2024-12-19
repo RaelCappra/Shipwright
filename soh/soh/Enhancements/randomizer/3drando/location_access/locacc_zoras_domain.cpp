@@ -43,7 +43,12 @@ void RegionTable_Init_ZorasDomain() {
                   Entrance(RR_ZR_FAIRY_GROTTO,     {[]{return Here(RR_ZORAS_RIVER, []{return logic->BlastOrSmash();});}}),
                   Entrance(RR_THE_LOST_WOODS,      {[]{return logic->HasItem(RG_SILVER_SCALE) || logic->CanUse(RG_IRON_BOOTS);}}),
                   Entrance(RR_ZR_STORMS_GROTTO,    {[]{return logic->CanOpenStormsGrotto();}}),
-                  Entrance(RR_ZR_BEHIND_WATERFALL, {[]{return logic->CanUse(RG_ZELDAS_LULLABY) || (logic->IsChild && ctx->GetTrickOption(RT_ZR_CUCCO)) || (logic->IsAdult && logic->CanUse(RG_HOVER_BOOTS) && ctx->GetTrickOption(RT_ZR_HOVERS));}}),
+                  Entrance(RR_ZR_BEHIND_WATERFALL, {[]{
+                       return ctx->GetOption(RSK_SLEEPING_WATERFALL).Is(RO_WATERFALL_OPEN) ||
+                              Here(RR_ZORAS_RIVER, []{return logic->CanUse(RG_ZELDAS_LULLABY);}) ||
+                              (logic->IsChild && ctx->GetTrickOption(RT_ZR_CUCCO)) ||
+                              (logic->IsAdult && logic->CanUse(RG_HOVER_BOOTS) && ctx->GetTrickOption(RT_ZR_HOVERS));
+                  }}),
   });
 
   areaTable[RR_ZR_BEHIND_WATERFALL] = Region("ZR Behind Waterfall", "Zora River", {RA_ZORAS_RIVER}, DAY_NIGHT_CYCLE, {}, {}, {
@@ -105,6 +110,11 @@ void RegionTable_Init_ZorasDomain() {
                   LOCATION(RC_ZD_GOSSIP_STONE,                        true),
                   LOCATION(RC_ZD_IN_FRONT_OF_KING_ZORA_BEEHIVE_LEFT,  logic->CanBreakUpperBeehives()),
                   LOCATION(RC_ZD_IN_FRONT_OF_KING_ZORA_BEEHIVE_RIGHT, logic->CanBreakUpperBeehives()),
+                  LOCATION(RC_ZD_NEAR_SHOP_POT_1,                     logic->CanBreakPots()),
+                  LOCATION(RC_ZD_NEAR_SHOP_POT_2,                     logic->CanBreakPots()),
+                  LOCATION(RC_ZD_NEAR_SHOP_POT_3,                     logic->CanBreakPots()),
+                  LOCATION(RC_ZD_NEAR_SHOP_POT_4,                     logic->CanBreakPots()),
+                  LOCATION(RC_ZD_NEAR_SHOP_POT_5,                     logic->CanBreakPots()),
                 }, {
                   //Exits
                   Entrance(RR_ZR_BEHIND_WATERFALL, {[]{return true;}}),
@@ -157,8 +167,15 @@ void RegionTable_Init_ZorasDomain() {
                   LOCATION(RC_ZF_GS_TREE,                  logic->IsChild),
                   LOCATION(RC_ZF_GS_ABOVE_THE_LOG,         logic->IsChild && logic->HookshotOrBoomerang() && logic->AtNight && logic->CanGetNightTimeGS()),
                   LOCATION(RC_ZF_GS_HIDDEN_CAVE,           logic->CanUse(RG_SILVER_GAUNTLETS) && logic->BlastOrSmash() && logic->HookshotOrBoomerang() && logic->IsAdult && logic->AtNight && logic->CanGetNightTimeGS()),
+                  LOCATION(RC_ZF_HIDDEN_CAVE_POT_1,        logic->CanUse(RG_SILVER_GAUNTLETS) && logic->IsAdult && logic->BlastOrSmash() && logic->CanBreakPots()),
+                  LOCATION(RC_ZF_HIDDEN_CAVE_POT_2,        logic->CanUse(RG_SILVER_GAUNTLETS) && logic->IsAdult && logic->BlastOrSmash() && logic->CanBreakPots()),
+                  LOCATION(RC_ZF_HIDDEN_CAVE_POT_3,        logic->CanUse(RG_SILVER_GAUNTLETS) && logic->IsAdult && logic->BlastOrSmash() && logic->CanBreakPots()),
                   LOCATION(RC_ZF_FAIRY_GOSSIP_STONE,       true),
                   LOCATION(RC_ZF_JABU_GOSSIP_STONE,        true),
+                  LOCATION(RC_ZF_NEAR_JABU_POT_1,          logic->IsChild && logic->CanBreakPots()),
+                  LOCATION(RC_ZF_NEAR_JABU_POT_2,          logic->IsChild && logic->CanBreakPots()),
+                  LOCATION(RC_ZF_NEAR_JABU_POT_3,          logic->IsChild && logic->CanBreakPots()),
+                  LOCATION(RC_ZF_NEAR_JABU_POT_4,          logic->IsChild && logic->CanBreakPots()),
                 }, {
                   //Exits
                   Entrance(RR_ZD_BEHIND_KING_ZORA,       {[]{return true;}}),

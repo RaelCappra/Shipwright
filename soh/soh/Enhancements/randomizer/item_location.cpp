@@ -72,6 +72,26 @@ std::set<RandomizerArea> ItemLocation::GetAreas() const {
     return areas;
 }
 
+RandomizerArea ItemLocation::GetFirstArea() const {
+    if (areas.empty()){
+        assert(false);
+        return RA_NONE;
+    } else {
+        return *areas.begin();
+    }
+}
+
+RandomizerArea ItemLocation::GetRandomArea() const {
+    if (areas.empty()){
+        SPDLOG_DEBUG("Attempted to get random area of location with no areas: ");
+        SPDLOG_DEBUG(Rando::StaticData::GetLocation(rc)->GetName());
+        assert(false);
+        return RA_NONE;
+    } else {
+        return RandomElementFromSet(areas);
+    }
+}
+
 void ItemLocation::PlaceVanillaItem() {
     placedItem = StaticData::GetLocation(rc)->GetVanillaItem();
 }
@@ -110,6 +130,7 @@ bool ItemLocation::HasObtained() const {
 
 void ItemLocation::SetCheckStatus(RandomizerCheckStatus status_) {
     status = status_;
+    GameInteractor::Instance->ExecuteHooks<GameInteractor::OnRandoSetCheckStatus>(rc, status);
 }
 
 RandomizerCheckStatus ItemLocation::GetCheckStatus() {
@@ -118,6 +139,7 @@ RandomizerCheckStatus ItemLocation::GetCheckStatus() {
 
 void ItemLocation::SetIsSkipped(bool isSkipped_) {
     isSkipped = isSkipped_;
+    GameInteractor::Instance->ExecuteHooks<GameInteractor::OnRandoSetIsSkipped>(rc, isSkipped);
 }
 
 bool ItemLocation::GetIsSkipped() {
@@ -156,8 +178,8 @@ void ItemLocation::SetHidden(const bool hidden_) {
     hidden = hidden_;
 }
 
-bool ItemLocation::IsExcluded() const {
-    return excludedOption.Value<bool>();
+bool ItemLocation::IsExcluded() {
+    return excludedOption.GetContextOptionIndex();
 }
 
 Option* ItemLocation::GetExcludedOption() {
@@ -177,7 +199,7 @@ void ItemLocation::AddExcludeOption() {
     // RANDOTODO: this without string compares and loops
     bool alreadyAdded = false;
     const Location* loc = StaticData::GetLocation(rc);
-    for (const Option* location : Context::GetInstance()->GetSettings()->GetExcludeOptionsForArea(loc->GetArea())) {
+    for (Option* location : Context::GetInstance()->GetSettings()->GetExcludeOptionsForArea(loc->GetArea())) {
         if (location->GetName() == excludedOption.GetName()) {
             alreadyAdded = true;
         }

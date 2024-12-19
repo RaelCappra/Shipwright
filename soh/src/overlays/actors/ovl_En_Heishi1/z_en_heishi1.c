@@ -7,6 +7,9 @@
 #include "z_en_heishi1.h"
 #include "objects/object_sd/object_sd.h"
 #include "vt.h"
+#include "soh/ResourceManagerHelpers.h"
+
+#include "soh/Enhancements/Holiday/Archez.h"
 
 #define FLAGS ACTOR_FLAG_UPDATE_WHILE_CULLED
 
@@ -389,7 +392,7 @@ void EnHeishi1_WaitNight(EnHeishi1* this, PlayState* play) {
 
     if (this->actor.xzDistToPlayer < 100.0f) {
         Message_StartTextbox(play, 0x702D, &this->actor);
-        func_80078884(NA_SE_SY_FOUND);
+        Sfx_PlaySfxCentered(NA_SE_SY_FOUND);
         osSyncPrintf(VT_FGCOL(GREEN) "☆☆☆☆☆ 発見！ ☆☆☆☆☆ \n" VT_RST); // "Discovered!"
         Player_SetCsActionWithHaltedActors(play, &this->actor, 1);
         this->actionFunc = EnHeishi1_SetupKick;
@@ -472,7 +475,7 @@ void EnHeishi1_Update(Actor* thisx, PlayState* play) {
                                 this->linkDetected = false;
                                 // this 60 unit height check is so the player doesnt get caught when on the upper path
                                 if (fabsf(player->actor.world.pos.y - this->actor.world.pos.y) < 60.0f) {
-                                    func_80078884(NA_SE_SY_FOUND);
+                                    Sfx_PlaySfxCentered(NA_SE_SY_FOUND);
                                     // "Discovered!"
                                     osSyncPrintf(VT_FGCOL(GREEN) "☆☆☆☆☆ 発見！ ☆☆☆☆☆ \n" VT_RST);
                                     Player_SetCsActionWithHaltedActors(play, &this->actor, 1);
@@ -495,6 +498,10 @@ s32 EnHeishi1_OverrideLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3
     // turn the guards head to match the direction he is looking
     if (limbIndex == 16) {
         rot->x += (s16)this->headAngle;
+    }
+
+    if (limbIndex == 15) {
+        SkipOverrideNextLimb();
     }
 
     return false;

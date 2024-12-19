@@ -71,6 +71,12 @@ namespace SOH {
 
     void ConfigVersion3Updater::Update(Ship::Config* conf) {
         conf->EraseBlock("Controllers");
+        if (conf->GetNestedJson().contains("CVars") && conf->GetNestedJson()["CVars"].contains("gInjectItemCounts")) {
+            CVarClear("gInjectItemCounts");
+            CVarSetInteger("gEnhancements.InjectItemCounts.GoldSkulltula", 1);
+            CVarSetInteger("gEnhancements.InjectItemCounts.HeartContainer", 1);
+            CVarSetInteger("gEnhancements.InjectItemCounts.HeartPiece", 1);
+        }
         for (Migration migration : version3Migrations) {
             if (migration.action == MigrationAction::Rename) {
                 CVarCopy(migration.from.c_str(), migration.to.value().c_str());

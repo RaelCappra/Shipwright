@@ -1,6 +1,7 @@
 #include "z_en_bom_chu.h"
 #include "overlays/actors/ovl_En_Bom/z_en_bom.h"
 #include "objects/gameplay_keep/gameplay_keep.h"
+#include "soh_assets.h"
 
 #define FLAGS ACTOR_FLAG_UPDATE_WHILE_CULLED
 
@@ -197,8 +198,8 @@ void EnBomChu_UpdateFloorPoly(EnBomChu* this, CollisionPoly* floorPoly, PlayStat
 
             // A hack for preventing bombchus from sticking to ledges.
             // The visual rotation reverts the sign inversion (shape.rot.x = -world.rot.x).
-            // The better fix would be making func_8002D908 compute XYZ velocity better,
-            // or not using it and make the bombchu compute its own velocity.
+            // The better fix would be making Actor_UpdateVelocityXYZ compute XYZ velocity
+            // better, or not using it and make the bombchu compute its own velocity.
             this->actor.world.rot.x = -this->actor.world.rot.x;
         }
     }
@@ -428,7 +429,7 @@ void EnBomChu_Update(Actor* thisx, PlayState* play2) {
     }
 
     this->actionFunc(this, play);
-    func_8002D97C(&this->actor);
+    Actor_MoveXYZ(&this->actor);
 
     this->collider.elements[0].dim.worldSphere.center.x = this->actor.world.pos.x;
     this->collider.elements[0].dim.worldSphere.center.y = this->actor.world.pos.y;
@@ -528,6 +529,16 @@ void EnBomChu_Draw(Actor* thisx, PlayState* play) {
     gSPMatrix(POLY_OPA_DISP++, MATRIX_NEWMTX(play->state.gfxCtx),
               G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
     gSPDisplayList(POLY_OPA_DISP++, gBombchuDL);
+
+    if (CVarGetInteger("gLetItSnow", 0)) {
+        Matrix_Push();
+        Matrix_RotateZYX(0, -3100, 17047, MTXMODE_APPLY);
+        Matrix_Translate(445.946f, -27.027f, 608.108f, MTXMODE_APPLY);
+        Matrix_Scale(0.541f, 0.541f, 0.541f, MTXMODE_APPLY);
+        gSPMatrix(POLY_OPA_DISP++, MATRIX_NEWMTX(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+        gSPDisplayList(POLY_OPA_DISP++, gSantaHatGenericDL);
+        Matrix_Pop();
+    }
 
     CLOSE_DISPS(play->state.gfxCtx);
 }

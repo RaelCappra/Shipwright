@@ -162,7 +162,7 @@ void EnBom_Move(EnBom* this, PlayState* play) {
             this->actor.world.rot.y = ((this->actor.wallYaw - this->actor.world.rot.y) + this->actor.wallYaw) - 0x8000;
         }
         Audio_PlayActorSound2(&this->actor, NA_SE_EV_BOMB_BOUND);
-        Actor_MoveForward(&this->actor);
+        Actor_MoveXZGravity(&this->actor);
         this->actor.speedXZ *= 0.7f;
         this->actor.bgCheckFlags &= ~8;
     }
@@ -176,11 +176,11 @@ void EnBom_Move(EnBom* this, PlayState* play) {
             this->actor.velocity.y *= -0.3f;
             this->actor.bgCheckFlags &= ~2;
         } else if (this->timer >= 4) {
-            func_8002F580(&this->actor, play);
+            Actor_OfferCarry(&this->actor, play);
         }
     }
 
-    Actor_MoveForward(&this->actor);
+    Actor_MoveXZGravity(&this->actor);
 }
 
 void EnBom_WaitForRelease(EnBom* this, PlayState* play) {
@@ -287,7 +287,12 @@ void EnBom_Update(Actor* thisx, PlayState* play2) {
 
             // spawn spark effect on even frames
             effPos = thisx->world.pos;
-            effPos.y += 17.0f;
+            if (CVarGetInteger("gHoliday.lilDavid.BombArrows.Active", 0) &&
+                thisx->parent && thisx->parent->id == ACTOR_EN_ARROW) {
+                effPos.y += 5.0f;
+            } else {
+                effPos.y += 17.0f;
+            }
             if ((play->gameplayFrames % 2) == 0) {
                 EffectSsGSpk_SpawnFuse(play, thisx, &effPos, &effVelocity, &effAccel);
             }

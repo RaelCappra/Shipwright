@@ -6,6 +6,8 @@
 
 #include "z_en_daiku_kakariko.h"
 #include "objects/object_daiku/object_daiku.h"
+#include "soh_assets.h"
+#include "soh/ResourceManagerHelpers.h"
 
 #define FLAGS (ACTOR_FLAG_TARGETABLE | ACTOR_FLAG_FRIENDLY | ACTOR_FLAG_UPDATE_WHILE_CULLED)
 
@@ -432,7 +434,7 @@ void EnDaikuKakariko_Run(EnDaikuKakariko* this, PlayState* play) {
         Math_SmoothStepToF(&this->actor.speedXZ, this->runSpeed, 0.8f, runDist, 0.0f);
     }
 
-    Actor_MoveForward(&this->actor);
+    Actor_MoveXZGravity(&this->actor);
 
     if (this->flags & 0x40) {
         Actor_UpdateBgCheckInfo(play, &this->actor, 0.0f, 0.0f, 0.0f, 4);
@@ -537,6 +539,51 @@ void EnDaikuKakariko_PostLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, V
     if (limbIndex == 15) {
         Matrix_MultVec3f(&unkVec, &this->actor.focus.pos);
         gSPDisplayList(POLY_OPA_DISP++, carpenterHeadDLists[this->actor.params & 3]);
+    }
+
+    if (CVarGetInteger("gLetItSnow", 0)) {
+        if (limbIndex == 15) {
+            Matrix_Push();
+            switch(this->actor.params) {
+                case 259: {
+                    Matrix_RotateZYX(4649, 0, -3543, MTXMODE_APPLY);
+                    Matrix_Translate(824.324f, 324.324f, -175.676f, MTXMODE_APPLY);
+                    Matrix_Scale(0.966f, 0.966f, 0.966f, MTXMODE_APPLY);
+                    gDPSetEnvColor(POLY_OPA_DISP++, 255, 0, 255, 255);
+                    gSPMatrix(POLY_OPA_DISP++, MATRIX_NEWMTX(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+                    gSPDisplayList(POLY_OPA_DISP++, gPaperCrownGenericDL);
+                    break;
+                }
+                case 513: {
+                    Matrix_RotateZYX(0, 0, -6200, MTXMODE_APPLY);
+                    Matrix_Translate(770.27f, 567.568f, 0.0f, MTXMODE_APPLY);
+                    Matrix_Scale(0.899f, 0.899f, 0.899f, MTXMODE_APPLY);
+                    gDPSetEnvColor(POLY_OPA_DISP++, 0, 255, 255, 255);
+                    gSPMatrix(POLY_OPA_DISP++, MATRIX_NEWMTX(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+                    gSPDisplayList(POLY_OPA_DISP++, gPaperCrownGenericDL);
+                    break;
+                }
+                case 2: {
+                    Matrix_RotateZYX(0, 0, 7970, MTXMODE_APPLY);
+                    Matrix_Translate(1270.27f, -878.378f, 0.0f, MTXMODE_APPLY);
+                    Matrix_Scale(1.0f, 1.0f, 1.0f, MTXMODE_APPLY);
+                    gDPSetEnvColor(POLY_OPA_DISP++, 0, 255, 0, 255);
+                    gSPMatrix(POLY_OPA_DISP++, MATRIX_NEWMTX(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+                    gSPDisplayList(POLY_OPA_DISP++, gPaperCrownGenericDL);
+                    break;
+                }
+                case -256:
+                default: {
+                    Matrix_RotateZYX(0, 0, -8635, MTXMODE_APPLY);
+                    Matrix_Translate(675.676f, 716.216f, 0.0f, MTXMODE_APPLY);
+                    Matrix_Scale(0.899f, 0.899f, 0.899f, MTXMODE_APPLY);
+                    gDPSetEnvColor(POLY_OPA_DISP++, 255, 0, 0, 255);
+                    gSPMatrix(POLY_OPA_DISP++, MATRIX_NEWMTX(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+                    gSPDisplayList(POLY_OPA_DISP++, gPaperCrownGenericDL);
+                }
+            }
+            Matrix_Pop();
+        }
     }
 
     CLOSE_DISPS(play->state.gfxCtx);

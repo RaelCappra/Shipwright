@@ -26,7 +26,8 @@ typedef enum {
     MF_FORMATTED,
     MF_CLEAN,
     MF_RAW,
-    MF_AUTO_FORMAT
+    MF_AUTO_FORMAT,
+    MF_ENCODE,
 } MessageFormat;
 
 /**
@@ -69,6 +70,9 @@ class CustomMessage {
     void SetTextBoxType(TextBoxType boxType);
     const TextBoxPosition& GetTextBoxPosition() const;
 
+    // To only be used with OnOpenText hook
+    void LoadIntoFont();
+
     CustomMessage operator+(const CustomMessage& right) const;
     CustomMessage operator+(const std::string& right) const;
     void operator+=(const std::string& right);
@@ -107,6 +111,11 @@ class CustomMessage {
      * with the control codes used to display them in OoT's textboxes.
      */
     void ReplaceSpecialCharacters(std::string& str) const;
+
+    /**
+     * @brief Replaces hashtags with stored colors.
+     */
+    void EncodeColors(std::string& str) const;
 
     /**
      * @brief Replaces our color variable strings with the OoT control codes.
@@ -161,11 +170,22 @@ class CustomMessage {
     void Clean();
 
     /**
+     * @brief Replaces variable characters with fixed ones to store the sata in string form
+     */
+    void Encode();
+
+    /**
      * @brief Replaces various symbols with the control codes necessary to
      * display them in OoT's textboxes for a single string
      * . i.e. special characters, colors, newlines, wait for input, etc.
      */
     void FormatString(std::string& str) const;
+    
+    /**
+     * @brief finds NEWLINEs in a string, while filtering
+     * /x01's that are used as opperands
+     */
+    size_t FindNEWLINE(std::string& str, size_t lastNewline) const;
     
     /**
      * @brief formats the string specifically to fit in OoT's 
@@ -280,7 +300,7 @@ class MessageNotFoundException : public std::exception {
         : messageTableId(std::move(messageTableId_)), textId(textId_) {
     }
     virtual const char* what() const noexcept {
-        char* message;
+        static char message[500];
         sprintf(message, "Message from table %s with textId %u was not found", messageTableId.c_str(), textId);
         return message;
     }

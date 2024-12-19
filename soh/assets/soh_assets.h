@@ -8,6 +8,27 @@
 // On Mac, not using aligned resource names was causing crashes in release builds
 
 // objects
+#define dgLinkAdultHatTrimDL "__OTR__objects/object_festivehats/gLinkAdultHatTrimDL"
+static const ALIGN_ASSET(2) char gLinkAdultHatTrimDL[] = dgLinkAdultHatTrimDL;
+
+#define dgLinkAdultPompomDL "__OTR__objects/object_festivehats/gLinkAdultPompomDL"
+static const ALIGN_ASSET(2) char gLinkAdultPompomDL[] = dgLinkAdultPompomDL;
+
+#define dgLinkChildHatTrimDL "__OTR__objects/object_festivehats/gLinkChildHatTrimDL"
+static const ALIGN_ASSET(2) char gLinkChildHatTrimDL[] = dgLinkChildHatTrimDL;
+
+#define dgPaperCrownGenericDL "__OTR__objects/object_festivehats/gPaperCrownGenericDL"
+static const ALIGN_ASSET(2) char gPaperCrownGenericDL[] = dgPaperCrownGenericDL;
+
+#define dgSantaHatGenericDL "__OTR__objects/object_festivehats/gSantaHatGenericDL"
+static const ALIGN_ASSET(2) char gSantaHatGenericDL[] = dgSantaHatGenericDL;
+
+#define dgHorseAntlersDL "__OTR__objects/object_festivehats/gHorseAntlersDL"
+static const ALIGN_ASSET(2) char gHorseAntlersDL[] = dgHorseAntlersDL;
+
+#define dgEponaRudolphHatDL "__OTR__objects/object_festivehats/gEponaRudolphHatDL"
+static const ALIGN_ASSET(2) char gEponaRudolphHatDL[] = dgEponaRudolphHatDL;
+
 #define dgChristmasGreenTreasureChestFrontTex "__OTR__objects/object_box/gChristmasGreenTreasureChestFrontTex"
 static const ALIGN_ASSET(2) char gChristmasGreenTreasureChestFrontTex[] = dgChristmasGreenTreasureChestFrontTex;
 
@@ -37,6 +58,9 @@ static const ALIGN_ASSET(2) char gSkullTreasureChestFrontTex[] = dgSkullTreasure
 
 #define dgSkullTreasureChestSideAndTopTex "__OTR__objects/object_box/gSkullTreasureChestSideAndTopTex"
 static const ALIGN_ASSET(2) char gSkullTreasureChestSideAndTopTex[] = dgSkullTreasureChestSideAndTopTex;
+
+#define dgSnowballDL "__OTR__objects/custom_snowball/snowball"
+static const ALIGN_ASSET(2) char gSnowballDL[] = dgSnowballDL;
 
 #define dgTitleRandomizerSubtitleTex "__OTR__objects/object_mag/gTitleRandomizerSubtitleTex"
 static const ALIGN_ASSET(2) char gTitleRandomizerSubtitleTex[] = dgTitleRandomizerSubtitleTex;
@@ -74,11 +98,65 @@ static const ALIGN_ASSET(2) char gTriforcePieceCompletedDL[] = dgTriforcePieceCo
 #define dgBossSoulSkullDL "__OTR__objects/object_boss_soul/gGIBossSoulSkullDL"
 static const ALIGN_ASSET(2) char gBossSoulSkullDL[] = dgBossSoulSkullDL;
 
+#define dgRandoPotDL "__OTR__objects/gameplay_dangeon_keep/gRandoPotDL"
+static const ALIGN_ASSET(2) char gRandoPotDL[] = dgRandoPotDL;
+
 #define dgFishingPoleGiDL "__OTR__objects/object_gi_fishing_pole/gFishingPoleGiDL"
 static const ALIGN_ASSET(2) char gFishingPoleGiDL[] = dgFishingPoleGiDL;
 
 #define dgMysteryItemDL "__OTR__objects/object_mystery_item/gMysteryItemDL"
 static const ALIGN_ASSET(2) char gMysteryItemDL[] = dgMysteryItemDL;
+
+#define dgXmasTreeDL "__OTR__objects/object_xmas_tree/gXmasTreeDL"
+static const ALIGN_ASSET(2) char gXmasTreeDL[] = dgXmasTreeDL;
+
+#define dgXmasDecor10DL "__OTR__objects/object_xmas_tree/gXmasDecor10DL"
+static const ALIGN_ASSET(2) char gXmasDecor10DL[] = dgXmasDecor10DL;
+
+#define dgXmasDecor20DL "__OTR__objects/object_xmas_tree/gXmasDecor20DL"
+static const ALIGN_ASSET(2) char gXmasDecor20DL[] = dgXmasDecor20DL;
+
+#define dgXmasDecor30DL "__OTR__objects/object_xmas_tree/gXmasDecor30DL"
+static const ALIGN_ASSET(2) char gXmasDecor30DL[] = dgXmasDecor30DL;
+
+#define dgXmasDecor40DL "__OTR__objects/object_xmas_tree/gXmasDecor40DL"
+static const ALIGN_ASSET(2) char gXmasDecor40DL[] = dgXmasDecor40DL;
+
+#define dgXmasDecor50DL "__OTR__objects/object_xmas_tree/gXmasDecor50DL"
+static const ALIGN_ASSET(2) char gXmasDecor50DL[] = dgXmasDecor50DL;
+
+#define dgXmasDecor60DL "__OTR__objects/object_xmas_tree/gXmasDecor60DL"
+static const ALIGN_ASSET(2) char gXmasDecor60DL[] = dgXmasDecor60DL;
+
+#define dgXmasDecor70DL "__OTR__objects/object_xmas_tree/gXmasDecor70DL"
+static const ALIGN_ASSET(2) char gXmasDecor70DL[] = dgXmasDecor70DL;
+
+#define dgXmasDecor80DL "__OTR__objects/object_xmas_tree/gXmasDecor80DL"
+static const ALIGN_ASSET(2) char gXmasDecor80DL[] = dgXmasDecor80DL;
+
+#define dgXmasDecor90DL "__OTR__objects/object_xmas_tree/gXmasDecor90DL"
+static const ALIGN_ASSET(2) char gXmasDecor90DL[] = dgXmasDecor90DL;
+
+#define dgXmasDecor100DL "__OTR__objects/object_xmas_tree/gXmasDecor100DL"
+static const ALIGN_ASSET(2) char gXmasDecor100DL[] = dgXmasDecor100DL;
+
+#define dgXmasStarDL "__OTR__objects/object_xmas_tree/gXmasStarDL"
+static const ALIGN_ASSET(2) char gXmasStarDL[] = dgXmasStarDL;
+
+#define dgPenguinDL "__OTR__objects/object_penguin/object_penguin_DL"
+static const ALIGN_ASSET(2) char gPenguinDL[] = dgPenguinDL;
+
+#define dgKakarikoDecorDL "__OTR__objects/object_kakariko_decor/gKakarikoDecorDL"
+static const ALIGN_ASSET(2) char gKakarikoDecorDL[] = dgKakarikoDecorDL;
+
+#define dgTempleOfTimeDecorDL "__OTR__objects/object_temple_of_time_decor/gTempleOfTimeDecorDL"
+static const ALIGN_ASSET(2) char gTempleOfTimeDecorDL[] = dgTempleOfTimeDecorDL;
+
+#define dgKakarikoChildDecorDL "__OTR__objects/object_kakariko_decor/gKakarikoChildDecorDL"
+static const ALIGN_ASSET(2) char gKakarikoChildDecorDL[] = dgKakarikoChildDecorDL;
+
+#define dgKakarikoAdultDecorDL "__OTR__objects/object_kakariko_decor/gKakarikoAdultDecorDL"
+static const ALIGN_ASSET(2) char gKakarikoAdultDecorDL[] = dgKakarikoAdultDecorDL;
 
 // overlays
 #define dgOptionsDividerChangeLangVtx "__OTR__overlays/ovl_file_choose/gOptionsDividerChangeLangVtx"
@@ -97,8 +175,23 @@ static const ALIGN_ASSET(2) char gArrowDownTex[] = dgArrowDown;
 #define dgTriforcePiece "__OTR__textures/parameter_static/gTriforcePiece"
 static const ALIGN_ASSET(2) char gTriforcePieceTex[] = dgTriforcePiece;
 
+#define dgWTriforcePiece "__OTR__textures/parameter_static/gWTriforcePiece"
+static const ALIGN_ASSET(2) char gWTriforcePieceTex[] = dgWTriforcePiece;
+
+#define dgSplitEntrance "__OTR__textures/parameter_static/gSplitEntrance"
+static const ALIGN_ASSET(2) char gSplitEntranceTex[] = dgSplitEntrance;
+
 #define dgBossSoul "__OTR__textures/parameter_static/gBossSoul"
 static const ALIGN_ASSET(2) char gBossSoulTex[] = dgBossSoul;
+
+#define dgMoonIcon "__OTR__textures/parameter_static/gMoon"
+static const ALIGN_ASSET(2) char gMoonIconTex[] = dgMoonIcon;
+
+#define dgSunIcon "__OTR__textures/parameter_static/gSun"
+static const ALIGN_ASSET(2) char gSunIconTex[] = dgSunIcon;
+
+#define dgNaviIcon "__OTR__textures/parameter_static/gNavi"
+static const ALIGN_ASSET(2) char gNaviIconTex[] = dgNaviIcon;
 
 #define dgFileSelMQButtonTex "__OTR__textures/title_static/gFileSelMQButtonTex"
 static const ALIGN_ASSET(2) char gFileSelMQButtonTex[] = dgFileSelMQButtonTex;

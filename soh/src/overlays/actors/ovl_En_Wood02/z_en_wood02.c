@@ -6,6 +6,7 @@
 
 #include "z_en_wood02.h"
 #include "objects/object_wood02/object_wood02.h"
+#include "soh/Enhancements/Holiday/Fredomato.h"
 
 #define FLAGS 0
 
@@ -178,6 +179,16 @@ void EnWood02_Init(Actor* thisx, PlayState* play2) {
     s32 bgId;
     f32 floorY;
     s16 extraRot;
+
+    if (gPlayState->sceneNum == SCENE_KAKARIKO_VILLAGE && this->actor.params <= WOOD_TREE_KAKARIKO_ADULT) {
+        Actor_Kill(this);
+    }
+
+    if (gPlayState->sceneNum == SCENE_KAKARIKO_VILLAGE && this->actor.params >= 0) {
+        this->actor.world.pos.x = 754.051;
+        this->actor.world.pos.y = 80.0;
+        this->actor.world.pos.z = 1429.908;
+    }
 
     // The tree in Kakariko's day scene does not have the same params to spawn the GS
     // as the night scene, For the always spawn GS enhancement we apply the needed
@@ -358,7 +369,9 @@ void EnWood02_Update(Actor* thisx, PlayState* play2) {
             dropsSpawnPt = this->actor.world.pos;
             dropsSpawnPt.y += 200.0f;
 
-            if ((this->unk_14C >= 0) && (this->unk_14C < 0x64) && (CVarGetInteger(CVAR_ENHANCEMENT("TreesDropSticks"), 0)) && !(INV_CONTENT(ITEM_STICK) == ITEM_NONE)) {
+            if (HandleTreeBonk(&this->actor)) {
+                // no-op
+            } else if ((this->unk_14C >= 0) && (this->unk_14C < 0x64) && (CVarGetInteger(CVAR_ENHANCEMENT("TreesDropSticks"), 0)) && !(INV_CONTENT(ITEM_STICK) == ITEM_NONE)) {
                 (numDrops = (Rand_ZeroOne() * 4));
                 for (i = 0; i < numDrops; ++i) {
                     Item_DropCollectible(play, &dropsSpawnPt, ITEM00_STICK);
@@ -421,7 +434,7 @@ void EnWood02_Update(Actor* thisx, PlayState* play2) {
         this->unk_14C++;
         Math_ApproachF(&this->actor.velocity.x, 0.0f, 1.0f, 5 * 0.01f);
         Math_ApproachF(&this->actor.velocity.z, 0.0f, 1.0f, 5 * 0.01f);
-        func_8002D7EC(&this->actor);
+        Actor_UpdatePos(&this->actor);
         this->actor.shape.rot.z = Math_SinS(3000 * this->unk_14C) * 0x4000;
         this->unk_14E[0]--;
 
@@ -452,14 +465,14 @@ void EnWood02_Draw(Actor* thisx, PlayState* play) {
 
     if ((type == WOOD_TREE_OVAL_GREEN_SPAWNER) || (type == WOOD_TREE_OVAL_GREEN_SPAWNED) ||
         (type == WOOD_TREE_OVAL_GREEN) || (type == WOOD_LEAF_GREEN)) {
-        red = 50;
-        green = 170;
-        blue = 70;
+        red = 255;
+        green = 255;
+        blue = 255;
     } else if ((type == WOOD_TREE_OVAL_YELLOW_SPAWNER) || (type == WOOD_TREE_OVAL_YELLOW_SPAWNED) ||
                (type == WOOD_LEAF_YELLOW)) {
-        red = 180;
-        green = 155;
-        blue = 0;
+        red = 255;
+        green = 255;
+        blue = 255;
     } else {
         red = green = blue = 255;
     }

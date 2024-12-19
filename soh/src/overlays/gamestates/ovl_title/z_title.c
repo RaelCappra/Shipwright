@@ -13,6 +13,7 @@
 #include <soh/Enhancements/bootcommands.h>
 #include <GameVersions.h>
 #include <soh/SaveManager.h>
+#include "soh/ResourceManagerHelpers.h"
 #include <string.h>
 
 #include "time.h"
@@ -221,7 +222,7 @@ void Title_Draw(TitleContext* this) {
     }
 
     // Draw ice cube around N64 logo.
-    if (CVarGetInteger(CVAR_GENERAL("LetItSnow"), 0)) {
+    if (CVarGetInteger("gLetItSnow", 0)) {
         f32 scale = 0.4f;
 
         gSPSegment(POLY_OPA_DISP++, 0x08,
@@ -293,8 +294,6 @@ void Title_Init(GameState* thisx) {
 
     //ResourceMgr_LoadDirectory("nintendo_rogo_static*");
 
-    // Disable vismono
-    D_801614B0.a = 0;
     R_UPDATE_RATE = 1;
     Matrix_Init(&this->state);
     View_Init(&this->view, this->state.gfxCtx);
