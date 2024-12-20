@@ -15,10 +15,23 @@ class Settings {
     Settings();
 
     /**
+     * @brief Hides or Unhides the price UI of Shopsanity based on settings.
+     */
+    void HandleShopsanityPriceUI();
+
+    /**
      * @brief Creates the `Option` and `OptionGroup` objects. This happens after construction because certain
      * other events in the codebase need to happen before all of the `Option`s can be created.
      */
     void CreateOptions();
+
+    /**
+     * @brief Populates the map used to translate strings into RandomiserSettingKeys
+     *
+     * @return std::unordered_map<std::string, RandomizerSettingKey>
+     */
+
+    std::unordered_map<std::string, RandomizerSettingKey> PopulateOptionNameToEnum();
 
     /**
      * @brief Get a reference to the `Option` corresponding to the provided RandomizerSettingKey.
@@ -50,12 +63,12 @@ class Settings {
 
     /**
      * @brief Get a list of Location Exclude `Option`s for the given
-     * SpoilerCollectionCheckGroup
+     * RandomizerCheckArea
      *
      * @param group
      * @return std::vector<Option*>&
      */
-    std::vector<Option*>& GetExcludeOptionsForGroup(SpoilerCollectionCheckGroup group);
+    std::vector<Option*>& GetExcludeOptionsForArea(RandomizerCheckArea area);
 
     /**
      * @brief Get a reference to all of the Exclude Location `Option` lists.
@@ -175,6 +188,7 @@ class Settings {
     void ParseJson(nlohmann::json spoilerFileJson);
     std::vector<Option*> VanillaLogicDefaults = {};
     std::map<RandomizerArea, std::vector<RandomizerTrick>> mTricksByArea = {};
+    void ReloadOptions();
 
   private:
     /**
@@ -185,8 +199,7 @@ class Settings {
     std::array<std::string, RSK_MAX> mOptionDescriptions = {};
     std::array<OptionGroup, RSG_MAX> mOptionGroups = {};
     std::array<TrickOption, RT_MAX> mTrickOptions = {};
-    std::vector<std::vector<Option*>> mExcludeLocationsOptionsGroups = {};
-    std::unordered_map<std::string, RandomizerSettingKey> mSpoilerfileSettingNameToEnum;
+    std::vector<std::vector<Option*>> mExcludeLocationsOptionsAreas = {};
     RandoOptionStartingAge mResolvedStartingAge =  RO_AGE_CHILD;
     RandoOptionLACSCondition mLACSCondition = RO_LACS_VANILLA;
     std::string mHash;

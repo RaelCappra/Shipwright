@@ -277,11 +277,6 @@ void EnKusa_Destroy(Actor* thisx, PlayState* play2) {
 }
 
 void EnKusa_SetupWaitObject(EnKusa* this) {
-    // Kill bushes in Boss Rush. Used in Gohma's arena.
-    if (IS_BOSS_RUSH) {
-        Actor_Kill(this);
-    }
-
     EnKusa_SetupAction(this, EnKusa_WaitObject);
 }
 
@@ -340,7 +335,7 @@ void EnKusa_Main(EnKusa* this, PlayState* play) {
             if (this->actor.xzDistToPlayer < 400.0f) {
                 CollisionCheck_SetOC(play, &play->colChkCtx, &this->collider.base);
                 if (this->actor.xzDistToPlayer < 100.0f) {
-                    func_8002F580(&this->actor, play);
+                    Actor_OfferCarry(&this->actor, play);
                 }
             }
         }
@@ -363,7 +358,7 @@ void EnKusa_LiftedUp(EnKusa* this, PlayState* play) {
         this->actor.gravity = -0.1f;
         EnKusa_UpdateVelY(this);
         EnKusa_RandScaleVecToZero(&this->actor.velocity, 0.005f);
-        func_8002D7EC(&this->actor);
+        Actor_UpdatePos(&this->actor);
         Actor_UpdateBgCheckInfo(play, &this->actor, 7.5f, 35.0f, 0.0f, 0xC5);
         this->actor.gravity = -3.2f;
     }
@@ -424,7 +419,7 @@ void EnKusa_Fall(EnKusa* this, PlayState* play) {
     this->actor.shape.rot.x += rotSpeedX;
     this->actor.shape.rot.y += rotSpeedY;
     EnKusa_RandScaleVecToZero(&this->actor.velocity, 0.05f);
-    func_8002D7EC(&this->actor);
+    Actor_UpdatePos(&this->actor);
     Actor_UpdateBgCheckInfo(play, &this->actor, 7.5f, 35.0f, 0.0f, 0xC5);
     Collider_UpdateCylinder(&this->actor, &this->collider);
     CollisionCheck_SetOC(play, &play->colChkCtx, &this->collider.base);

@@ -300,7 +300,7 @@ s32 EnGoroiwa_MoveAndFall(EnGoroiwa* this, PlayState* play) {
     Vec3s* nextPointPos;
 
     Math_StepToF(&this->actor.speedXZ, R_EN_GOROIWA_SPEED * 0.01f, 0.3f);
-    func_8002D868(&this->actor);
+    Actor_UpdateVelocityXZGravity(&this->actor);
     path = &play->setupPathList[this->actor.params & 0xFF];
     nextPointPos = (Vec3s*)SEGMENTED_TO_VIRTUAL(path->points) + this->nextWaypoint;
     result = true;
@@ -725,7 +725,7 @@ void EnGoroiwa_Update(Actor* thisx, PlayState* play) {
     s32 pad;
     s32 sp30;
 
-    if (!(player->stateFlags1 & (PLAYER_STATE1_TEXT_ON_SCREEN | PLAYER_STATE1_DEAD | PLAYER_STATE1_IN_ITEM_CS | PLAYER_STATE1_IN_CUTSCENE))) {
+    if (!(player->stateFlags1 & (PLAYER_STATE1_TALKING | PLAYER_STATE1_DEAD | PLAYER_STATE1_IN_ITEM_CS | PLAYER_STATE1_IN_CUTSCENE))) {
         if (this->collisionDisabledTimer > 0) {
             this->collisionDisabledTimer--;
         }

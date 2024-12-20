@@ -74,6 +74,9 @@ static const ALIGN_ASSET(2) char gTriforcePieceCompletedDL[] = dgTriforcePieceCo
 #define dgBossSoulSkullDL "__OTR__objects/object_boss_soul/gGIBossSoulSkullDL"
 static const ALIGN_ASSET(2) char gBossSoulSkullDL[] = dgBossSoulSkullDL;
 
+#define dgRandoPotDL "__OTR__objects/gameplay_dangeon_keep/gRandoPotDL"
+static const ALIGN_ASSET(2) char gRandoPotDL[] = dgRandoPotDL;
+
 #define dgFishingPoleGiDL "__OTR__objects/object_gi_fishing_pole/gFishingPoleGiDL"
 static const ALIGN_ASSET(2) char gFishingPoleGiDL[] = dgFishingPoleGiDL;
 
@@ -96,6 +99,24 @@ static const ALIGN_ASSET(2) char gArrowDownTex[] = dgArrowDown;
 
 #define dgTriforcePiece "__OTR__textures/parameter_static/gTriforcePiece"
 static const ALIGN_ASSET(2) char gTriforcePieceTex[] = dgTriforcePiece;
+
+#define dgWTriforcePiece "__OTR__textures/parameter_static/gWTriforcePiece"
+static const ALIGN_ASSET(2) char gWTriforcePieceTex[] = dgWTriforcePiece;
+
+#define dgSplitEntrance "__OTR__textures/parameter_static/gSplitEntrance"
+static const ALIGN_ASSET(2) char gSplitEntranceTex[] = dgSplitEntrance;
+
+#define dgBossSoul "__OTR__textures/parameter_static/gBossSoul"
+static const ALIGN_ASSET(2) char gBossSoulTex[] = dgBossSoul;
+
+#define dgMoonIcon "__OTR__textures/parameter_static/gMoon"
+static const ALIGN_ASSET(2) char gMoonIconTex[] = dgMoonIcon;
+
+#define dgSunIcon "__OTR__textures/parameter_static/gSun"
+static const ALIGN_ASSET(2) char gSunIconTex[] = dgSunIcon;
+
+#define dgNaviIcon "__OTR__textures/parameter_static/gNavi"
+static const ALIGN_ASSET(2) char gNaviIconTex[] = dgNaviIcon;
 
 #define dgFileSelMQButtonTex "__OTR__textures/title_static/gFileSelMQButtonTex"
 static const ALIGN_ASSET(2) char gFileSelMQButtonTex[] = dgFileSelMQButtonTex;

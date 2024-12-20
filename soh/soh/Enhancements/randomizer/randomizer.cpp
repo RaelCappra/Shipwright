@@ -10,7 +10,9 @@
 #include <textures/icon_item_24_static/icon_item_24_static.h>
 #include "3drando/rando_main.hpp"
 #include "3drando/random.hpp"
-#include "3drando/custom_messages.hpp" 
+#include "soh/ResourceManagerHelpers.h"
+#include "soh/UIWidgets.hpp"
+#include "3drando/custom_messages.hpp"
 #include "../../UIWidgets.hpp"
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -41,9 +43,6 @@
 #include "fishsanity.h"
 #include "randomizerTypes.h"
 
-extern "C" uint32_t ResourceMgr_IsGameMasterQuest();
-extern "C" uint32_t ResourceMgr_IsSceneMasterQuest(s16 sceneNum);
-
 extern std::map<RandomizerCheckArea, std::string> rcAreaNames;
 
 using json = nlohmann::json;
@@ -55,8 +54,6 @@ std::set<RandomizerCheck> excludedLocations;
 std::set<RandomizerCheck> spoilerExcludedLocations;
 std::set<RandomizerTrick> enabledTricks;
 std::set<RandomizerTrick> enabledGlitches;
-
-std::set<std::map<RandomizerCheck, RandomizerCheckTrackerData>> checkTrackerStates;
 
 u8 generated;
 char* seedString;
@@ -70,61 +67,69 @@ const std::string Randomizer::NaviRandoMessageTableID = "RandomizerNavi";
 const std::string Randomizer::IceTrapRandoMessageTableID = "RandomizerIceTrap";
 const std::string Randomizer::randoMiscHintsTableID = "RandomizerMiscHints";
 
-static const char* englishRupeeNames[171] = {
-    "[P]",               "Bad RNG Rolls",    "Bananas",          "Beanbean Coins",   "Beans",
-    "Beli",              "Bells",            "Berries",          "Bison Dollars",    "Bitcoin",
-    "Blue Essence",      "Bolts",            "Bones",            "Boondollars",      "Bottle Caps",
-    "Bratwürste",        "Bucks",            "BugFrags",         "Canadian Dollars", "Cards",
-    "Chaos Orbs",        "Clams",            "Coal",             "Cocoa Beans",      "Coins",
-    "Cookies",           "Copper",           "Cor",              "Cornflakes",       "Credits",
-    "Crimebucks",        "Crystal Shards",   "Cubits",           "Cucumbers",        "Dalmations",
-    "Dampécoin",         "Dark Elixir",      "Darseks",          "Dead Memes",       "Diamonds",
-    "DNA",               "Doge",             "Dogecoin",         "Doll Hairs",       "Dollars",
-    "Dollarydoos",       "Dosh",             "Doubloons",        "Dwarfbucks",       "Emeralds",
-    "Energon",           "Eris",             "Ether",            "Euro",             "Experience",
-    "Extinction Points", "Floopies",         "Flurbos",          "FPS",              "Friends",
-    "Frog Coins",        "Gald",             "Gekz",             "Gems",             "Geo",
-    "Gil",               "Glimmer",          "Glitches",         "Gold",             "Gold Dragons",
-    "Goober Dollars",    "Green Herbs",      "Greg Siblings",    "Gummybears",       "Hell",
-    "Hyrule Loaches",    "Ice Traps",        "ISK",              "Jiggies",          "KF7 Ammo",
-    "Kinstones",         "Kremcoins",        "Kroner",           "Leaves ",          "Lemmings",
-    "Lien",              "Lira",             "Lumber",           "Lungmen Dollars",  "Macca",
-    "Mana",              "Mann Co. Keys",    "Meat",             "Meat Stacks",      "Medaparts",
-    "Meseta",            "Mesetas",          "Minerals",         "Monopoly Money",   "Moons",
-    "Mora",              "Mumbo Tokens",     "Munny",            "Mushrooms",        "Mysteries",
-    "Neopoints",         "Notes",            "Nuyen",            "Orbs",             "Pix",
-    "Pixels",            "Platinum",         "Pokédollars",      "Pokémon",          "Poko",
-    "Pokos",             "Potch",            "Pounds",           "Power Pellets",    "Primogems",
-    "Réals",             "Refined Metal",    "Remote Mines",     "Retweets",         "Rhinu",
-    "Rings",             "Riot Points",      "Robux",            "Rubies",           "Rubles",
-    "Runite Ore",        "Rupees",           "Saint Quartz",     "Septims",          "Shekels",
-    "Shillings",         "Silver",           "Simoleons",        "Smackaroos",       "Social Credit",
-    "Souls",             "Spent Casings",    "Spice",            "Spondulicks",      "Spoons",
-    "Star Bits",         "Star Chips",       "Stars",            "Stones of Jordan", "Store Credit",
-    "Strawbs",           "Studs",            "Super Sea Snails", "Talent",           "Teef",
-    "Telecrystals",      "Tiberium",         "TokKul",           "Toys",             "Turnips",
-    "Upvotes",           "V-Bucks",          "Vespene Gas",      "Watts",            "Widgets",
-    "Woolongs",          "World Dollars",    "Wumpa Fruit",      "Yen",              "Zenny",
-    "Zorkmids"
+static const char* englishRupeeNames[175] = {
+    "[P]",                "Bad RNG Rolls",     "Bananas",           "Beanbean Coins",    "Beans",
+    "Beli",               "Bells",             "Berries",           "Bison Dollars",     "Bitcoin",
+    "Blue Essence",       "Bolts",             "Bones",             "Boondollars",       "Bottle Caps",
+    "Bratwürste",         "Bucks",             "BugFrags",          "Canadian Dollars",  "Cards",
+    "Chaos Orbs",         "Clams",             "Coal",              "Cocoa Beans",       "Coins",
+    "Cookies",            "Copper",            "Cor",               "Cornflakes",        "Credits",
+    "Crimebucks",         "Crystal Shards",    "Cubits",            "Cucumbers",         "Dalmations",
+    "Dampécoin",          "Dark Elixir",       "Darseks",           "Dead Memes",        "Diamonds",
+    "DNA",                "Doge",              "Dogecoin",          "Doll Hairs",        "Dollars",
+    "Dollarydoos",        "Dosh",              "Doubloons",         "Dwarfbucks",        "Elexit",
+    "Emeralds",           "Energon",           "Eris",              "Ether",             "Euro",
+    "Experience",         "Extinction Points", "Floopies",          "Flurbos",           "FPS",
+    "Friends",            "Frog Coins",        "Gald",              "Gekz",              "Gems",
+    "Geo",                "Gil",               "Glimmer",           "Glitches",          "Gold",
+    "Gold Dragons",       "Goober Dollars",    "Green Herbs",       "Greg Siblings",     "Grouses",
+    "Gummybears",         "Hell",              "Hyrule Loaches",    "Ice Traps",         "ISK",
+    "Jiggies",            "KF7 Ammo",          "Kinstones",         "Kremcoins",         "Kroner",
+    "Leaves",             "Lemmings",          "Lien",              "Lira",              "Lumber",
+    "Lungmen Dollars",    "Macca",             "Mana",              "Mann Co. Keys",     "Meat",
+    "Meat Stacks",        "Medaparts",         "Meseta",            "Mesetas",           "Minerals",
+    "Monopoly Money",     "Moons",             "Mora",              "Mumbo Tokens",      "Munny",
+    "Mushrooms",          "Mysteries",         "Neopoints",         "Notes",             "Nuyen",
+    "Orbs",               "Ore",               "Pix",               "Pixels",            "Plastyks",
+    "Platinum",           "Pokédollars",       "Pokémon",           "Poko",              "Pokos",
+    "Potch",              "Pounds",            "Power Pellets",     "Primogems",         "Réals",
+    "Refined Metal",      "Remote Mines",      "Retweets",          "Rhinu",             "Rings",
+    "Riot Points",        "Robux",             "Rubies",            "Rubles",            "Runite Ore",
+    "Rupees",             "Saint Quartz",      "Septims",           "Shekels",           "Shillings",
+    "Silver",             "Simoleons",         "Smackaroos",        "Social Credit",     "Souls",
+    "Spent Casings",      "Spice",             "Spondulicks",       "Spoons",            "Star Bits",
+    "Star Chips",         "Stars",             "Stones of Jordan",  "Store Credit",      "Strawbs",
+    "Studs",              "Super Sea Snails",  "Talent",            "Teef",              "Telecrystals",
+    "Tiberium",           "TokKul",            "Toys",              "Turnips",           "Upvotes",
+    "V-Bucks",            "Vespene Gas",       "Watts",             "Widgets",           "Woolongs",
+    "World Dollars",      "Wumpa Fruit",       "Yen",               "Zenny",             "Zorkmids"
 };
 
-static const char* germanRupeeNames[56] = {
-    "Rubine",     "Mäuse",       "Kröten",        "Münzen",     "Euro",       "Mark",     "Bananen",
-    "Gummibären", "Bonbons",     "Diamanten",     "Bratwürste", "Bitcoin",    "Dogecoin", "Monde",
-    "Sterne",     "Brause UFOs", "Taler",         "Sternis",    "Schilling",  "Freunde",  "Seelen",
-    "Gil",        "Zenny",       "Pfandflaschen", "Knochen",    "Pilze",      "Smaragde", "Kronkorken",
-    "Pokédollar", "Brötchen",    "EXP",           "Wagenchips", "Moos",       "Knete",    "Kohle",
-    "Kies",       "Radieschen",  "Diridari",      "Steine",     "Kartoffeln", "Penunze",  "ECU",
-    "Franken",    "Cent",        "Pfennig",       "Groschen",   "Rappen",     "Gulden",   "Kreuzer",
-    "Kronen",     "Forint",      "Heller",        "Pfund",      "Karolin",    "Pesa",     "Tael"
+static const char* germanRupeeNames[65] = {
+    "Bananen",            "Bitcoin",           "Bonbons",           "Bratwürste",        "Brause UFOs",
+    "Brötchen",           "Cent",              "Diamanten",         "Diridari",          "Dogecoin",
+    "ECU",                "Elexit",            "Erz",               "Erzbrocken",        "Euro",
+    "EXP",                "Forint",            "Franken",           "Freunde",           "Gil",
+    "Gold",               "Groschen",          "Gulden",            "Gummibären",        "Heller",
+    "Juwelen",            "Karolin",           "Kartoffeln",        "Kies",              "Knete",
+    "Knochen",            "Kohle",             "Kraniche",          "Kreuzer",           "Kronen",
+    "Kronkorken",         "Kröten",            "Mark",              "Mäuse",             "Monde",
+    "Moorhühner",         "Moos",              "Münzen",            "Penunze",           "Pesa",
+    "Pfandflaschen",      "Pfennig",           "Pfund",             "Pilze",             "Plastiks",
+    "Pokédollar",         "Radieschen",        "Rappen",            "Rubine",            "Saphire",
+    "Schilling",          "Seelen",            "Smaragde",          "Steine",            "Sterne",
+    "Sternis",            "Tael",              "Taler",             "Wagenchips",        "Zenny"
 };
 
-static const char* frenchRupeeNames[36] = {
-    "Rubis",       "Bitcoin", "Bananes",   "Euros",     "Dollars", "Émeraudes",  "Joyaux",   "Diamants",
-    "Balles",      "Pokémon", "Pièces",    "Lunes",     "Étoiles", "Dogecoin",   "Anneaux",  "Radis",
-    "Pokédollars", "Zennies", "Pépètes",   "Mailles",   "Éthers",  "Clochettes", "Capsules", "Gils",
-    "Champignons", "Blés",    "Halos",     "Munnies",   "Orens",   "Florens",    "Crédits",  "Galds",
-    "Bling",       "Orbes",   "Baguettes", "Croissants"
+static const char* frenchRupeeNames[40] = {
+    "Anneaux",            "Baguettes",         "Balles",            "Bananes",           "Bitcoin",
+    "Blés",               "Bling",             "Capsules",          "Centimes",          "Champignons",
+    "Clochettes",         "Crédits",           "Croissants",        "Diamants",          "Dogecoin",
+    "Dollars",            "Émeraudes",         "Éthers",            "Étoiles",           "Euros",
+    "Florens",            "Francs",            "Galds",             "Gils",              "Grouses",
+    "Halos",              "Joyaux",            "Lunes",             "Mailles",           "Munnies",
+    "Orbes",              "Orens",             "Pépètes",           "Pièces",            "Plastyks",
+    "Pokédollars",        "Pokémon",           "Radis",             "Rubis",             "Zennies"
 };
 
 Randomizer::Randomizer() {
@@ -140,7 +145,7 @@ Randomizer::Randomizer() {
     SpoilerfileAreaNameToEnum["the Graveyard"] = RCAREA_GRAVEYARD;
     SpoilerfileAreaNameToEnum["Haunted Wasteland"] = RCAREA_WASTELAND;
     SpoilerfileAreaNameToEnum["outside Ganon's Castle"] = RCAREA_HYRULE_CASTLE;
-    for (int c = 0; c < Rando::StaticData::hintTypeNames.size(); c++) {
+    for (size_t c = 0; c < Rando::StaticData::hintTypeNames.size(); c++) {
         SpoilerfileHintTypeNameToEnum[Rando::StaticData::hintTypeNames[(HintType)c].GetEnglish(MF_CLEAN)] = (HintType)c;
     }
 }
@@ -159,7 +164,7 @@ std::unordered_map<std::string, SceneID> spoilerFileDungeonToScene = {
     { "Shadow Temple", SCENE_SHADOW_TEMPLE },
     { "Bottom of the Well", SCENE_BOTTOM_OF_THE_WELL },
     { "Ice Cavern", SCENE_ICE_CAVERN },
-    { "Gerudo Training Grounds", SCENE_GERUDO_TRAINING_GROUND },
+    { "Gerudo Training Ground", SCENE_GERUDO_TRAINING_GROUND },
     { "Ganon's Castle", SCENE_INSIDE_GANONS_CASTLE }
 };
 
@@ -236,9 +241,10 @@ void Randomizer::LoadHintMessages() {
 
     // Bow Shooting Gallery reminder
     CustomMessageManager::Instance->CreateMessage(Randomizer::hintMessageTableID, TEXT_SHOOTING_GALLERY_MAN_COME_BACK_WITH_BOW,
-        CustomMessage("Come back when you have your own&bow and you'll get a %rdifferent prize%w!",
-        "Komm wieder sobald Du Deinen eigenen&Bogen hast, um einen %rspeziellen Preis%w zu&erhalten!",
-        "J'aurai %rune autre récompense%w pour toi&lorsque tu auras ton propre arc."));
+        CustomMessage("Come back when you have your own bow and you'll get a #different prize#!",
+        "Komm wieder sobald Du Deinen eigenen Bogen hast, um einen #speziellen Preis# zu erhalten!",
+        "J'aurai #une autre récompense# pour toi lorsque tu auras ton propre arc.",
+        {QM_RED}));
 
     // Warp Song Mysterious text
     CustomMessageManager::Instance->CreateMessage(Randomizer::hintMessageTableID, TEXT_WARP_MINUET_OF_FOREST,
@@ -253,9 +259,9 @@ void Randomizer::LoadHintMessages() {
             "Wasserstand Kontrollsystem&Finger weg!",
             "Système de contrôle du niveau&d'eau.&Ne pas toucher!"));
     CustomMessageManager::Instance->CreateMessage(Randomizer::hintMessageTableID, TEXT_LAKE_HYLIA_WATER_SWITCH_NAVI,
-        CustomMessage("%cThis switch is rustier than you think.^%cSomething must be wrong with the&pipe system in the %bWater Temple%c.",
-            "%cDieser Schalter scheint rostiger zu&sein als er aussieht.^%cEtwas muss mit dem Leitungssystem&im %bWassertempel%c nicht stimmen.",
-            "%cCet interrupteur est très rouillé.^%cIl doit y avoir un problème avec&la tuyauterie du %bTemple de l'Eau%c."));
+        CustomMessage("%cThis switch is rustier than you think.^%cSomething must be wrong with the pipe system in the %bWater Temple%c.",
+            "%cDieser Schalter scheint rostiger zu sein als er aussieht.^%cEtwas muss mit dem Leitungssystem im %bWassertempel%c nicht stimmen.",
+            "%cCet interrupteur est très rouillé.^%cIl doit y avoir un problème avec la tuyauterie du %bTemple de l'Eau%c."));
 }
 
 // Reference soh/src/overlays/actors/ovl_En_GirlA/z_en_girla.h
@@ -298,38 +304,101 @@ void Randomizer::LoadMerchantMessages() {
 
     // Prices have a chance of being 0, and the "sell" message below doesn't really make sense for a free item, so adding a "free" variation here
     CustomMessageManager::Instance->CreateMessage(Randomizer::merchantMessageTableID, TEXT_SCRUB_RANDOM_FREE,
-        CustomMessage("\x12\x38\x82" "All right! You win! In return for&sparing me, I will give you a&%g[[item]]%w!&Please, take it!\x07\x10\xA3",
-            "\x12\x38\x82" "In Ordnung! Du gewinnst! Im Austausch&dafür, dass Du mich verschont hast,&werde ich Dir einen &%g[[item]]%w geben!\x07\x10\xA3",
-            "\x12\x38\x82" "J'me rends! Laisse-moi partir et en&échange, je te donne un &%g[[item]]%w! Vas-y prends le!\x07\x10\xA3"));
+        CustomMessage("\x12\x38\x82" "All right! You win! In return for sparing me, I will give you a #[[1]]#!&Please, take it!\x07\x10\xA3",
+            "\x12\x38\x82" "In Ordnung! Du gewinnst! Im Austausch dafür, dass Du mich verschont hast, werde ich Dir einen #[[1]]# geben!\x07\x10\xA3",
+            "\x12\x38\x82" "J'me rends! Laisse-moi partir et en échange, je te donne un #[[1]]#! Vas-y prends le!\x07\x10\xA3",
+            {QM_GREEN}));
     CustomMessageManager::Instance->CreateMessage(Randomizer::merchantMessageTableID, TEXT_SCRUB_RANDOM,
-        CustomMessage("\x12\x38\x82" "All right! You win! In return for&sparing me, I will sell you a&%g[[item]]%w!&%r[[price]] Rupees%w it is!\x07\x10\xA3",
-            "\x12\x38\x82" "Ich gebe auf! Ich verkaufe Dir einen&%g[[item]]%w&für %r[[price]] Rubine%w!\x07\x10\xA3",
-            "\x12\x38\x82" "J'abandonne! Tu veux bien m'acheter&un %g[[item]]%w?&Ça fera %r[[price]] Rubis%w!\x07\x10\xA3"));
+        CustomMessage("\x12\x38\x82" "All right! You win! In return for sparing me, I will sell you a #[[1]]#! #[[2]] Rupees# it is!\x07\x10\xA3",
+            "\x12\x38\x82" "Ich gebe auf! Ich verkaufe Dir einen #[[1]]# für #[[2]] Rubine#!\x07\x10\xA3",
+            "\x12\x38\x82" "J'abandonne! Tu veux bien m'acheter un #[[1]]#? Ça fera #[[2]] Rubis#!\x07\x10\xA3",
+            {QM_GREEN, QM_YELLOW}));
 
     //Carpet Salesman
     CustomMessageManager::Instance->CreateMessage(
-        Randomizer::merchantMessageTableID, TEXT_CARPET_SALESMAN_2,
-        CustomMessage("Finally! Now I can go back to being &an %rarms dealer%w!",
-            /*german*/"Endlich! Schon bald kann ich wieder &%rKrabbelminen-Händler%w sein!",
-            /*french*/ "Squalala! Je vais enfin pouvoir &%rprendre des vacances%w!"));
+        Randomizer::merchantMessageTableID, TEXT_CARPET_SALESMAN_ARMS_DEALER,
+        CustomMessage("Finally! Now I can go back to being an #arms dealer#!",
+            /*german*/"Endlich! Schon bald kann ich wieder #Krabbelminen-Händler# sein!",
+            /*french*/"Squalala! Je vais enfin pouvoir #prendre des vacances#!",
+            {QM_RED}));
 
     // Each shop item has two messages, one for when the cursor is over it, and one for when you select it and are
     // prompted buy/don't buy
     CustomMessageManager::Instance->CreateMessage(
         Randomizer::merchantMessageTableID, TEXT_SHOP_ITEM_RANDOM,
-        CustomMessage("\x08%r[[item]]  [[price]] Rupees&%wSpecial deal! ONE LEFT!&Get it while it lasts!\x0A\x02",
-            "\x08%r[[item]]  [[price]] Rubine&%wSonderangebot! NUR NOCH EINES VERFÜGBAR!&Beeilen Sie sich!\x0A\x02",
-            "\x08%r[[item]]  [[price]] Rubis&%wOffre spéciale! DERNIER EN STOCK!&Faites vite!\x0A\x02"));
+        CustomMessage("\x08#[[1]]#  #[[2]]_Rupees#&Special deal! #ONE LEFT#!&Get it while it lasts!\x0A\x02",
+            "\x08#[[1]]#  #[[2]]_Rubine#&Sonderangebot! #NUR NOCH EINES VERFÜGBAR#!&Beeilen Sie sich!\x0A\x02",
+            "\x08#[[1]]#  #[[2]]_Rubis#&Offre spéciale! #DERNIER EN STOCK#!&Faites vite!\x0A\x02",
+            {QM_GREEN, QM_YELLOW, QM_RED}));
+
     CustomMessageManager::Instance->CreateMessage(
         Randomizer::merchantMessageTableID, TEXT_SHOP_ITEM_RANDOM_CONFIRM,
-        CustomMessage("\x08[[item]]  [[price]] Rupees\x09&&\x1B%gBuy&Don't buy%w\x09\x02",
-            "\x08[[item]]  [[price]] Rubine\x09&&\x1B%gKaufen&Nicht kaufen%w\x09\x02",
-            "\x08[[item]]  [[price]] Rubis\x09&&\x1B%gAcheter&Ne pas acheter%w\x09\x02"));
+        CustomMessage("\x08#[[1]]#  #[[2]]_Rupees#\x09\x1B#Buy&Don't buy#\x09\x02",
+            "\x08#[[1]]#  #[[2]]_Rubine#\x09\x1B#Kaufen&Nicht kaufen#\x09\x02",
+            "\x08#[[1]]#  #[[2]]_Rubis#\x09\x1B#Acheter&Ne pas acheter#\x09\x02",
+            {QM_GREEN, QM_YELLOW, QM_GREEN}));
+                      
+    CustomMessageManager::Instance->CreateMessage(
+        Randomizer::merchantMessageTableID, TEXT_BEAN_SALESMAN_BUY_FOR_10,
+        CustomMessage("I tried to be a #magic bean# salesman, but it turns out my marketing skills weren't worth "
+                      "beans!^Anyway, want to buy #[[1]]# for #[[2]] Rupees#?\x1B#Yes&No#",
+           /*german*/ "Möchten Sie #[[1]]# für #[[2]] Rubine# kaufen?\x1B#Ja&Nein#",
+           /*french*/ "J'ai essayé d'être un vendeur de #haricots magiques#, mais j'étais mauvais au niveau du marketing et ça "
+                      "me courait sur le haricot...^Enfin bref, ça te dirait de m'acheter #[[1]]# pour #[[2]] Rubis#?\x1B#Oui&Non#",
+                      {QM_RED, QM_GREEN, QM_YELLOW, QM_GREEN}));
+
     CustomMessageManager::Instance->CreateMessage(
         Randomizer::merchantMessageTableID, TEXT_BEAN_SALESMAN_BUY_FOR_100,
-        CustomMessage("I never thought I'd say this, but I'm &selling the last %rMagic Bean%w. %r99%w Rupees...\x1B&%gYes&No%w",
-                      "Ich hätte nie gedacht, daß ich das&sage, aber ich verkaufe die letzte^%rWundererbse%w für %r99%w Rubine.&\x1B&%gJa&Nein%w",
-                      "Je te vends mon dernier %rHaricot&magique%w pour %r99 Rubis%w.\x1B&%gAcheter&Ne pas acheter%w"));
+        CustomMessage("I never thought I'd say this, but I'm selling the last #Magic Bean#.^#99 Rupees#, no less.\x1B#Yes&No#",
+                      "Ich hätte nie gedacht, daß ich das sage, aber ich verkaufe die letzte^#Wundererbse# für #99 Rubine#.\x1B&#Ja&Nein#",
+                      "Je te vends mon dernier #Haricot&magique# pour #99 Rubis#.\x1B&#AcheterNe pas acheter#",
+                      {QM_RED, QM_YELLOW, QM_GREEN}));
+
+    CustomMessageManager::Instance->CreateMessage(
+        Randomizer::merchantMessageTableID, TEXT_MEDIGORON,
+        CustomMessage("How about buying #[[1]]# for #[[2]] Rupees#?\x1B#Buy&Don't buy#",
+           /*german*/ "Möchtest Du #[[1]]# für #[[2]] Rubine# kaufen?\x1B#Klar!&Nie im Leben!#",
+           /*french*/ "Veux-tu acheter #[[1]]# pour #[[2]] rubis#?\x1B#Acheter&Ne pas acheter#",
+                       {QM_GREEN, QM_YELLOW, QM_GREEN}));
+       /*spanish*/ // ¿Me compras #[[1]]# por #[[2]] rupias#?\x1B#Comprar&No comprar#
+
+    CustomMessage firstCarpet = CustomMessage("Welcome!^I am selling stuff, strange and rare, from all over the world to everybody. Today's special is...^",
+                                   /*german*/ "Sei gegrüßt!^Ich verkaufe allerlei Kuriositäten. Stets sonderliche und seltene Ware aus "
+                                              "aller Welt für jedermann. Das heutige Angebot bleibt...^",
+                                   /*french*/ "Bienvenue!^Je vends des objets rares et merveilleux du monde entier. En spécial aujourd'hui...^");
+                               /*spanish*/ // ¡Acércate!^Vendo productos extraños y difíciles de encontrar... De todo el mundo a todo el mundo. La oferta de hoy es...^#¡
+    
+    CustomMessageManager::Instance->CreateMessage(
+        Randomizer::merchantMessageTableID, TEXT_CARPET_SALESMAN_MYSTERIOUS,
+        firstCarpet +
+        CustomMessage("Terrifying! I won't tell you what it is until I see the #money#...^How about #[[2]] Rupees#?&&"
+                                    "\x1B#Buy&Don't buy#",
+                        /*german*/ "Furchterregend, oder? Ich erzähle Euch mehr, wenn ich #Geld# sehe...^Wie wär's mit #[[2]] Rubinen#?&&"
+                                    "\x1B#Aber sicher!&Ich bin weg!#",
+                        /*french*/ "Un concentré de puissance! Mais montre tes #rubis# avant que je te dise ce que c'est...^Disons #[[2]] "
+                                    "rubis#?&&\x1B#Acheter&Ne pas acheter#",
+                                    {QM_RED, QM_YELLOW, QM_GREEN}));
+                    /*spanish*/ // ¡Terrorífico! No te revelaré su nombre hasta que vea el #dinero#...^#[[2]] rupias#, ¿qué te parece?&&"
+                                // "\x1B#Comprar&No comprar#
+
+    CustomMessageManager::Instance->CreateMessage(
+        Randomizer::merchantMessageTableID, TEXT_CARPET_SALESMAN_1,
+        firstCarpet +
+        CustomMessage("#[[1]]!# It's real, I promise! A lonely man such as myself wouldn't #lie# to you, hmm?^"
+                       "How about #[[2]] Rupees#?\x1B#Buy&Don't buy#",
+           /*german*/ "#[[1]]#! Ich kann versichern, es ist ein aufrichtiges Angebot!^Ein einsamer Mann wie ich würde Dich doch "
+                       "nicht #anlügen#, oder?^Wie wär's mit #[[2]] Rubinen#?\x1B#Aber sicher!&Ich bin weg!#",
+           /*french*/ "#[[1]]!# C'est vrai! J'te jure! Un gars comme moi ne te #mentirai# pas tu ne crois pas?^Disons #[[2]] "
+                       "rubis#?\x1B#Acheter&Ne pas acheter#",
+                       {QM_GREEN, QM_RED, QM_YELLOW}));
+
+    CustomMessageManager::Instance->CreateMessage(
+        Randomizer::merchantMessageTableID, TEXT_GRANNYS_SHOP,
+        CustomMessage("#[[1]]#! How about #[[2]] Rupees#?\x1B#Buy&Don't buy#",
+           /*german*/ "#[[1]]#! Sagen wir #[[2]] Rubine#?\x1B#Gerne!&Auf keinen Fall!#",
+           /*french*/ "#[[1]]#! Que dis-tu de #[[2]] rubis#?\x1B#Acheter&Ne pas acheter#",
+                       {QM_GREEN, QM_YELLOW, QM_GREEN}, {true}));
+           // /*spanish*/#[[1]]#. Vendo por #[[2]] rupias#.&\x1B#Comprar&No comprar#
 }
 
 std::map<s32, TrialKey> trialFlagToTrialKey = {
@@ -358,10 +427,9 @@ ItemObtainability Randomizer::GetItemObtainabilityFromRandomizerCheck(Randomizer
 
 ItemObtainability Randomizer::GetItemObtainabilityFromRandomizerGet(RandomizerGet randoGet) {
 
-    // Shopsanity with at least one item shuffled allows for a third wallet upgrade.
     // This is needed since Plentiful item pool also adds a third progressive wallet
-    // but we should *not* get Tycoon's Wallet in that mode.
-    bool tycoonWallet = GetRandoSettingValue(RSK_SHOPSANITY) > RO_SHOPSANITY_ZERO_ITEMS;
+    // but we should not get Tycoon's Wallet from it if it is off.
+    bool tycoonWallet = GetRandoSettingValue(RSK_INCLUDE_TYCOON_WALLET);
 
     // Same thing with the infinite upgrades, if we're not shuffling them
     // and we're using the Plentiful item pool, we should prevent the infinite
@@ -410,7 +478,8 @@ ItemObtainability Randomizer::GetItemObtainabilityFromRandomizerGet(RandomizerGe
                 (CUR_UPG_VALUE(UPG_STICKS) < 3 ? CAN_OBTAIN : CANT_OBTAIN_ALREADY_HAVE);
         case RG_DEKU_STICK_1:
         case RG_BUY_DEKU_STICK_1:
-            return CUR_UPG_VALUE(UPG_STICKS) ? CAN_OBTAIN : CANT_OBTAIN_NEED_UPGRADE;
+            return CUR_UPG_VALUE(UPG_STICKS) || !OTRGlobals::Instance->gRandoContext->GetOption(RSK_SHUFFLE_DEKU_STICK_BAG).GetContextOptionIndex()
+                 ? CAN_OBTAIN : CANT_OBTAIN_NEED_UPGRADE;
         case RG_PROGRESSIVE_NUT_UPGRADE:
             return infiniteUpgrades != RO_INF_UPGRADES_OFF ?
                 (Flags_GetRandomizerInf(RAND_INF_HAS_INFINITE_NUT_UPGRADE) ? CANT_OBTAIN_ALREADY_HAVE : CAN_OBTAIN) :
@@ -419,7 +488,8 @@ ItemObtainability Randomizer::GetItemObtainabilityFromRandomizerGet(RandomizerGe
         case RG_DEKU_NUTS_10:
         case RG_BUY_DEKU_NUTS_5:
         case RG_BUY_DEKU_NUTS_10:
-            return CUR_UPG_VALUE(UPG_NUTS) ? CAN_OBTAIN : CANT_OBTAIN_NEED_UPGRADE;
+            return CUR_UPG_VALUE(UPG_NUTS) || !OTRGlobals::Instance->gRandoContext->GetOption(RSK_SHUFFLE_DEKU_NUT_BAG).GetContextOptionIndex()
+                ? CAN_OBTAIN : CANT_OBTAIN_NEED_UPGRADE;
         case RG_PROGRESSIVE_BOMB_BAG:
             return infiniteUpgrades != RO_INF_UPGRADES_OFF ?
                 (Flags_GetRandomizerInf(RAND_INF_HAS_INFINITE_BOMB_BAG) ? CANT_OBTAIN_ALREADY_HAVE : CAN_OBTAIN) :
@@ -663,8 +733,8 @@ ItemObtainability Randomizer::GetItemObtainabilityFromRandomizerGet(RandomizerGe
             return gSaveContext.inventory.dungeonKeys[SCENE_SHADOW_TEMPLE] < SHADOW_TEMPLE_SMALL_KEY_MAX ? CAN_OBTAIN : CANT_OBTAIN_ALREADY_HAVE;
         case RG_BOTTOM_OF_THE_WELL_SMALL_KEY:
             return gSaveContext.inventory.dungeonKeys[SCENE_BOTTOM_OF_THE_WELL] < BOTTOM_OF_THE_WELL_SMALL_KEY_MAX ? CAN_OBTAIN : CANT_OBTAIN_ALREADY_HAVE;
-        case RG_GERUDO_TRAINING_GROUNDS_SMALL_KEY:
-            return gSaveContext.inventory.dungeonKeys[SCENE_GERUDO_TRAINING_GROUND] < GERUDO_TRAINING_GROUNDS_SMALL_KEY_MAX ? CAN_OBTAIN : CANT_OBTAIN_ALREADY_HAVE;
+        case RG_GERUDO_TRAINING_GROUND_SMALL_KEY:
+            return gSaveContext.inventory.dungeonKeys[SCENE_GERUDO_TRAINING_GROUND] < GERUDO_TRAINING_GROUND_SMALL_KEY_MAX ? CAN_OBTAIN : CANT_OBTAIN_ALREADY_HAVE;
         case RG_GERUDO_FORTRESS_SMALL_KEY:
             return gSaveContext.inventory.dungeonKeys[SCENE_THIEVES_HIDEOUT] < GERUDO_FORTRESS_SMALL_KEY_MAX ? CAN_OBTAIN : CANT_OBTAIN_ALREADY_HAVE;
         case RG_GANONS_CASTLE_SMALL_KEY:
@@ -721,520 +791,6 @@ ItemObtainability Randomizer::GetItemObtainabilityFromRandomizerGet(RandomizerGe
         default:
             return CAN_OBTAIN;
     }
-}
-
-GetItemID Randomizer::GetItemIdFromRandomizerGet(RandomizerGet randoGet, GetItemID ogItemId) {
-    // Shopsanity with at least one item shuffled allows for a third wallet upgrade.
-    // This is needed since Plentiful item pool also adds a third progressive wallet
-    // but we should *not* get Tycoon's Wallet in that mode.
-    bool tycoonWallet = GetRandoSettingValue(RSK_SHOPSANITY) > RO_SHOPSANITY_ZERO_ITEMS;
-
-    // Same thing with the infinite upgrades, if we're not shuffling them
-    //and we're using the Plentiful item pool, we should prevent the infinite
-    //upgrades from being gotten
-    u8 infiniteUpgrades = GetRandoSettingValue(RSK_INFINITE_UPGRADES);
-    switch (randoGet) {
-        case RG_NONE:
-            return ogItemId;
-        case RG_TRIFORCE:
-        case RG_HINT:
-        case RG_MAX:
-        case RG_SOLD_OUT:
-            return GI_NONE;
-
-        // Equipment
-        case RG_KOKIRI_SWORD:
-            return GI_SWORD_KOKIRI;
-        case RG_PROGRESSIVE_GORONSWORD: //todo progressive?
-            return GI_SWORD_BGS;
-        case RG_GIANTS_KNIFE:
-            return GI_SWORD_KNIFE;
-        case RG_BIGGORON_SWORD:
-            return GI_SWORD_BGS;
-        case RG_DEKU_SHIELD:
-        case RG_BUY_DEKU_SHIELD:
-            return GI_SHIELD_DEKU;
-        case RG_HYLIAN_SHIELD:
-        case RG_BUY_HYLIAN_SHIELD:
-            return GI_SHIELD_HYLIAN;
-        case RG_MIRROR_SHIELD:
-            return GI_SHIELD_MIRROR;
-        case RG_GORON_TUNIC:
-        case RG_BUY_GORON_TUNIC:
-            return GI_TUNIC_GORON;
-        case RG_ZORA_TUNIC:
-        case RG_BUY_ZORA_TUNIC:
-            return GI_TUNIC_ZORA;
-        case RG_IRON_BOOTS:
-            return GI_BOOTS_IRON;
-        case RG_HOVER_BOOTS:
-            return GI_BOOTS_HOVER;
-
-        // Inventory Items
-        case RG_PROGRESSIVE_STICK_UPGRADE:
-            switch (CUR_UPG_VALUE(UPG_STICKS)) {
-                case 0:
-                case 1:
-                    return GI_STICK_UPGRADE_20;
-                case 2:
-                    return GI_STICK_UPGRADE_30;
-                case 3:
-                case 4:
-                    return infiniteUpgrades == RO_INF_UPGRADES_PROGRESSIVE ? (GetItemID)RG_STICK_UPGRADE_INF : GI_STICK_UPGRADE_30;
-            }
-        case RG_PROGRESSIVE_NUT_UPGRADE:
-            switch (CUR_UPG_VALUE(UPG_NUTS)) {
-                case 0:
-                case 1:
-                    return GI_NUT_UPGRADE_30;
-                case 2:
-                    return GI_NUT_UPGRADE_40;
-                case 3:
-                case 4:
-                    return infiniteUpgrades == RO_INF_UPGRADES_PROGRESSIVE ? (GetItemID)RG_NUT_UPGRADE_INF : GI_NUT_UPGRADE_40;
-            }
-        case RG_PROGRESSIVE_BOMB_BAG:
-            switch (CUR_UPG_VALUE(UPG_BOMB_BAG)) {
-                case 0:
-                    return GI_BOMB_BAG_20;
-                case 1:
-                    return GI_BOMB_BAG_30;
-                case 2:
-                    return GI_BOMB_BAG_40;
-                case 3:
-                case 4:
-                    return infiniteUpgrades == RO_INF_UPGRADES_PROGRESSIVE ? (GetItemID)RG_BOMB_BAG_INF : GI_BOMB_BAG_40;
-            }
-        case RG_BOMBS_5:
-        case RG_BUY_BOMBS_525:
-        case RG_BUY_BOMBS_535:
-            return GI_BOMBS_5;
-        case RG_BOMBS_10:
-        case RG_BUY_BOMBS_10:
-            return GI_BOMBS_10;
-        case RG_BOMBS_20:
-        case RG_BUY_BOMBS_20:
-            return GI_BOMBS_20;
-        case RG_BUY_BOMBS_30:
-            return GI_BOMBS_30;
-        case RG_PROGRESSIVE_BOW:
-            switch (CUR_UPG_VALUE(UPG_QUIVER)) {
-                case 0:
-                    return GI_BOW;
-                case 1:
-                    return GI_QUIVER_40;
-                case 2:
-                    return GI_QUIVER_50;
-                case 3:
-                case 4:
-                    return infiniteUpgrades == RO_INF_UPGRADES_PROGRESSIVE ? (GetItemID)RG_QUIVER_INF : GI_QUIVER_50;
-            }
-        case RG_ARROWS_5:
-        case RG_BUY_ARROWS_10:
-            return GI_ARROWS_SMALL;
-        case RG_ARROWS_10:
-        case RG_BUY_ARROWS_30:
-            return GI_ARROWS_MEDIUM;
-        case RG_ARROWS_30:
-        case RG_BUY_ARROWS_50:
-            return GI_ARROWS_LARGE;
-        case RG_PROGRESSIVE_SLINGSHOT:
-            switch (CUR_UPG_VALUE(UPG_BULLET_BAG)) {
-                case 0:
-                    return GI_SLINGSHOT;
-                case 1:
-                    return GI_BULLET_BAG_40;
-                case 2:
-                    return GI_BULLET_BAG_50;
-                case 3:
-                case 4:
-                    return infiniteUpgrades == RO_INF_UPGRADES_PROGRESSIVE ? (GetItemID)RG_BULLET_BAG_INF : GI_BULLET_BAG_50;
-            }
-        case RG_DEKU_SEEDS_30:
-        case RG_BUY_DEKU_SEEDS_30:
-            return GI_SEEDS_30;
-        case RG_PROGRESSIVE_OCARINA:
-            switch (INV_CONTENT(ITEM_OCARINA_FAIRY)) {
-                case ITEM_NONE:
-                    return GI_OCARINA_FAIRY;
-                case ITEM_OCARINA_FAIRY:
-                case ITEM_OCARINA_TIME:
-                    return GI_OCARINA_OOT;
-            }
-        case RG_BOMBCHU_5:
-        case RG_BOMBCHU_10:
-        case RG_BUY_BOMBCHUS_10:
-            return GI_BOMBCHUS_10;
-        case RG_BOMBCHU_20:
-        case RG_BUY_BOMBCHUS_20:
-            return GI_BOMBCHUS_20;
-        case RG_PROGRESSIVE_BOMBCHUS:
-            if (INV_CONTENT(ITEM_BOMBCHU) == ITEM_NONE) {
-                return (GetItemID)RG_PROGRESSIVE_BOMBCHUS;
-            } else if (infiniteUpgrades != RO_INF_UPGRADES_OFF) {
-                return (GetItemID)RG_BOMBCHU_INF;
-            } else if (AMMO(ITEM_BOMBCHU) < 5) {
-                return GI_BOMBCHUS_10;
-            } else {
-                return GI_BOMBCHUS_5;
-            }
-        case RG_PROGRESSIVE_HOOKSHOT:
-            switch (INV_CONTENT(ITEM_HOOKSHOT)) {
-                case ITEM_NONE:
-                    return GI_HOOKSHOT;
-                case ITEM_HOOKSHOT:
-                case ITEM_LONGSHOT:
-                    return GI_LONGSHOT;
-            }
-        case RG_BOOMERANG:
-            return GI_BOOMERANG;
-        case RG_LENS_OF_TRUTH:
-            return GI_LENS;
-        case RG_MAGIC_BEAN:
-            return GI_BEAN;
-        case RG_MEGATON_HAMMER:
-            return GI_HAMMER;
-        case RG_FIRE_ARROWS:
-            return GI_ARROW_FIRE;
-        case RG_ICE_ARROWS:
-            return GI_ARROW_ICE;
-        case RG_LIGHT_ARROWS:
-            return GI_ARROW_LIGHT;
-        case RG_DINS_FIRE:
-            return GI_DINS_FIRE;
-        case RG_FARORES_WIND:
-            return GI_FARORES_WIND;
-        case RG_NAYRUS_LOVE:
-            return GI_NAYRUS_LOVE;
-
-        // Bottles
-        case RG_EMPTY_BOTTLE:
-            return GI_BOTTLE;
-        case RG_BOTTLE_WITH_MILK:
-            return GI_MILK_BOTTLE;
-        case RG_RUTOS_LETTER:
-            return GI_LETTER_RUTO;
-
-        // Bottle Refills
-        case RG_MILK:
-            return GI_MILK;
-        case RG_RED_POTION_REFILL:
-        case RG_BUY_RED_POTION_30:
-        case RG_BUY_RED_POTION_40:
-        case RG_BUY_RED_POTION_50:
-            return GI_POTION_RED;
-        case RG_GREEN_POTION_REFILL:
-        case RG_BUY_GREEN_POTION:
-            return GI_POTION_GREEN;
-        case RG_BLUE_POTION_REFILL:
-        case RG_BUY_BLUE_POTION:
-            return GI_POTION_BLUE;
-        case RG_FISH:
-        case RG_BUY_FISH:
-            return GI_FISH;
-        case RG_BUY_BLUE_FIRE:
-            return GI_BLUE_FIRE;
-        case RG_BUY_BOTTLE_BUG:
-            return GI_BUGS;
-        case RG_BUY_POE:
-            return GI_POE;
-        case RG_BUY_FAIRYS_SPIRIT:
-            return GI_FAIRY;
-
-        // Trade Items
-        case RG_WEIRD_EGG:
-            return GI_WEIRD_EGG;
-        case RG_ZELDAS_LETTER:
-            return GI_LETTER_ZELDA;
-        case RG_POCKET_EGG:
-            return GI_POCKET_EGG;
-        case RG_COJIRO:
-            return GI_COJIRO;
-        case RG_ODD_MUSHROOM:
-            return GI_ODD_MUSHROOM;
-        case RG_ODD_POTION:
-            return GI_ODD_POTION;
-        case RG_POACHERS_SAW:
-            return GI_SAW;
-        case RG_BROKEN_SWORD:
-            return GI_SWORD_BROKEN;
-        case RG_PRESCRIPTION:
-            return GI_PRESCRIPTION;
-        case RG_EYEBALL_FROG:
-            return GI_FROG;
-        case RG_EYEDROPS:
-            return GI_EYEDROPS;
-        case RG_CLAIM_CHECK:
-            return GI_CLAIM_CHECK;
-
-        // Misc Items
-        case RG_STONE_OF_AGONY:
-            return GI_STONE_OF_AGONY;
-        case RG_GERUDO_MEMBERSHIP_CARD:
-            return GI_GERUDO_CARD;
-        case RG_GOLD_SKULLTULA_TOKEN:
-            return GI_SKULL_TOKEN;
-        case RG_PROGRESSIVE_STRENGTH:
-            switch (CUR_UPG_VALUE(UPG_STRENGTH)) {
-                case 0:
-                    return GI_BRACELET;
-                case 1:
-                    return GI_GAUNTLETS_SILVER;
-                case 2:
-                case 3:
-                    return GI_GAUNTLETS_GOLD;
-            }
-        case RG_PROGRESSIVE_WALLET:
-            if (!Flags_GetRandomizerInf(RAND_INF_HAS_WALLET)) {
-                return (GetItemID)RG_CHILD_WALLET;
-            }
-            switch (CUR_UPG_VALUE(UPG_WALLET)) {
-                case 0:
-                    return GI_WALLET_ADULT;
-                case 1:
-                    return GI_WALLET_GIANT;
-                case 2:
-                    return tycoonWallet ? (GetItemID)RG_TYCOON_WALLET : infiniteUpgrades != RO_INF_UPGRADES_OFF ? (GetItemID)RG_WALLET_INF : GI_WALLET_GIANT;
-                case 3:
-                case 4:
-                    return infiniteUpgrades != RO_INF_UPGRADES_OFF ? (GetItemID)RG_WALLET_INF : tycoonWallet ? (GetItemID)RG_TYCOON_WALLET : GI_WALLET_GIANT;
-            }
-        case RG_PROGRESSIVE_SCALE:
-            if (!Flags_GetRandomizerInf(RAND_INF_CAN_SWIM)) {
-                return (GetItemID)RG_BRONZE_SCALE;
-            }
-            switch (CUR_UPG_VALUE(UPG_SCALE)) {
-                case 0:
-                    return GI_SCALE_SILVER;
-                case 1:
-                case 2:
-                    return GI_SCALE_GOLD;
-            }
-        case RG_PROGRESSIVE_MAGIC_METER:
-            switch (gSaveContext.magicLevel) {
-                case 0:
-                    return (GetItemID)RG_MAGIC_SINGLE;
-                case 1:
-                    return (GetItemID)RG_MAGIC_DOUBLE;
-                case 2:
-                case 3:
-                    return infiniteUpgrades != RO_INF_UPGRADES_OFF ? (GetItemID)RG_MAGIC_INF : (GetItemID)RG_MAGIC_DOUBLE;
-            }
-
-        case RG_RECOVERY_HEART:
-        case RG_BUY_HEART:
-            return GI_HEART;
-        case RG_GREEN_RUPEE:
-            return GI_RUPEE_GREEN;
-        case RG_BLUE_RUPEE:
-            return GI_RUPEE_BLUE;
-        case RG_RED_RUPEE:
-            return GI_RUPEE_RED;
-        case RG_PURPLE_RUPEE:
-            return GI_RUPEE_PURPLE;
-        case RG_HUGE_RUPEE:
-            return GI_RUPEE_GOLD;
-        case RG_PIECE_OF_HEART:
-            return GI_HEART_PIECE;
-        case RG_HEART_CONTAINER:
-            return GI_HEART_CONTAINER;
-        
-        case RG_DEKU_NUTS_5:
-        case RG_BUY_DEKU_NUTS_5:
-            return GI_NUTS_5;
-        case RG_DEKU_NUTS_10:
-        case RG_BUY_DEKU_NUTS_10:
-            return GI_NUTS_10;
-        case RG_DEKU_STICK_1:
-        case RG_BUY_DEKU_STICK_1:
-            return GI_STICKS_1;
-        case RG_TREASURE_GAME_SMALL_KEY:
-            return GI_DOOR_KEY;
-        case RG_TREASURE_GAME_HEART:
-            return GI_HEART_PIECE_WIN;
-        case RG_TREASURE_GAME_GREEN_RUPEE:
-            return GI_RUPEE_GREEN_LOSE;
-
-        //Ocarina Buttons
-        case RG_OCARINA_A_BUTTON:
-            return (GetItemID)RG_OCARINA_A_BUTTON;
-        case RG_OCARINA_C_LEFT_BUTTON:
-            return (GetItemID)RG_OCARINA_C_LEFT_BUTTON;
-        case RG_OCARINA_C_RIGHT_BUTTON:
-            return (GetItemID)RG_OCARINA_C_RIGHT_BUTTON;
-        case RG_OCARINA_C_UP_BUTTON:
-            return (GetItemID)RG_OCARINA_C_UP_BUTTON;
-        case RG_OCARINA_C_DOWN_BUTTON:
-            return (GetItemID)RG_OCARINA_C_DOWN_BUTTON;
-
-        default:
-            if (!IsItemVanilla(randoGet)) {
-                return (GetItemID)randoGet;
-            }
-            return ogItemId;
-    }
-}
-
-bool Randomizer::IsItemVanilla(RandomizerGet randoGet) {
-    switch (randoGet) {
-        case RG_NONE:
-        case RG_KOKIRI_SWORD: 
-        case RG_GIANTS_KNIFE: 
-        case RG_BIGGORON_SWORD:
-        case RG_DEKU_SHIELD:
-        case RG_HYLIAN_SHIELD:
-        case RG_MIRROR_SHIELD:
-        case RG_GORON_TUNIC:
-        case RG_ZORA_TUNIC:
-        case RG_IRON_BOOTS:
-        case RG_HOVER_BOOTS:
-        case RG_BOOMERANG:
-        case RG_LENS_OF_TRUTH:
-        case RG_MEGATON_HAMMER:
-        case RG_STONE_OF_AGONY:
-        case RG_DINS_FIRE:
-        case RG_FARORES_WIND:
-        case RG_NAYRUS_LOVE:
-        case RG_FIRE_ARROWS:
-        case RG_ICE_ARROWS:
-        case RG_LIGHT_ARROWS:
-        case RG_GERUDO_MEMBERSHIP_CARD:
-        case RG_MAGIC_BEAN:
-        case RG_WEIRD_EGG: 
-        case RG_ZELDAS_LETTER:
-        case RG_RUTOS_LETTER:
-        case RG_POCKET_EGG:
-        case RG_COJIRO:
-        case RG_ODD_MUSHROOM:
-        case RG_ODD_POTION:
-        case RG_POACHERS_SAW:
-        case RG_BROKEN_SWORD:
-        case RG_PRESCRIPTION:
-        case RG_EYEBALL_FROG:
-        case RG_EYEDROPS:
-        case RG_CLAIM_CHECK:
-        case RG_GOLD_SKULLTULA_TOKEN:
-        case RG_PROGRESSIVE_HOOKSHOT:
-        case RG_PROGRESSIVE_STRENGTH:
-            return true;
-        case RG_PROGRESSIVE_BOMB_BAG:
-            if (CUR_UPG_VALUE(UPG_BOMB_BAG) < 3) {
-                return true;
-            } else {
-                return false;
-            }
-        case RG_PROGRESSIVE_BOW:
-            if (CUR_UPG_VALUE(UPG_QUIVER) < 3) {
-                return true;
-            } else {
-                return false;
-            }
-        case RG_PROGRESSIVE_SLINGSHOT:
-            if (CUR_UPG_VALUE(UPG_BULLET_BAG) < 3) {
-                return true;
-            } else {
-                return false;
-            }
-        case RG_PROGRESSIVE_NUT_UPGRADE:
-            if (CUR_UPG_VALUE(UPG_NUTS) < 3) {
-                return true;
-            } else {
-                return false;
-            }
-        case RG_PROGRESSIVE_STICK_UPGRADE:
-            if (CUR_UPG_VALUE(UPG_STICKS) < 3) {
-                return true;
-            } else {
-                return false;
-            }
-        case RG_PROGRESSIVE_OCARINA:
-        case RG_PROGRESSIVE_GORONSWORD:
-        case RG_EMPTY_BOTTLE:
-        case RG_BOTTLE_WITH_MILK:
-        case RG_RECOVERY_HEART:
-        case RG_GREEN_RUPEE:
-        case RG_BLUE_RUPEE:
-        case RG_RED_RUPEE:
-        case RG_PURPLE_RUPEE:
-        case RG_HUGE_RUPEE:
-        case RG_PIECE_OF_HEART:
-        case RG_HEART_CONTAINER:
-        case RG_MILK:
-        case RG_FISH:
-        case RG_BOMBS_5:
-        case RG_BOMBS_10:
-        case RG_BOMBS_20:
-        case RG_BOMBCHU_5:
-        case RG_BOMBCHU_10:
-        case RG_BOMBCHU_20:
-            return true;
-        case RG_PROGRESSIVE_BOMBCHUS:
-            return INV_CONTENT(ITEM_BOMBCHU) != ITEM_NONE && !GetRandoSettingValue(RSK_INFINITE_UPGRADES);
-        case RG_ARROWS_5:
-        case RG_ARROWS_10:
-        case RG_ARROWS_30:
-        case RG_DEKU_NUTS_5:
-        case RG_DEKU_NUTS_10:
-        case RG_DEKU_SEEDS_30:
-        case RG_DEKU_STICK_1:
-        case RG_RED_POTION_REFILL:
-        case RG_GREEN_POTION_REFILL:
-        case RG_BLUE_POTION_REFILL:
-        case RG_TREASURE_GAME_HEART:
-        case RG_TREASURE_GAME_GREEN_RUPEE:
-        case RG_BUY_DEKU_NUTS_5:
-        case RG_BUY_ARROWS_30:
-        case RG_BUY_ARROWS_50:
-        case RG_BUY_BOMBS_525:
-        case RG_BUY_DEKU_NUTS_10:
-        case RG_BUY_DEKU_STICK_1:
-        case RG_BUY_BOMBS_10:
-        case RG_BUY_FISH:
-        case RG_BUY_RED_POTION_30:
-        case RG_BUY_GREEN_POTION:
-        case RG_BUY_BLUE_POTION:
-        case RG_BUY_HYLIAN_SHIELD:
-        case RG_BUY_DEKU_SHIELD:
-        case RG_BUY_GORON_TUNIC:
-        case RG_BUY_ZORA_TUNIC:
-        case RG_BUY_HEART:
-        case RG_BUY_BOMBCHUS_10:
-        case RG_BUY_BOMBCHUS_20:
-        case RG_BUY_DEKU_SEEDS_30:
-        case RG_SOLD_OUT:
-        case RG_BUY_BLUE_FIRE:
-        case RG_BUY_BOTTLE_BUG:
-        case RG_BUY_POE:
-        case RG_BUY_FAIRYS_SPIRIT:
-        case RG_BUY_ARROWS_10:
-        case RG_BUY_BOMBS_20:
-        case RG_BUY_BOMBS_30:
-        case RG_BUY_BOMBS_535:
-        case RG_BUY_RED_POTION_40:
-        case RG_BUY_RED_POTION_50:
-            return true;
-        case RG_PROGRESSIVE_SCALE:
-            if (!Flags_GetRandomizerInf(RAND_INF_CAN_SWIM)) {
-                return false;
-            }
-            return true;
-        case RG_PROGRESSIVE_WALLET:
-            if (!Flags_GetRandomizerInf(RAND_INF_HAS_WALLET)) {
-                return false;
-            }
-            if (CUR_UPG_VALUE(UPG_WALLET) < 2) {
-                return true;
-            } else {
-                return false;
-            }
-        default:
-            return false;
-    }
-}
-
-bool Randomizer::CheckContainsVanillaItem(RandomizerCheck randoCheck) {
-    RandomizerGet randoGet = Rando::Context::GetInstance()->GetItemLocation(randoCheck)->GetPlacedRandomizerGet();
-    return IsItemVanilla(randoGet);
 }
 
 // There has been some talk about potentially just using the RC identifier to store flags rather than randomizer inf, so
@@ -1364,6 +920,7 @@ std::map<RandomizerCheck, RandomizerInf> rcToRandomizerInf = {
     { RC_GC_MEDIGORON,                                                RAND_INF_MERCHANTS_MEDIGORON                   },
     { RC_KAK_GRANNYS_SHOP,                                            RAND_INF_MERCHANTS_GRANNYS_SHOP                },
     { RC_WASTELAND_BOMBCHU_SALESMAN,                                  RAND_INF_MERCHANTS_CARPET_SALESMAN             },
+    { RC_ZR_MAGIC_BEAN_SALESMAN,                                      RAND_INF_MERCHANTS_MAGIC_BEAN_SALESMAN         },
     { RC_LW_TRADE_COJIRO,                                             RAND_INF_ADULT_TRADES_LW_TRADE_COJIRO },
     { RC_GV_TRADE_SAW,                                                RAND_INF_ADULT_TRADES_GV_TRADE_SAW },
     { RC_DMT_TRADE_BROKEN_SWORD,                                      RAND_INF_ADULT_TRADES_DMT_TRADE_BROKEN_SWORD },
@@ -1452,6 +1009,548 @@ std::map<RandomizerCheck, RandomizerInf> rcToRandomizerInf = {
     { RC_ZD_FISH_3,                                                   RAND_INF_ZD_FISH_3 },
     { RC_ZD_FISH_4,                                                   RAND_INF_ZD_FISH_4 },
     { RC_ZD_FISH_5,                                                   RAND_INF_ZD_FISH_5 },
+    
+    { RC_KF_LINKS_HOUSE_POT,                                            RAND_INF_KF_LINKS_HOUSE_POT },
+    { RC_KF_TWINS_HOUSE_POT_1,                                          RAND_INF_KF_TWINS_HOUSE_POT_1 },
+    { RC_KF_TWINS_HOUSE_POT_2,                                          RAND_INF_KF_TWINS_HOUSE_POT_2 },
+    { RC_KF_BROTHERS_HOUSE_POT_1,                                       RAND_INF_KF_BROTHERS_HOUSE_POT_1 },
+    { RC_KF_BROTHERS_HOUSE_POT_2,                                       RAND_INF_KF_BROTHERS_HOUSE_POT_2 },
+    { RC_GF_BREAK_ROOM_POT_1,                                           RAND_INF_GF_BREAK_ROOM_POT_1 },
+    { RC_GF_BREAK_ROOM_POT_2,                                           RAND_INF_GF_BREAK_ROOM_POT_2 },
+    { RC_GF_KITCHEN_POT_1,                                              RAND_INF_GF_KITCHEN_POT_1 },
+    { RC_GF_KITCHEN_POT_2,                                              RAND_INF_GF_KITCHEN_POT_2 },
+    { RC_GF_NORTH_F1_CARPENTER_POT_1,                                   RAND_INF_GF_NORTH_F1_CARPENTER_POT_1 },
+    { RC_GF_NORTH_F1_CARPENTER_POT_2,                                   RAND_INF_GF_NORTH_F1_CARPENTER_POT_2 },
+    { RC_GF_NORTH_F1_CARPENTER_POT_3,                                   RAND_INF_GF_NORTH_F1_CARPENTER_POT_3 },
+    { RC_GF_NORTH_F2_CARPENTER_POT_1,                                   RAND_INF_GF_NORTH_F2_CARPENTER_POT_1 },
+    { RC_GF_NORTH_F2_CARPENTER_POT_2,                                   RAND_INF_GF_NORTH_F2_CARPENTER_POT_2 },
+    { RC_GF_SOUTH_F1_CARPENTER_POT_1,                                   RAND_INF_GF_SOUTH_F1_CARPENTER_POT_1 },
+    { RC_GF_SOUTH_F1_CARPENTER_POT_2,                                   RAND_INF_GF_SOUTH_F1_CARPENTER_POT_2 },
+    { RC_GF_SOUTH_F1_CARPENTER_POT_3,                                   RAND_INF_GF_SOUTH_F1_CARPENTER_POT_3 },
+    { RC_GF_SOUTH_F1_CARPENTER_CELL_POT_1,                              RAND_INF_GF_SOUTH_F1_CARPENTER_CELL_POT_1 },
+    { RC_GF_SOUTH_F1_CARPENTER_CELL_POT_2,                              RAND_INF_GF_SOUTH_F1_CARPENTER_CELL_POT_2 },
+    { RC_GF_SOUTH_F1_CARPENTER_CELL_POT_3,                              RAND_INF_GF_SOUTH_F1_CARPENTER_CELL_POT_3 },
+    { RC_GF_SOUTH_F1_CARPENTER_CELL_POT_4,                              RAND_INF_GF_SOUTH_F1_CARPENTER_CELL_POT_4 },
+    { RC_WASTELAND_NEAR_GS_POT_1,                                       RAND_INF_WASTELAND_NEAR_GS_POT_1 },
+    { RC_WASTELAND_NEAR_GS_POT_2,                                       RAND_INF_WASTELAND_NEAR_GS_POT_2 },
+    { RC_WASTELAND_NEAR_GS_POT_3,                                       RAND_INF_WASTELAND_NEAR_GS_POT_3 },
+    { RC_WASTELAND_NEAR_GS_POT_4,                                       RAND_INF_WASTELAND_NEAR_GS_POT_4 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_1,                                    RAND_INF_MK_GUARD_HOUSE_CHILD_POT_1 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_2,                                    RAND_INF_MK_GUARD_HOUSE_CHILD_POT_2 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_3,                                    RAND_INF_MK_GUARD_HOUSE_CHILD_POT_3 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_4,                                    RAND_INF_MK_GUARD_HOUSE_CHILD_POT_4 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_5,                                    RAND_INF_MK_GUARD_HOUSE_CHILD_POT_5 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_6,                                    RAND_INF_MK_GUARD_HOUSE_CHILD_POT_6 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_7,                                    RAND_INF_MK_GUARD_HOUSE_CHILD_POT_7 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_8,                                    RAND_INF_MK_GUARD_HOUSE_CHILD_POT_8 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_9,                                    RAND_INF_MK_GUARD_HOUSE_CHILD_POT_9 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_10,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_10 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_11,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_11 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_12,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_12 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_13,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_13 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_14,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_14 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_15,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_15 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_16,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_16 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_17,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_17 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_18,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_18 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_19,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_19 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_20,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_20 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_21,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_21 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_22,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_22 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_23,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_23 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_24,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_24 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_25,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_25 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_26,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_26 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_27,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_27 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_28,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_28 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_29,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_29 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_30,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_30 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_31,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_31 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_32,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_32 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_33,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_33 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_34,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_34 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_35,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_35 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_36,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_36 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_37,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_37 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_38,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_38 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_39,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_39 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_40,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_40 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_41,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_41 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_42,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_42 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_43,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_43 },
+    { RC_MK_GUARD_HOUSE_CHILD_POT_44,                                   RAND_INF_MK_GUARD_HOUSE_CHILD_POT_44 },
+    { RC_MK_GUARD_HOUSE_ADULT_POT_1,                                    RAND_INF_MK_GUARD_HOUSE_ADULT_POT_1 },
+    { RC_MK_GUARD_HOUSE_ADULT_POT_2,                                    RAND_INF_MK_GUARD_HOUSE_ADULT_POT_2 },
+    { RC_MK_GUARD_HOUSE_ADULT_POT_3,                                    RAND_INF_MK_GUARD_HOUSE_ADULT_POT_3 },
+    { RC_MK_GUARD_HOUSE_ADULT_POT_4,                                    RAND_INF_MK_GUARD_HOUSE_ADULT_POT_4 },
+    { RC_MK_GUARD_HOUSE_ADULT_POT_5,                                    RAND_INF_MK_GUARD_HOUSE_ADULT_POT_5 },
+    { RC_MK_GUARD_HOUSE_ADULT_POT_6,                                    RAND_INF_MK_GUARD_HOUSE_ADULT_POT_6 },
+    { RC_MK_GUARD_HOUSE_ADULT_POT_7,                                    RAND_INF_MK_GUARD_HOUSE_ADULT_POT_7 },
+    { RC_MK_GUARD_HOUSE_ADULT_POT_8,                                    RAND_INF_MK_GUARD_HOUSE_ADULT_POT_8 },
+    { RC_MK_GUARD_HOUSE_ADULT_POT_9,                                    RAND_INF_MK_GUARD_HOUSE_ADULT_POT_9 },
+    { RC_MK_GUARD_HOUSE_ADULT_POT_10,                                   RAND_INF_MK_GUARD_HOUSE_ADULT_POT_10 },
+    { RC_MK_GUARD_HOUSE_ADULT_POT_11,                                   RAND_INF_MK_GUARD_HOUSE_ADULT_POT_11 },
+    { RC_MK_BACK_ALLEY_HOUSE_POT_1,                                     RAND_INF_MK_BACK_ALLEY_HOUSE_POT_1 },
+    { RC_MK_BACK_ALLEY_HOUSE_POT_2,                                     RAND_INF_MK_BACK_ALLEY_HOUSE_POT_2 },
+    { RC_MK_BACK_ALLEY_HOUSE_POT_3,                                     RAND_INF_MK_BACK_ALLEY_HOUSE_POT_3 },
+    { RC_KAK_NEAR_POTION_SHOP_POT_1,                                    RAND_INF_KAK_NEAR_POTION_SHOP_POT_1 },
+    { RC_KAK_NEAR_POTION_SHOP_POT_2,                                    RAND_INF_KAK_NEAR_POTION_SHOP_POT_2 },
+    { RC_KAK_NEAR_POTION_SHOP_POT_3,                                    RAND_INF_KAK_NEAR_POTION_SHOP_POT_3 },
+    { RC_KAK_NEAR_IMPAS_HOUSE_POT_1,                                    RAND_INF_KAK_NEAR_IMPAS_HOUSE_POT_1 },
+    { RC_KAK_NEAR_IMPAS_HOUSE_POT_2,                                    RAND_INF_KAK_NEAR_IMPAS_HOUSE_POT_2 },
+    { RC_KAK_NEAR_IMPAS_HOUSE_POT_3,                                    RAND_INF_KAK_NEAR_IMPAS_HOUSE_POT_3 },
+    { RC_KAK_NEAR_GUARDS_HOUSE_POT_1,                                   RAND_INF_KAK_NEAR_GUARDS_HOUSE_POT_1 },
+    { RC_KAK_NEAR_GUARDS_HOUSE_POT_2,                                   RAND_INF_KAK_NEAR_GUARDS_HOUSE_POT_2 },
+    { RC_KAK_NEAR_GUARDS_HOUSE_POT_3,                                   RAND_INF_KAK_NEAR_GUARDS_HOUSE_POT_3 },
+    { RC_KAK_NEAR_MEDICINE_SHOP_POT_1,                                  RAND_INF_KAK_NEAR_MEDICINE_SHOP_POT_1 },
+    { RC_KAK_NEAR_MEDICINE_SHOP_POT_2,                                  RAND_INF_KAK_NEAR_MEDICINE_SHOP_POT_2 },
+    { RC_GY_DAMPES_GRAVE_POT_1,                                         RAND_INF_GY_DAMPES_GRAVE_POT_1 },
+    { RC_GY_DAMPES_GRAVE_POT_2,                                         RAND_INF_GY_DAMPES_GRAVE_POT_2 },
+    { RC_GY_DAMPES_GRAVE_POT_3,                                         RAND_INF_GY_DAMPES_GRAVE_POT_3 },
+    { RC_GY_DAMPES_GRAVE_POT_4,                                         RAND_INF_GY_DAMPES_GRAVE_POT_4 },
+    { RC_GY_DAMPES_GRAVE_POT_5,                                         RAND_INF_GY_DAMPES_GRAVE_POT_5 },
+    { RC_GY_DAMPES_GRAVE_POT_6,                                         RAND_INF_GY_DAMPES_GRAVE_POT_6 },
+    { RC_GC_LOWER_STAIRCASE_POT_1,                                      RAND_INF_GC_LOWER_STAIRCASE_POT_1 },
+    { RC_GC_LOWER_STAIRCASE_POT_2,                                      RAND_INF_GC_LOWER_STAIRCASE_POT_2 },
+    { RC_GC_UPPER_STAIRCASE_POT_1,                                      RAND_INF_GC_UPPER_STAIRCASE_POT_1 },
+    { RC_GC_UPPER_STAIRCASE_POT_2,                                      RAND_INF_GC_UPPER_STAIRCASE_POT_2 },
+    { RC_GC_UPPER_STAIRCASE_POT_3,                                      RAND_INF_GC_UPPER_STAIRCASE_POT_3 },
+    { RC_GC_MEDIGORON_POT_1,                                            RAND_INF_GC_MEDIGORON_POT_1 },
+    { RC_GC_DARUNIA_POT_1,                                              RAND_INF_GC_DARUNIA_POT_1 },
+    { RC_GC_DARUNIA_POT_2,                                              RAND_INF_GC_DARUNIA_POT_2 },
+    { RC_GC_DARUNIA_POT_3,                                              RAND_INF_GC_DARUNIA_POT_3 },
+    { RC_DMC_NEAR_GC_POT_1,                                             RAND_INF_DMC_NEAR_GC_POT_1 },
+    { RC_DMC_NEAR_GC_POT_2,                                             RAND_INF_DMC_NEAR_GC_POT_2 },
+    { RC_DMC_NEAR_GC_POT_3,                                             RAND_INF_DMC_NEAR_GC_POT_3 },
+    { RC_DMC_NEAR_GC_POT_4,                                             RAND_INF_DMC_NEAR_GC_POT_4 },
+    { RC_ZD_NEAR_SHOP_POT_1,                                            RAND_INF_ZD_NEAR_SHOP_POT_1 },
+    { RC_ZD_NEAR_SHOP_POT_2,                                            RAND_INF_ZD_NEAR_SHOP_POT_2 },
+    { RC_ZD_NEAR_SHOP_POT_3,                                            RAND_INF_ZD_NEAR_SHOP_POT_3 },
+    { RC_ZD_NEAR_SHOP_POT_4,                                            RAND_INF_ZD_NEAR_SHOP_POT_4 },
+    { RC_ZD_NEAR_SHOP_POT_5,                                            RAND_INF_ZD_NEAR_SHOP_POT_5 },
+    { RC_ZF_HIDDEN_CAVE_POT_1,                                          RAND_INF_ZF_HIDDEN_CAVE_POT_1 },
+    { RC_ZF_HIDDEN_CAVE_POT_2,                                          RAND_INF_ZF_HIDDEN_CAVE_POT_2 },
+    { RC_ZF_HIDDEN_CAVE_POT_3,                                          RAND_INF_ZF_HIDDEN_CAVE_POT_3 },
+    { RC_ZF_NEAR_JABU_POT_1,                                            RAND_INF_ZF_NEAR_JABU_POT_1 },
+    { RC_ZF_NEAR_JABU_POT_2,                                            RAND_INF_ZF_NEAR_JABU_POT_2 },
+    { RC_ZF_NEAR_JABU_POT_3,                                            RAND_INF_ZF_NEAR_JABU_POT_3 },
+    { RC_ZF_NEAR_JABU_POT_4,                                            RAND_INF_ZF_NEAR_JABU_POT_4 },
+    { RC_LLR_FRONT_POT_1,                                               RAND_INF_LLR_FRONT_POT_1 },
+    { RC_LLR_FRONT_POT_2,                                               RAND_INF_LLR_FRONT_POT_2 },
+    { RC_LLR_FRONT_POT_3,                                               RAND_INF_LLR_FRONT_POT_3 },
+    { RC_LLR_FRONT_POT_4,                                               RAND_INF_LLR_FRONT_POT_4 },
+    { RC_LLR_RAIN_SHED_POT_1,                                           RAND_INF_LLR_RAIN_SHED_POT_1 },
+    { RC_LLR_RAIN_SHED_POT_2,                                           RAND_INF_LLR_RAIN_SHED_POT_2 },
+    { RC_LLR_RAIN_SHED_POT_3,                                           RAND_INF_LLR_RAIN_SHED_POT_3 },
+    { RC_LLR_TALONS_HOUSE_POT_1,                                        RAND_INF_LLR_TALONS_HOUSE_POT_1 },
+    { RC_LLR_TALONS_HOUSE_POT_2,                                        RAND_INF_LLR_TALONS_HOUSE_POT_2 },
+    { RC_LLR_TALONS_HOUSE_POT_3,                                        RAND_INF_LLR_TALONS_HOUSE_POT_3 },
+    { RC_HF_COW_GROTTO_POT_1,                                           RAND_INF_HF_COW_GROTTO_POT_1 },
+    { RC_HF_COW_GROTTO_POT_2,                                           RAND_INF_HF_COW_GROTTO_POT_2 },
+    { RC_HC_STORMS_GROTTO_POT_1,                                        RAND_INF_HC_STORMS_GROTTO_POT_1 },
+    { RC_HC_STORMS_GROTTO_POT_2,                                        RAND_INF_HC_STORMS_GROTTO_POT_2 },
+    { RC_HC_STORMS_GROTTO_POT_3,                                        RAND_INF_HC_STORMS_GROTTO_POT_3 },
+    { RC_HC_STORMS_GROTTO_POT_4,                                        RAND_INF_HC_STORMS_GROTTO_POT_4 },
+    { RC_DODONGOS_CAVERN_LIZALFOS_POT_1,                                RAND_INF_DODONGOS_CAVERN_LIZALFOS_POT_1 },
+    { RC_DODONGOS_CAVERN_LIZALFOS_POT_2,                                RAND_INF_DODONGOS_CAVERN_LIZALFOS_POT_2 },
+    { RC_DODONGOS_CAVERN_LIZALFOS_POT_3,                                RAND_INF_DODONGOS_CAVERN_LIZALFOS_POT_3 },
+    { RC_DODONGOS_CAVERN_LIZALFOS_POT_4,                                RAND_INF_DODONGOS_CAVERN_LIZALFOS_POT_4 },
+    { RC_DODONGOS_CAVERN_SIDE_ROOM_POT_1,                               RAND_INF_DODONGOS_CAVERN_SIDE_ROOM_POT_1 },
+    { RC_DODONGOS_CAVERN_SIDE_ROOM_POT_2,                               RAND_INF_DODONGOS_CAVERN_SIDE_ROOM_POT_2 },
+    { RC_DODONGOS_CAVERN_SIDE_ROOM_POT_3,                               RAND_INF_DODONGOS_CAVERN_SIDE_ROOM_POT_3 },
+    { RC_DODONGOS_CAVERN_SIDE_ROOM_POT_4,                               RAND_INF_DODONGOS_CAVERN_SIDE_ROOM_POT_4 },
+    { RC_DODONGOS_CAVERN_SIDE_ROOM_POT_5,                               RAND_INF_DODONGOS_CAVERN_SIDE_ROOM_POT_5 },
+    { RC_DODONGOS_CAVERN_SIDE_ROOM_POT_6,                               RAND_INF_DODONGOS_CAVERN_SIDE_ROOM_POT_6 },
+    { RC_DODONGOS_CAVERN_TORCH_ROOM_POT_1,                              RAND_INF_DODONGOS_CAVERN_TORCH_ROOM_POT_1 },
+    { RC_DODONGOS_CAVERN_TORCH_ROOM_POT_2,                              RAND_INF_DODONGOS_CAVERN_TORCH_ROOM_POT_2 },
+    { RC_DODONGOS_CAVERN_TORCH_ROOM_POT_3,                              RAND_INF_DODONGOS_CAVERN_TORCH_ROOM_POT_3 },
+    { RC_DODONGOS_CAVERN_TORCH_ROOM_POT_4,                              RAND_INF_DODONGOS_CAVERN_TORCH_ROOM_POT_4 },
+    { RC_DODONGOS_CAVERN_STAIRCASE_POT_1,                               RAND_INF_DODONGOS_CAVERN_STAIRCASE_POT_1 },
+    { RC_DODONGOS_CAVERN_STAIRCASE_POT_2,                               RAND_INF_DODONGOS_CAVERN_STAIRCASE_POT_2 },
+    { RC_DODONGOS_CAVERN_STAIRCASE_POT_3,                               RAND_INF_DODONGOS_CAVERN_STAIRCASE_POT_3 },
+    { RC_DODONGOS_CAVERN_STAIRCASE_POT_4,                               RAND_INF_DODONGOS_CAVERN_STAIRCASE_POT_4 },
+    { RC_DODONGOS_CAVERN_SINGLE_EYE_POT_1,                              RAND_INF_DODONGOS_CAVERN_SINGLE_EYE_POT_1 },
+    { RC_DODONGOS_CAVERN_SINGLE_EYE_POT_2,                              RAND_INF_DODONGOS_CAVERN_SINGLE_EYE_POT_2 },
+    { RC_DODONGOS_CAVERN_BLADE_POT_1,                                   RAND_INF_DODONGOS_CAVERN_BLADE_POT_1 },
+    { RC_DODONGOS_CAVERN_BLADE_POT_2,                                   RAND_INF_DODONGOS_CAVERN_BLADE_POT_2 },
+    { RC_DODONGOS_CAVERN_DOUBLE_EYE_POT_1,                              RAND_INF_DODONGOS_CAVERN_DOUBLE_EYE_POT_1 },
+    { RC_DODONGOS_CAVERN_DOUBLE_EYE_POT_2,                              RAND_INF_DODONGOS_CAVERN_DOUBLE_EYE_POT_2 },
+    { RC_DODONGOS_CAVERN_BACK_ROOM_POT_1,                               RAND_INF_DODONGOS_CAVERN_BACK_ROOM_POT_1 },
+    { RC_DODONGOS_CAVERN_BACK_ROOM_POT_2,                               RAND_INF_DODONGOS_CAVERN_BACK_ROOM_POT_2 },
+    { RC_DODONGOS_CAVERN_BACK_ROOM_POT_3,                               RAND_INF_DODONGOS_CAVERN_BACK_ROOM_POT_3 },
+    { RC_DODONGOS_CAVERN_BACK_ROOM_POT_4,                               RAND_INF_DODONGOS_CAVERN_BACK_ROOM_POT_4 },
+    { RC_JABU_JABUS_BELLY_ABOVE_BIG_OCTO_POT_1,                         RAND_INF_JABU_JABUS_BELLY_ABOVE_BIG_OCTO_POT_1 },
+    { RC_JABU_JABUS_BELLY_ABOVE_BIG_OCTO_POT_2,                         RAND_INF_JABU_JABUS_BELLY_ABOVE_BIG_OCTO_POT_2 },
+    { RC_JABU_JABUS_BELLY_ABOVE_BIG_OCTO_POT_3,                         RAND_INF_JABU_JABUS_BELLY_ABOVE_BIG_OCTO_POT_3 },
+    { RC_JABU_JABUS_BELLY_BARINADE_POT_1,                               RAND_INF_JABU_JABUS_BELLY_BARINADE_POT_1 },
+    { RC_JABU_JABUS_BELLY_BARINADE_POT_2,                               RAND_INF_JABU_JABUS_BELLY_BARINADE_POT_2 },
+    { RC_JABU_JABUS_BELLY_BARINADE_POT_3,                               RAND_INF_JABU_JABUS_BELLY_BARINADE_POT_3 },
+    { RC_JABU_JABUS_BELLY_BARINADE_POT_4,                               RAND_INF_JABU_JABUS_BELLY_BARINADE_POT_4 },
+    { RC_JABU_JABUS_BELLY_BARINADE_POT_5,                               RAND_INF_JABU_JABUS_BELLY_BARINADE_POT_5 },
+    { RC_JABU_JABUS_BELLY_BARINADE_POT_6,                               RAND_INF_JABU_JABUS_BELLY_BARINADE_POT_6 },
+    { RC_JABU_JABUS_BELLY_BASEMENT_POT_1,                               RAND_INF_JABU_JABUS_BELLY_BASEMENT_POT_1 },
+    { RC_JABU_JABUS_BELLY_BASEMENT_POT_2,                               RAND_INF_JABU_JABUS_BELLY_BASEMENT_POT_2 },
+    { RC_JABU_JABUS_BELLY_BASEMENT_POT_3,                               RAND_INF_JABU_JABUS_BELLY_BASEMENT_POT_3 },
+    { RC_JABU_JABUS_BELLY_TWO_OCTOROK_POT_1,                            RAND_INF_JABU_JABUS_BELLY_TWO_OCTOROK_POT_1 },
+    { RC_JABU_JABUS_BELLY_TWO_OCTOROK_POT_2,                            RAND_INF_JABU_JABUS_BELLY_TWO_OCTOROK_POT_2 },
+    { RC_JABU_JABUS_BELLY_TWO_OCTOROK_POT_3,                            RAND_INF_JABU_JABUS_BELLY_TWO_OCTOROK_POT_3 },
+    { RC_JABU_JABUS_BELLY_TWO_OCTOROK_POT_4,                            RAND_INF_JABU_JABUS_BELLY_TWO_OCTOROK_POT_4 },
+    { RC_JABU_JABUS_BELLY_TWO_OCTOROK_POT_5,                            RAND_INF_JABU_JABUS_BELLY_TWO_OCTOROK_POT_5 },
+    { RC_FOREST_TEMPLE_LOBBY_POT_1,                                     RAND_INF_FOREST_TEMPLE_LOBBY_POT_1 },
+    { RC_FOREST_TEMPLE_LOBBY_POT_2,                                     RAND_INF_FOREST_TEMPLE_LOBBY_POT_2 },
+    { RC_FOREST_TEMPLE_LOBBY_POT_3,                                     RAND_INF_FOREST_TEMPLE_LOBBY_POT_3 },
+    { RC_FOREST_TEMPLE_LOBBY_POT_4,                                     RAND_INF_FOREST_TEMPLE_LOBBY_POT_4 },
+    { RC_FOREST_TEMPLE_LOBBY_POT_5,                                     RAND_INF_FOREST_TEMPLE_LOBBY_POT_5 },
+    { RC_FOREST_TEMPLE_LOBBY_POT_6,                                     RAND_INF_FOREST_TEMPLE_LOBBY_POT_6 },
+    { RC_FOREST_TEMPLE_LOWER_STALFOS_POT_1,                             RAND_INF_FOREST_TEMPLE_LOWER_STALFOS_POT_1 },
+    { RC_FOREST_TEMPLE_LOWER_STALFOS_POT_2,                             RAND_INF_FOREST_TEMPLE_LOWER_STALFOS_POT_2 },
+    { RC_FOREST_TEMPLE_GREEN_POE_POT_1,                                 RAND_INF_FOREST_TEMPLE_GREEN_POE_POT_1 },
+    { RC_FOREST_TEMPLE_GREEN_POE_POT_2,                                 RAND_INF_FOREST_TEMPLE_GREEN_POE_POT_2 },
+    { RC_FOREST_TEMPLE_UPPER_STALFOS_POT_1,                             RAND_INF_FOREST_TEMPLE_UPPER_STALFOS_POT_1 },
+    { RC_FOREST_TEMPLE_UPPER_STALFOS_POT_2,                             RAND_INF_FOREST_TEMPLE_UPPER_STALFOS_POT_2 },
+    { RC_FOREST_TEMPLE_UPPER_STALFOS_POT_3,                             RAND_INF_FOREST_TEMPLE_UPPER_STALFOS_POT_3 },
+    { RC_FOREST_TEMPLE_UPPER_STALFOS_POT_4,                             RAND_INF_FOREST_TEMPLE_UPPER_STALFOS_POT_4 },
+    { RC_FOREST_TEMPLE_BLUE_POE_POT_1,                                  RAND_INF_FOREST_TEMPLE_BLUE_POE_POT_1 },
+    { RC_FOREST_TEMPLE_BLUE_POE_POT_2,                                  RAND_INF_FOREST_TEMPLE_BLUE_POE_POT_2 },
+    { RC_FOREST_TEMPLE_BLUE_POE_POT_3,                                  RAND_INF_FOREST_TEMPLE_BLUE_POE_POT_3 },
+    { RC_FOREST_TEMPLE_FROZEN_EYE_POT_1,                                RAND_INF_FOREST_TEMPLE_FROZEN_EYE_POT_1 },
+    { RC_FOREST_TEMPLE_FROZEN_EYE_POT_2,                                RAND_INF_FOREST_TEMPLE_FROZEN_EYE_POT_2 },
+    { RC_FIRE_TEMPLE_NEAR_BOSS_POT_1,                                   RAND_INF_FIRE_TEMPLE_NEAR_BOSS_POT_1 },
+    { RC_FIRE_TEMPLE_NEAR_BOSS_POT_2,                                   RAND_INF_FIRE_TEMPLE_NEAR_BOSS_POT_2 },
+    { RC_FIRE_TEMPLE_NEAR_BOSS_POT_3,                                   RAND_INF_FIRE_TEMPLE_NEAR_BOSS_POT_3 },
+    { RC_FIRE_TEMPLE_NEAR_BOSS_POT_4,                                   RAND_INF_FIRE_TEMPLE_NEAR_BOSS_POT_4 },
+    { RC_FIRE_TEMPLE_BIG_LAVA_POT_1,                                    RAND_INF_FIRE_TEMPLE_BIG_LAVA_POT_1 },
+    { RC_FIRE_TEMPLE_BIG_LAVA_POT_2,                                    RAND_INF_FIRE_TEMPLE_BIG_LAVA_POT_2 },
+    { RC_FIRE_TEMPLE_BIG_LAVA_POT_3,                                    RAND_INF_FIRE_TEMPLE_BIG_LAVA_POT_3 },
+    { RC_FIRE_TEMPLE_FLAME_MAZE_LEFT_POT_1,                             RAND_INF_FIRE_TEMPLE_FLAME_MAZE_LEFT_POT_1 },
+    { RC_FIRE_TEMPLE_FLAME_MAZE_LEFT_POT_2,                             RAND_INF_FIRE_TEMPLE_FLAME_MAZE_LEFT_POT_2 },
+    { RC_FIRE_TEMPLE_FLAME_MAZE_LEFT_POT_3,                             RAND_INF_FIRE_TEMPLE_FLAME_MAZE_LEFT_POT_3 },
+    { RC_FIRE_TEMPLE_FLAME_MAZE_LEFT_POT_4,                             RAND_INF_FIRE_TEMPLE_FLAME_MAZE_LEFT_POT_4 },
+    { RC_FIRE_TEMPLE_FLAME_MAZE_RIGHT_POT_1,                            RAND_INF_FIRE_TEMPLE_FLAME_MAZE_RIGHT_POT_1 },
+    { RC_FIRE_TEMPLE_FLAME_MAZE_RIGHT_POT_2,                            RAND_INF_FIRE_TEMPLE_FLAME_MAZE_RIGHT_POT_2 },
+    { RC_FIRE_TEMPLE_FLAME_MAZE_RIGHT_POT_3,                            RAND_INF_FIRE_TEMPLE_FLAME_MAZE_RIGHT_POT_3 },
+    { RC_FIRE_TEMPLE_FLAME_MAZE_RIGHT_POT_4,                            RAND_INF_FIRE_TEMPLE_FLAME_MAZE_RIGHT_POT_4 },
+    { RC_WATER_TEMPLE_MAIN_LEVEL_2_POT_1,                               RAND_INF_WATER_TEMPLE_MAIN_LEVEL_2_POT_1 },
+    { RC_WATER_TEMPLE_MAIN_LEVEL_2_POT_2,                               RAND_INF_WATER_TEMPLE_MAIN_LEVEL_2_POT_2 },
+    { RC_WATER_TEMPLE_MAIN_LEVEL_1_POT_1,                               RAND_INF_WATER_TEMPLE_MAIN_LEVEL_1_POT_1 },
+    { RC_WATER_TEMPLE_MAIN_LEVEL_1_POT_2,                               RAND_INF_WATER_TEMPLE_MAIN_LEVEL_1_POT_2 },
+    { RC_WATER_TEMPLE_TORCH_POT_1,                                      RAND_INF_WATER_TEMPLE_TORCH_POT_1 },
+    { RC_WATER_TEMPLE_TORCH_POT_2,                                      RAND_INF_WATER_TEMPLE_TORCH_POT_2 },
+    { RC_WATER_TEMPLE_NEAR_COMPASS_POT_1,                               RAND_INF_WATER_TEMPLE_NEAR_COMPASS_POT_1 },
+    { RC_WATER_TEMPLE_NEAR_COMPASS_POT_2,                               RAND_INF_WATER_TEMPLE_NEAR_COMPASS_POT_2 },
+    { RC_WATER_TEMPLE_NEAR_COMPASS_POT_3,                               RAND_INF_WATER_TEMPLE_NEAR_COMPASS_POT_3 },
+    { RC_WATER_TEMPLE_CENTRAL_BOW_POT_1,                                RAND_INF_WATER_TEMPLE_CENTRAL_BOW_POT_1 },
+    { RC_WATER_TEMPLE_CENTRAL_BOW_POT_2,                                RAND_INF_WATER_TEMPLE_CENTRAL_BOW_POT_2 },
+    { RC_WATER_TEMPLE_BEHIND_GATE_POT_1,                                RAND_INF_WATER_TEMPLE_BEHIND_GATE_POT_1 },
+    { RC_WATER_TEMPLE_BEHIND_GATE_POT_2,                                RAND_INF_WATER_TEMPLE_BEHIND_GATE_POT_2 },
+    { RC_WATER_TEMPLE_BEHIND_GATE_POT_3,                                RAND_INF_WATER_TEMPLE_BEHIND_GATE_POT_3 },
+    { RC_WATER_TEMPLE_BEHIND_GATE_POT_4,                                RAND_INF_WATER_TEMPLE_BEHIND_GATE_POT_4 },
+    { RC_WATER_TEMPLE_BASEMENT_BLOCK_PUZZLE_POT_1,                      RAND_INF_WATER_TEMPLE_BASEMENT_BLOCK_PUZZLE_POT_1 },
+    { RC_WATER_TEMPLE_BASEMENT_BLOCK_PUZZLE_POT_2,                      RAND_INF_WATER_TEMPLE_BASEMENT_BLOCK_PUZZLE_POT_2 },
+    { RC_WATER_TEMPLE_RIVER_POT_1,                                      RAND_INF_WATER_TEMPLE_RIVER_POT_1 },
+    { RC_WATER_TEMPLE_RIVER_POT_2,                                      RAND_INF_WATER_TEMPLE_RIVER_POT_2 },
+    { RC_WATER_TEMPLE_LIKE_LIKE_POT_1,                                  RAND_INF_WATER_TEMPLE_LIKE_LIKE_POT_1 },
+    { RC_WATER_TEMPLE_LIKE_LIKE_POT_2,                                  RAND_INF_WATER_TEMPLE_LIKE_LIKE_POT_2 },
+    { RC_WATER_TEMPLE_BOSS_KEY_POT_1,                                   RAND_INF_WATER_TEMPLE_BOSS_KEY_POT_1 },
+    { RC_WATER_TEMPLE_BOSS_KEY_POT_2,                                   RAND_INF_WATER_TEMPLE_BOSS_KEY_POT_2 },
+    { RC_SHADOW_TEMPLE_NEAR_DEAD_HAND_POT_1,                            RAND_INF_SHADOW_TEMPLE_NEAR_DEAD_HAND_POT_1 },
+    { RC_SHADOW_TEMPLE_WHISPERING_WALLS_POT_1,                          RAND_INF_SHADOW_TEMPLE_WHISPERING_WALLS_POT_1 },
+    { RC_SHADOW_TEMPLE_WHISPERING_WALLS_POT_2,                          RAND_INF_SHADOW_TEMPLE_WHISPERING_WALLS_POT_2 },
+    { RC_SHADOW_TEMPLE_WHISPERING_WALLS_POT_3,                          RAND_INF_SHADOW_TEMPLE_WHISPERING_WALLS_POT_3 },
+    { RC_SHADOW_TEMPLE_WHISPERING_WALLS_POT_4,                          RAND_INF_SHADOW_TEMPLE_WHISPERING_WALLS_POT_4 },
+    { RC_SHADOW_TEMPLE_WHISPERING_WALLS_POT_5,                          RAND_INF_SHADOW_TEMPLE_WHISPERING_WALLS_POT_5 },
+    { RC_SHADOW_TEMPLE_MAP_CHEST_POT_1,                                 RAND_INF_SHADOW_TEMPLE_MAP_CHEST_POT_1 },
+    { RC_SHADOW_TEMPLE_MAP_CHEST_POT_2,                                 RAND_INF_SHADOW_TEMPLE_MAP_CHEST_POT_2 },
+    { RC_SHADOW_TEMPLE_FALLING_SPIKES_POT_1,                            RAND_INF_SHADOW_TEMPLE_FALLING_SPIKES_POT_1 },
+    { RC_SHADOW_TEMPLE_FALLING_SPIKES_POT_2,                            RAND_INF_SHADOW_TEMPLE_FALLING_SPIKES_POT_2 },
+    { RC_SHADOW_TEMPLE_FALLING_SPIKES_POT_3,                            RAND_INF_SHADOW_TEMPLE_FALLING_SPIKES_POT_3 },
+    { RC_SHADOW_TEMPLE_FALLING_SPIKES_POT_4,                            RAND_INF_SHADOW_TEMPLE_FALLING_SPIKES_POT_4 },
+    { RC_SHADOW_TEMPLE_AFTER_WIND_POT_1,                                RAND_INF_SHADOW_TEMPLE_AFTER_WIND_POT_1 },
+    { RC_SHADOW_TEMPLE_AFTER_WIND_POT_2,                                RAND_INF_SHADOW_TEMPLE_AFTER_WIND_POT_2 },
+    { RC_SHADOW_TEMPLE_SPIKE_WALLS_POT_1,                               RAND_INF_SHADOW_TEMPLE_SPIKE_WALLS_POT_1 },
+    { RC_SHADOW_TEMPLE_FLOORMASTER_POT_1,                               RAND_INF_SHADOW_TEMPLE_FLOORMASTER_POT_1 },
+    { RC_SHADOW_TEMPLE_FLOORMASTER_POT_2,                               RAND_INF_SHADOW_TEMPLE_FLOORMASTER_POT_2 },
+    { RC_SHADOW_TEMPLE_AFTER_BOAT_POT_1,                                RAND_INF_SHADOW_TEMPLE_AFTER_BOAT_POT_1 },
+    { RC_SHADOW_TEMPLE_AFTER_BOAT_POT_2,                                RAND_INF_SHADOW_TEMPLE_AFTER_BOAT_POT_2 },
+    { RC_SHADOW_TEMPLE_AFTER_BOAT_POT_3,                                RAND_INF_SHADOW_TEMPLE_AFTER_BOAT_POT_3 },
+    { RC_SHADOW_TEMPLE_AFTER_BOAT_POT_4,                                RAND_INF_SHADOW_TEMPLE_AFTER_BOAT_POT_4 },
+    { RC_SPIRIT_TEMPLE_LOBBY_POT_1,                                     RAND_INF_SPIRIT_TEMPLE_LOBBY_POT_1 },
+    { RC_SPIRIT_TEMPLE_LOBBY_POT_2,                                     RAND_INF_SPIRIT_TEMPLE_LOBBY_POT_2 },
+    { RC_SPIRIT_TEMPLE_ANUBIS_POT_1,                                    RAND_INF_SPIRIT_TEMPLE_ANUBIS_POT_1 },
+    { RC_SPIRIT_TEMPLE_ANUBIS_POT_2,                                    RAND_INF_SPIRIT_TEMPLE_ANUBIS_POT_2 },
+    { RC_SPIRIT_TEMPLE_ANUBIS_POT_3,                                    RAND_INF_SPIRIT_TEMPLE_ANUBIS_POT_3 },
+    { RC_SPIRIT_TEMPLE_ANUBIS_POT_4,                                    RAND_INF_SPIRIT_TEMPLE_ANUBIS_POT_4 },
+    { RC_SPIRIT_TEMPLE_CHILD_CLIMB_POT_1,                               RAND_INF_SPIRIT_TEMPLE_CHILD_CLIMB_POT_1 },
+    { RC_SPIRIT_TEMPLE_AFTER_SUN_BLOCK_POT_1,                           RAND_INF_SPIRIT_TEMPLE_AFTER_SUN_BLOCK_POT_1 },
+    { RC_SPIRIT_TEMPLE_AFTER_SUN_BLOCK_POT_2,                           RAND_INF_SPIRIT_TEMPLE_AFTER_SUN_BLOCK_POT_2 },
+    { RC_SPIRIT_TEMPLE_CENTRAL_CHAMBER_POT_1,                           RAND_INF_SPIRIT_TEMPLE_CENTRAL_CHAMBER_POT_1 },
+    { RC_SPIRIT_TEMPLE_CENTRAL_CHAMBER_POT_2,                           RAND_INF_SPIRIT_TEMPLE_CENTRAL_CHAMBER_POT_2 },
+    { RC_SPIRIT_TEMPLE_CENTRAL_CHAMBER_POT_3,                           RAND_INF_SPIRIT_TEMPLE_CENTRAL_CHAMBER_POT_3 },
+    { RC_SPIRIT_TEMPLE_CENTRAL_CHAMBER_POT_4,                           RAND_INF_SPIRIT_TEMPLE_CENTRAL_CHAMBER_POT_4 },
+    { RC_SPIRIT_TEMPLE_CENTRAL_CHAMBER_POT_5,                           RAND_INF_SPIRIT_TEMPLE_CENTRAL_CHAMBER_POT_5 },
+    { RC_SPIRIT_TEMPLE_CENTRAL_CHAMBER_POT_6,                           RAND_INF_SPIRIT_TEMPLE_CENTRAL_CHAMBER_POT_6 },
+    { RC_SPIRIT_TEMPLE_BEAMOS_HALL_POT_1,                               RAND_INF_SPIRIT_TEMPLE_BEAMOS_HALL_POT_1 },
+    { RC_GANONS_CASTLE_FOREST_TRIAL_POT_1,                              RAND_INF_GANONS_CASTLE_FOREST_TRIAL_POT_1 },
+    { RC_GANONS_CASTLE_FOREST_TRIAL_POT_2,                              RAND_INF_GANONS_CASTLE_FOREST_TRIAL_POT_2 },
+    { RC_GANONS_CASTLE_FIRE_TRIAL_POT_1,                                RAND_INF_GANONS_CASTLE_FIRE_TRIAL_POT_1 },
+    { RC_GANONS_CASTLE_FIRE_TRIAL_POT_2,                                RAND_INF_GANONS_CASTLE_FIRE_TRIAL_POT_2 },
+    { RC_GANONS_CASTLE_WATER_TRIAL_POT_1,                               RAND_INF_GANONS_CASTLE_WATER_TRIAL_POT_1 },
+    { RC_GANONS_CASTLE_WATER_TRIAL_POT_2,                               RAND_INF_GANONS_CASTLE_WATER_TRIAL_POT_2 },
+    { RC_GANONS_CASTLE_WATER_TRIAL_POT_3,                               RAND_INF_GANONS_CASTLE_WATER_TRIAL_POT_3 },
+    { RC_GANONS_CASTLE_SHADOW_TRIAL_POT_1,                              RAND_INF_GANONS_CASTLE_SHADOW_TRIAL_POT_1 },
+    { RC_GANONS_CASTLE_SHADOW_TRIAL_POT_2,                              RAND_INF_GANONS_CASTLE_SHADOW_TRIAL_POT_2 },
+    { RC_GANONS_CASTLE_SHADOW_TRIAL_POT_3,                              RAND_INF_GANONS_CASTLE_SHADOW_TRIAL_POT_3 },
+    { RC_GANONS_CASTLE_SHADOW_TRIAL_POT_4,                              RAND_INF_GANONS_CASTLE_SHADOW_TRIAL_POT_4 },
+    { RC_GANONS_CASTLE_SPIRIT_TRIAL_POT_1,                              RAND_INF_GANONS_CASTLE_SPIRIT_TRIAL_POT_1 },
+    { RC_GANONS_CASTLE_SPIRIT_TRIAL_POT_2,                              RAND_INF_GANONS_CASTLE_SPIRIT_TRIAL_POT_2 },
+    { RC_GANONS_CASTLE_LIGHT_TRIAL_BOULDER_POT_1,                       RAND_INF_GANONS_CASTLE_LIGHT_TRIAL_BOULDER_POT_1 },
+    { RC_GANONS_CASTLE_LIGHT_TRIAL_POT_1,                               RAND_INF_GANONS_CASTLE_LIGHT_TRIAL_POT_1 },
+    { RC_GANONS_CASTLE_LIGHT_TRIAL_POT_2,                               RAND_INF_GANONS_CASTLE_LIGHT_TRIAL_POT_2 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_1,                              RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_1 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_2,                              RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_2 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_3,                              RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_3 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_4,                              RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_4 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_5,                              RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_5 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_6,                              RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_6 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_7,                              RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_7 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_8,                              RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_8 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_9,                              RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_9 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_10,                             RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_10 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_11,                             RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_11 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_12,                             RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_12 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_13,                             RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_13 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_14,                             RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_14 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_15,                             RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_15 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_16,                             RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_16 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_17,                             RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_17 },
+    { RC_GANONS_CASTLE_GANONS_TOWER_POT_18,                             RAND_INF_GANONS_CASTLE_GANONS_TOWER_POT_18 },
+    { RC_BOTTOM_OF_THE_WELL_BASEMENT_POT_1,                             RAND_INF_BOTTOM_OF_THE_WELL_BASEMENT_POT_1 },
+    { RC_BOTTOM_OF_THE_WELL_BASEMENT_POT_2,                             RAND_INF_BOTTOM_OF_THE_WELL_BASEMENT_POT_2 },
+    { RC_BOTTOM_OF_THE_WELL_BASEMENT_POT_3,                             RAND_INF_BOTTOM_OF_THE_WELL_BASEMENT_POT_3 },
+    { RC_BOTTOM_OF_THE_WELL_BASEMENT_POT_4,                             RAND_INF_BOTTOM_OF_THE_WELL_BASEMENT_POT_4 },
+    { RC_BOTTOM_OF_THE_WELL_BASEMENT_POT_5,                             RAND_INF_BOTTOM_OF_THE_WELL_BASEMENT_POT_5 },
+    { RC_BOTTOM_OF_THE_WELL_BASEMENT_POT_6,                             RAND_INF_BOTTOM_OF_THE_WELL_BASEMENT_POT_6 },
+    { RC_BOTTOM_OF_THE_WELL_BASEMENT_POT_7,                             RAND_INF_BOTTOM_OF_THE_WELL_BASEMENT_POT_7 },
+    { RC_BOTTOM_OF_THE_WELL_BASEMENT_POT_8,                             RAND_INF_BOTTOM_OF_THE_WELL_BASEMENT_POT_8 },
+    { RC_BOTTOM_OF_THE_WELL_BASEMENT_POT_9,                             RAND_INF_BOTTOM_OF_THE_WELL_BASEMENT_POT_9 },
+    { RC_BOTTOM_OF_THE_WELL_BASEMENT_POT_10,                            RAND_INF_BOTTOM_OF_THE_WELL_BASEMENT_POT_10 },
+    { RC_BOTTOM_OF_THE_WELL_BASEMENT_POT_11,                            RAND_INF_BOTTOM_OF_THE_WELL_BASEMENT_POT_11 },
+    { RC_BOTTOM_OF_THE_WELL_BASEMENT_POT_12,                            RAND_INF_BOTTOM_OF_THE_WELL_BASEMENT_POT_12 },
+    { RC_BOTTOM_OF_THE_WELL_LEFT_SIDE_POT_1,                            RAND_INF_BOTTOM_OF_THE_WELL_LEFT_SIDE_POT_1 },
+    { RC_BOTTOM_OF_THE_WELL_LEFT_SIDE_POT_2,                            RAND_INF_BOTTOM_OF_THE_WELL_LEFT_SIDE_POT_2 },
+    { RC_BOTTOM_OF_THE_WELL_LEFT_SIDE_POT_3,                            RAND_INF_BOTTOM_OF_THE_WELL_LEFT_SIDE_POT_3 },
+    { RC_BOTTOM_OF_THE_WELL_NEAR_ENTRANCE_POT_1,                        RAND_INF_BOTTOM_OF_THE_WELL_NEAR_ENTRANCE_POT_1 },
+    { RC_BOTTOM_OF_THE_WELL_NEAR_ENTRANCE_POT_2,                        RAND_INF_BOTTOM_OF_THE_WELL_NEAR_ENTRANCE_POT_2 },
+    { RC_BOTTOM_OF_THE_WELL_FIRE_KEESE_POT_1,                           RAND_INF_BOTTOM_OF_THE_WELL_FIRE_KEESE_POT_1 },
+    { RC_BOTTOM_OF_THE_WELL_UNDERWATER_POT,                             RAND_INF_BOTTOM_OF_THE_WELL_UNDERWATER_POT },
+    { RC_ICE_CAVERN_HALL_POT_1,                                         RAND_INF_ICE_CAVERN_HALL_POT_1 },
+    { RC_ICE_CAVERN_HALL_POT_2,                                         RAND_INF_ICE_CAVERN_HALL_POT_2 },
+    { RC_ICE_CAVERN_SPINNING_BLADE_POT_1,                               RAND_INF_ICE_CAVERN_SPINNING_BLADE_POT_1 },
+    { RC_ICE_CAVERN_SPINNING_BLADE_POT_2,                               RAND_INF_ICE_CAVERN_SPINNING_BLADE_POT_2 },
+    { RC_ICE_CAVERN_SPINNING_BLADE_POT_3,                               RAND_INF_ICE_CAVERN_SPINNING_BLADE_POT_3 },
+    { RC_ICE_CAVERN_NEAR_END_POT_1,                                     RAND_INF_ICE_CAVERN_NEAR_END_POT_1 },
+    { RC_ICE_CAVERN_NEAR_END_POT_2,                                     RAND_INF_ICE_CAVERN_NEAR_END_POT_2 },
+    { RC_ICE_CAVERN_FROZEN_POT_1,                                       RAND_INF_ICE_CAVERN_FROZEN_POT_1 },
+
+    { RC_JABU_JABUS_BELLY_MQ_ENTRANCE_POT_1,                            RAND_INF_JABU_JABUS_BELLY_MQ_ENTRANCE_POT_1 },
+    { RC_JABU_JABUS_BELLY_MQ_ENTRANCE_POT_2,                            RAND_INF_JABU_JABUS_BELLY_MQ_ENTRANCE_POT_2 },
+    { RC_JABU_JABUS_BELLY_MQ_GEYSER_POT_1,                              RAND_INF_JABU_JABUS_BELLY_MQ_GEYSER_POT_1 },
+    { RC_JABU_JABUS_BELLY_MQ_GEYSER_POT_2,                              RAND_INF_JABU_JABUS_BELLY_MQ_GEYSER_POT_2 },
+    { RC_JABU_JABUS_BELLY_MQ_TIME_BLOCK_POT_1,                          RAND_INF_JABU_JABUS_BELLY_MQ_TIME_BLOCK_POT_1 },
+    { RC_JABU_JABUS_BELLY_MQ_TIME_BLOCK_POT_2,                          RAND_INF_JABU_JABUS_BELLY_MQ_TIME_BLOCK_POT_2 },
+    { RC_JABU_JABUS_BELLY_MQ_LIKE_LIKES_POT_1,                          RAND_INF_JABU_JABUS_BELLY_MQ_LIKE_LIKES_POT_1 },
+    { RC_JABU_JABUS_BELLY_MQ_LIKE_LIKES_POT_2,                          RAND_INF_JABU_JABUS_BELLY_MQ_LIKE_LIKES_POT_2 },
+    { RC_JABU_JABUS_BELLY_MQ_BEFORE_BOSS_POT_1,                         RAND_INF_JABU_JABUS_BELLY_MQ_BEFORE_BOSS_POT_1 },
+    { RC_FOREST_TEMPLE_MQ_LOBBY_POT_1,                                  RAND_INF_FOREST_TEMPLE_MQ_LOBBY_POT_1 },
+    { RC_FOREST_TEMPLE_MQ_LOBBY_POT_2,                                  RAND_INF_FOREST_TEMPLE_MQ_LOBBY_POT_2 },
+    { RC_FOREST_TEMPLE_MQ_LOBBY_POT_3,                                  RAND_INF_FOREST_TEMPLE_MQ_LOBBY_POT_3 },
+    { RC_FOREST_TEMPLE_MQ_LOBBY_POT_4,                                  RAND_INF_FOREST_TEMPLE_MQ_LOBBY_POT_4 },
+    { RC_FOREST_TEMPLE_MQ_LOBBY_POT_5,                                  RAND_INF_FOREST_TEMPLE_MQ_LOBBY_POT_5 },
+    { RC_FOREST_TEMPLE_MQ_LOBBY_POT_6,                                  RAND_INF_FOREST_TEMPLE_MQ_LOBBY_POT_6 },
+    { RC_FOREST_TEMPLE_MQ_WOLFOS_POT_1,                                 RAND_INF_FOREST_TEMPLE_MQ_LOWER_STALFOS_POT_1 },
+    { RC_FOREST_TEMPLE_MQ_WOLFOS_POT_2,                                 RAND_INF_FOREST_TEMPLE_MQ_LOWER_STALFOS_POT_2 },
+    { RC_FOREST_TEMPLE_MQ_UPPER_STALFOS_POT_1,                          RAND_INF_FOREST_TEMPLE_MQ_UPPER_STALFOS_POT_1 },
+    { RC_FOREST_TEMPLE_MQ_UPPER_STALFOS_POT_2,                          RAND_INF_FOREST_TEMPLE_MQ_UPPER_STALFOS_POT_2 },
+    { RC_FOREST_TEMPLE_MQ_UPPER_STALFOS_POT_3,                          RAND_INF_FOREST_TEMPLE_MQ_UPPER_STALFOS_POT_3 },
+    { RC_FOREST_TEMPLE_MQ_UPPER_STALFOS_POT_4,                          RAND_INF_FOREST_TEMPLE_MQ_UPPER_STALFOS_POT_4 },
+    { RC_FOREST_TEMPLE_MQ_BLUE_POE_POT_1,                               RAND_INF_FOREST_TEMPLE_MQ_BLUE_POE_POT_1 },
+    { RC_FOREST_TEMPLE_MQ_BLUE_POE_POT_2,                               RAND_INF_FOREST_TEMPLE_MQ_BLUE_POE_POT_2 },
+    { RC_FOREST_TEMPLE_MQ_BLUE_POE_POT_3,                               RAND_INF_FOREST_TEMPLE_MQ_BLUE_POE_POT_3 },
+    { RC_FOREST_TEMPLE_MQ_GREEN_POE_POT_1,                              RAND_INF_FOREST_TEMPLE_MQ_GREEN_POE_POT_1 },
+    { RC_FOREST_TEMPLE_MQ_GREEN_POE_POT_2,                              RAND_INF_FOREST_TEMPLE_MQ_GREEN_POE_POT_2 },
+    { RC_FOREST_TEMPLE_MQ_BASEMENT_POT_1,                               RAND_INF_FOREST_TEMPLE_MQ_BASEMENT_POT_1 },
+    { RC_FOREST_TEMPLE_MQ_BASEMENT_POT_2,                               RAND_INF_FOREST_TEMPLE_MQ_BASEMENT_POT_2 },
+    { RC_FOREST_TEMPLE_MQ_BASEMENT_POT_3,                               RAND_INF_FOREST_TEMPLE_MQ_BASEMENT_POT_3 },
+    { RC_FOREST_TEMPLE_MQ_BASEMENT_POT_4,                               RAND_INF_FOREST_TEMPLE_MQ_BASEMENT_POT_4 },
+    { RC_DODONGOS_CAVERN_MQ_RIGHT_SIDE_POT_1,                           RAND_INF_DODONGOS_CAVERN_MQ_RIGHT_SIDE_POT_1 },
+    { RC_DODONGOS_CAVERN_MQ_RIGHT_SIDE_POT_2,                           RAND_INF_DODONGOS_CAVERN_MQ_RIGHT_SIDE_POT_2 },
+    { RC_DODONGOS_CAVERN_MQ_RIGHT_SIDE_POT_3,                           RAND_INF_DODONGOS_CAVERN_MQ_RIGHT_SIDE_POT_3 },
+    { RC_DODONGOS_CAVERN_MQ_RIGHT_SIDE_POT_4,                           RAND_INF_DODONGOS_CAVERN_MQ_RIGHT_SIDE_POT_4 },
+    { RC_DODONGOS_CAVERN_MQ_UPPER_LIZALFOS_POT_1,                       RAND_INF_DODONGOS_CAVERN_MQ_UPPER_LIZALFOS_POT_1 },
+    { RC_DODONGOS_CAVERN_MQ_UPPER_LIZALFOS_POT_2,                       RAND_INF_DODONGOS_CAVERN_MQ_UPPER_LIZALFOS_POT_2 },
+    { RC_DODONGOS_CAVERN_MQ_UPPER_LIZALFOS_POT_3,                       RAND_INF_DODONGOS_CAVERN_MQ_UPPER_LIZALFOS_POT_3 },
+    { RC_DODONGOS_CAVERN_MQ_UPPER_LIZALFOS_POT_4,                       RAND_INF_DODONGOS_CAVERN_MQ_UPPER_LIZALFOS_POT_4 },
+    { RC_DODONGOS_CAVERN_MQ_POE_ROOM_POT_1,                             RAND_INF_DODONGOS_CAVERN_MQ_POE_ROOM_POT_1 },
+    { RC_DODONGOS_CAVERN_MQ_POE_ROOM_POT_2,                             RAND_INF_DODONGOS_CAVERN_MQ_POE_ROOM_POT_2 },
+    { RC_DODONGOS_CAVERN_MQ_POE_ROOM_POT_3,                             RAND_INF_DODONGOS_CAVERN_MQ_POE_ROOM_POT_3 },
+    { RC_DODONGOS_CAVERN_MQ_POE_ROOM_POT_4,                             RAND_INF_DODONGOS_CAVERN_MQ_POE_ROOM_POT_4 },
+    { RC_DODONGOS_CAVERN_MQ_TORCH_PUZZLE_CORNER_POT,                    RAND_INF_DODONGOS_CAVERN_MQ_BLOCK_ROOM_POT_1 },
+    { RC_DODONGOS_CAVERN_MQ_TORCH_PUZZLE_MIDDLE_POT,                    RAND_INF_DODONGOS_CAVERN_MQ_BLOCK_ROOM_POT_2 },
+    { RC_DODONGOS_CAVERN_MQ_TWO_FLAMES_POT_1,                           RAND_INF_DODONGOS_CAVERN_MQ_TWO_FLAMES_POT_1 },
+    { RC_DODONGOS_CAVERN_MQ_TWO_FLAMES_POT_2,                           RAND_INF_DODONGOS_CAVERN_MQ_TWO_FLAMES_POT_2 },
+    { RC_DODONGOS_CAVERN_MQ_BIG_BLOCK_POT_1,                            RAND_INF_DODONGOS_CAVERN_MQ_SILVER_BLOCK_POT_1 },
+    { RC_DODONGOS_CAVERN_MQ_BIG_BLOCK_POT_2,                            RAND_INF_DODONGOS_CAVERN_MQ_SILVER_BLOCK_POT_2 },
+    { RC_DODONGOS_CAVERN_MQ_STAIRCASE_POT_1,                            RAND_INF_DODONGOS_CAVERN_MQ_STAIRCASE_POT_1 },
+    { RC_DODONGOS_CAVERN_MQ_STAIRCASE_POT_2,                            RAND_INF_DODONGOS_CAVERN_MQ_STAIRCASE_POT_2 },
+    { RC_DODONGOS_CAVERN_MQ_STAIRCASE_POT_3,                            RAND_INF_DODONGOS_CAVERN_MQ_STAIRCASE_POT_3 },
+    { RC_DODONGOS_CAVERN_MQ_STAIRCASE_POT_4,                            RAND_INF_DODONGOS_CAVERN_MQ_STAIRCASE_POT_4 },
+    { RC_DODONGOS_CAVERN_MQ_ARMOS_ROOM_NW_POT,                          RAND_INF_DODONGOS_CAVERN_MQ_ARMOS_POT_1 },
+    { RC_DODONGOS_CAVERN_MQ_ARMOS_ROOM_NE_POT,                          RAND_INF_DODONGOS_CAVERN_MQ_ARMOS_POT_2 },
+    { RC_DODONGOS_CAVERN_MQ_ARMOS_ROOM_SE_POT,                          RAND_INF_DODONGOS_CAVERN_MQ_ARMOS_POT_3 },
+    { RC_DODONGOS_CAVERN_MQ_ARMOS_ROOM_SW_POT,                          RAND_INF_DODONGOS_CAVERN_MQ_ARMOS_POT_4 },
+    { RC_DODONGOS_CAVERN_MQ_BEFORE_BOSS_SW_POT,                         RAND_INF_DODONGOS_CAVERN_MQ_BEFORE_BOSS_POT_1 },
+    { RC_DODONGOS_CAVERN_MQ_BEFORE_BOSS_NE_POT,                         RAND_INF_DODONGOS_CAVERN_MQ_BEFORE_BOSS_POT_2 },
+    { RC_DODONGOS_CAVERN_MQ_BACKROOM_POT_1,                             RAND_INF_DODONGOS_CAVERN_MQ_BACKROOM_POT_1 },
+    { RC_DODONGOS_CAVERN_MQ_BACKROOM_POT_2,                             RAND_INF_DODONGOS_CAVERN_MQ_BACKROOM_POT_2 },
+    { RC_GANONS_CASTLE_MQ_FOREST_TRIAL_POT_1,                           RAND_INF_GANONS_CASTLE_MQ_FOREST_TRIAL_POT_1 },
+    { RC_GANONS_CASTLE_MQ_FOREST_TRIAL_POT_2,                           RAND_INF_GANONS_CASTLE_MQ_FOREST_TRIAL_POT_2 },
+    { RC_GANONS_CASTLE_MQ_WATER_TRIAL_POT_1,                            RAND_INF_GANONS_CASTLE_MQ_WATER_TRIAL_POT_1 },
+    { RC_GANONS_CASTLE_MQ_WATER_TRIAL_POT_2,                            RAND_INF_GANONS_CASTLE_MQ_WATER_TRIAL_POT_2 },
+    { RC_GANONS_CASTLE_MQ_SHADOW_TRIAL_POT_1,                           RAND_INF_GANONS_CASTLE_MQ_SHADOW_TRIAL_POT_1 },
+    { RC_GANONS_CASTLE_MQ_SHADOW_TRIAL_POT_2,                           RAND_INF_GANONS_CASTLE_MQ_SHADOW_TRIAL_POT_2 },
+    { RC_GANONS_CASTLE_MQ_FIRE_TRIAL_POT_1,                             RAND_INF_GANONS_CASTLE_MQ_FIRE_TRIAL_POT_1 },
+    { RC_GANONS_CASTLE_MQ_FIRE_TRIAL_POT_2,                             RAND_INF_GANONS_CASTLE_MQ_FIRE_TRIAL_POT_2 },
+    { RC_GANONS_CASTLE_MQ_LIGHT_TRIAL_POT_1,                            RAND_INF_GANONS_CASTLE_MQ_LIGHT_TRIAL_POT_1 },
+    { RC_GANONS_CASTLE_MQ_LIGHT_TRIAL_POT_2,                            RAND_INF_GANONS_CASTLE_MQ_LIGHT_TRIAL_POT_2 },
+    { RC_GANONS_CASTLE_MQ_SPIRIT_TRIAL_POT_1,                           RAND_INF_GANONS_CASTLE_MQ_SPIRIT_TRIAL_POT_1 },
+    { RC_GANONS_CASTLE_MQ_SPIRIT_TRIAL_POT_2,                           RAND_INF_GANONS_CASTLE_MQ_SPIRIT_TRIAL_POT_2 },
+    { RC_SHADOW_TEMPLE_MQ_WHISPERING_WALLS_POT_1,                       RAND_INF_SHADOW_TEMPLE_MQ_WHISPERING_WALLS_POT_1 },
+    { RC_SHADOW_TEMPLE_MQ_WHISPERING_WALLS_POT_2,                       RAND_INF_SHADOW_TEMPLE_MQ_WHISPERING_WALLS_POT_2 },
+    { RC_SHADOW_TEMPLE_MQ_ENTRANCE_REDEAD_POT_1,                        RAND_INF_SHADOW_TEMPLE_MQ_ENTRANCE_REDEAD_POT_1 },
+    { RC_SHADOW_TEMPLE_MQ_ENTRANCE_REDEAD_POT_2,                        RAND_INF_SHADOW_TEMPLE_MQ_ENTRANCE_REDEAD_POT_2 },
+    { RC_SHADOW_TEMPLE_MQ_LOWER_UMBRELLA_WEST_POT,                      RAND_INF_SHADOW_TEMPLE_MQ_FALLING_SPIKES_POT_1 },
+    { RC_SHADOW_TEMPLE_MQ_LOWER_UMBRELLA_EAST_POT,                      RAND_INF_SHADOW_TEMPLE_MQ_FALLING_SPIKES_POT_2 },
+    { RC_SHADOW_TEMPLE_MQ_UPPER_UMBRELLA_SOUTH_POT,                     RAND_INF_SHADOW_TEMPLE_MQ_FALLING_SPIKES_POT_3 },
+    { RC_SHADOW_TEMPLE_MQ_UPPER_UMBRELLA_NORTH_POT,                     RAND_INF_SHADOW_TEMPLE_MQ_FALLING_SPIKES_POT_4 },
+    { RC_SHADOW_TEMPLE_MQ_BEFORE_BOAT_POT_1,                            RAND_INF_SHADOW_TEMPLE_MQ_BEFORE_BOAT_POT_1 },
+    { RC_SHADOW_TEMPLE_MQ_BEFORE_BOAT_POT_2,                            RAND_INF_SHADOW_TEMPLE_MQ_BEFORE_BOAT_POT_2 },
+    { RC_SHADOW_TEMPLE_MQ_BEFORE_CHASM_WEST_POT,                        RAND_INF_SHADOW_TEMPLE_MQ_AFTER_BOAT_POT_1 },
+    { RC_SHADOW_TEMPLE_MQ_BEFORE_CHASM_EAST_POT,                        RAND_INF_SHADOW_TEMPLE_MQ_AFTER_BOAT_POT_2 },
+    { RC_SHADOW_TEMPLE_MQ_AFTER_CHASM_WEST_POT,                         RAND_INF_SHADOW_TEMPLE_MQ_AFTER_BOAT_POT_3 },
+    { RC_SHADOW_TEMPLE_MQ_AFTER_CHASM_EAST_POT,                         RAND_INF_SHADOW_TEMPLE_MQ_AFTER_BOAT_POT_4 },
+    { RC_SHADOW_TEMPLE_MQ_SPIKE_BARICADE_POT,                           RAND_INF_SHADOW_TEMPLE_MQ_SPIKE_BARICADE_POT },
+    { RC_SHADOW_TEMPLE_MQ_DEAD_HAND_POT_1,                              RAND_INF_SHADOW_TEMPLE_MQ_DEAD_HAND_POT_1 },
+    { RC_SHADOW_TEMPLE_MQ_DEAD_HAND_POT_2,                              RAND_INF_SHADOW_TEMPLE_MQ_DEAD_HAND_POT_2 },
+    { RC_BOTTOM_OF_THE_WELL_MQ_INNER_LOBBY_POT_1,                       RAND_INF_BOTTOM_OF_THE_WELL_MQ_INNER_LOBBY_POT_1 },
+    { RC_BOTTOM_OF_THE_WELL_MQ_INNER_LOBBY_POT_2,                       RAND_INF_BOTTOM_OF_THE_WELL_MQ_INNER_LOBBY_POT_2 },
+    { RC_BOTTOM_OF_THE_WELL_MQ_INNER_LOBBY_POT_3,                       RAND_INF_BOTTOM_OF_THE_WELL_MQ_INNER_LOBBY_POT_3 },
+    { RC_BOTTOM_OF_THE_WELL_MQ_OUTER_LOBBY_POT,                         RAND_INF_BOTTOM_OF_THE_WELL_MQ_OUTER_LOBBY_POT },
+    { RC_BOTTOM_OF_THE_WELL_MQ_EAST_INNER_ROOM_POT_1,                   RAND_INF_BOTTOM_OF_THE_WELL_MQ_SOUTH_KEY_POT_1 },
+    { RC_BOTTOM_OF_THE_WELL_MQ_EAST_INNER_ROOM_POT_2,                   RAND_INF_BOTTOM_OF_THE_WELL_MQ_SOUTH_KEY_POT_2 },
+    { RC_BOTTOM_OF_THE_WELL_MQ_EAST_INNER_ROOM_POT_3,                   RAND_INF_BOTTOM_OF_THE_WELL_MQ_SOUTH_KEY_POT_3 },
+    { RC_FIRE_TEMPLE_MQ_ENTRANCE_POT_1,                                 RAND_INF_FIRE_TEMPLE_MQ_ENTRANCE_POT_1 },
+    { RC_FIRE_TEMPLE_MQ_ENTRANCE_POT_2,                                 RAND_INF_FIRE_TEMPLE_MQ_ENTRANCE_POT_2 },
+    { RC_FIRE_TEMPLE_MQ_OUTSIDE_BOSS_POT_1,                             RAND_INF_FIRE_TEMPLE_MQ_OUTSIDE_BOSS_POT_1 },
+    { RC_FIRE_TEMPLE_MQ_OUTSIDE_BOSS_POT_2,                             RAND_INF_FIRE_TEMPLE_MQ_OUTSIDE_BOSS_POT_2 },
+    { RC_FIRE_TEMPLE_MQ_LAVA_ROOM_NORTH_POT,                            RAND_INF_FIRE_TEMPLE_MQ_LAVA_POT_1 },
+    { RC_FIRE_TEMPLE_MQ_LAVA_ROOM_HIGH_POT,                             RAND_INF_FIRE_TEMPLE_MQ_LAVA_POT_2 },
+    { RC_FIRE_TEMPLE_MQ_LAVA_ROOM_SOUTH_POT,                            RAND_INF_FIRE_TEMPLE_MQ_LAVA_POT_3 },
+    { RC_FIRE_TEMPLE_MQ_LAVA_TORCH_POT_1,                               RAND_INF_FIRE_TEMPLE_MQ_LAVA_TORCH_POT_1 },
+    { RC_FIRE_TEMPLE_MQ_LAVA_TORCH_POT_2,                               RAND_INF_FIRE_TEMPLE_MQ_LAVA_TORCH_POT_2 },
+    { RC_FIRE_TEMPLE_MQ_ABOVE_LAVA_POT_1,                               RAND_INF_FIRE_TEMPLE_MQ_ABOVE_LAVA_POT_1 },
+    { RC_FIRE_TEMPLE_MQ_ABOVE_LAVA_POT_2,                               RAND_INF_FIRE_TEMPLE_MQ_ABOVE_LAVA_POT_2 },
+    { RC_FIRE_TEMPLE_MQ_ABOVE_LAVA_POT_3,                               RAND_INF_FIRE_TEMPLE_MQ_ABOVE_LAVA_POT_3 },
+    { RC_FIRE_TEMPLE_MQ_FLAME_WALL_POT_1,                               RAND_INF_FIRE_TEMPLE_MQ_FLAME_WALL_POT_1 },
+    { RC_FIRE_TEMPLE_MQ_FLAME_WALL_POT_2,                               RAND_INF_FIRE_TEMPLE_MQ_FLAME_WALL_POT_2 },
+    { RC_FIRE_TEMPLE_MQ_PAST_FIRE_MAZE_SOUTH_POT,                       RAND_INF_FIRE_TEMPLE_MQ_FIRE_MAZE_POT_1 },
+    { RC_FIRE_TEMPLE_MQ_PAST_FIRE_MAZE_NORTH_POT,                       RAND_INF_FIRE_TEMPLE_MQ_FIRE_MAZE_POT_2 },
+    { RC_FIRE_TEMPLE_MQ_FIRE_MAZE_NORTHMOST_POT,                        RAND_INF_FIRE_TEMPLE_MQ_FIRE_MAZE_POT_3 },
+    { RC_FIRE_TEMPLE_MQ_FIRE_MAZE_NORTHWEST_POT,                        RAND_INF_FIRE_TEMPLE_MQ_FIRE_MAZE_POT_4 },
+    { RC_FIRE_TEMPLE_MQ_SOUTH_FIRE_MAZE_WEST_POT,                       RAND_INF_FIRE_TEMPLE_MQ_FIRE_MAZE_POT_5 },
+    { RC_FIRE_TEMPLE_MQ_SOUTH_FIRE_MAZE_EAST_POT,                       RAND_INF_FIRE_TEMPLE_MQ_FIRE_MAZE_POT_6 },
+    { RC_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_1,                         RAND_INF_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_1 },
+    { RC_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_2,                         RAND_INF_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_2 },
+    { RC_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_3,                         RAND_INF_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_3 },
+    { RC_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_4,                         RAND_INF_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_4 },
+    { RC_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_5,                         RAND_INF_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_5 },
+    { RC_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_6,                         RAND_INF_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_6 },
+    { RC_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_7,                         RAND_INF_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_7 },
+    { RC_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_8,                         RAND_INF_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_8 },
+    { RC_ICE_CAVERN_MQ_ENTRANCE_POT,                                    RAND_INF_ICE_CAVERN_MQ_ENTRANCE_POT },
+    { RC_ICE_CAVERN_MQ_FIRST_CRYSTAL_POT_1,                             RAND_INF_ICE_CAVERN_MQ_FIRST_CRYSTAL_POT_1 },
+    { RC_ICE_CAVERN_MQ_FIRST_CRYSTAL_POT_2,                             RAND_INF_ICE_CAVERN_MQ_FIRST_CRYSTAL_POT_2 },
+    { RC_ICE_CAVERN_MQ_EARLY_WOLFOS_POT_1,                              RAND_INF_ICE_CAVERN_MQ_EARLY_WOLFOS_POT_1 },
+    { RC_ICE_CAVERN_MQ_EARLY_WOLFOS_POT_2,                              RAND_INF_ICE_CAVERN_MQ_EARLY_WOLFOS_POT_2 },
+    { RC_ICE_CAVERN_MQ_EARLY_WOLFOS_POT_3,                              RAND_INF_ICE_CAVERN_MQ_EARLY_WOLFOS_POT_3 },
+    { RC_ICE_CAVERN_MQ_EARLY_WOLFOS_POT_4,                              RAND_INF_ICE_CAVERN_MQ_EARLY_WOLFOS_POT_4 },
+    { RC_ICE_CAVERN_MQ_PUSH_BLOCK_POT_1,                                RAND_INF_ICE_CAVERN_MQ_PUSH_BLOCK_POT_1 },
+    { RC_ICE_CAVERN_MQ_PUSH_BLOCK_POT_2,                                RAND_INF_ICE_CAVERN_MQ_PUSH_BLOCK_POT_2 },
+    { RC_ICE_CAVERN_MQ_COMPASS_POT_1,                                   RAND_INF_ICE_CAVERN_MQ_COMPASS_POT_1 },
+    { RC_ICE_CAVERN_MQ_COMPASS_POT_2,                                   RAND_INF_ICE_CAVERN_MQ_COMPASS_POT_2 },
+    { RC_SPIRIT_TEMPLE_MQ_ENTRANCE_POT_1,                               RAND_INF_SPIRIT_TEMPLE_MQ_ENTRANCE_POT_1 },
+    { RC_SPIRIT_TEMPLE_MQ_ENTRANCE_POT_2,                               RAND_INF_SPIRIT_TEMPLE_MQ_ENTRANCE_POT_2 },
+    { RC_SPIRIT_TEMPLE_MQ_ENTRANCE_POT_3,                               RAND_INF_SPIRIT_TEMPLE_MQ_ENTRANCE_POT_3 },
+    { RC_SPIRIT_TEMPLE_MQ_ENTRANCE_POT_4,                               RAND_INF_SPIRIT_TEMPLE_MQ_ENTRANCE_POT_4 },
+    { RC_SPIRIT_TEMPLE_MQ_CHILD_SLUGMA_POT,                             RAND_INF_SPIRIT_TEMPLE_MQ_CHILD_SLUGMA_POT },
+    { RC_SPIRIT_TEMPLE_MQ_CHILD_GIBDO_POT_1,                            RAND_INF_SPIRIT_TEMPLE_MQ_CHILD_GIBDO_POT_1 },
+    { RC_SPIRIT_TEMPLE_MQ_CHILD_GIBDO_POT_2,                            RAND_INF_SPIRIT_TEMPLE_MQ_CHILD_GIBDO_POT_2 },
+    { RC_SPIRIT_TEMPLE_MQ_CHILD_LIKE_LIKE_POT,                          RAND_INF_SPIRIT_TEMPLE_MQ_CHILD_LIKE_LIKE_POT },
+    { RC_SPIRIT_TEMPLE_MQ_CHILD_STALFOS_POT_1,                          RAND_INF_SPIRIT_TEMPLE_MQ_CHILD_STALFOS_POT_1 },
+    { RC_SPIRIT_TEMPLE_MQ_CHILD_STALFOS_POT_2,                          RAND_INF_SPIRIT_TEMPLE_MQ_CHILD_STALFOS_POT_2 },
+    { RC_SPIRIT_TEMPLE_MQ_CHILD_STALFOS_POT_3,                          RAND_INF_SPIRIT_TEMPLE_MQ_CHILD_STALFOS_POT_3 },
+    { RC_SPIRIT_TEMPLE_MQ_CHILD_STALFOS_POT_4,                          RAND_INF_SPIRIT_TEMPLE_MQ_CHILD_STALFOS_POT_4 },
+    { RC_SPIRIT_TEMPLE_MQ_STATUE_2F_CENTER_EAST_POT,                    RAND_INF_SPIRIT_TEMPLE_MQ_CENTRAL_CHAMBER_POT_1 },
+    { RC_SPIRIT_TEMPLE_MQ_STATUE_3F_EAST_POT,                           RAND_INF_SPIRIT_TEMPLE_MQ_CENTRAL_CHAMBER_POT_2 },
+    { RC_SPIRIT_TEMPLE_MQ_STATUE_3F_WEST_POT,                           RAND_INF_SPIRIT_TEMPLE_MQ_CENTRAL_CHAMBER_POT_3 },
+    { RC_SPIRIT_TEMPLE_MQ_STATUE_2F_WEST_POT,                           RAND_INF_SPIRIT_TEMPLE_MQ_CENTRAL_CHAMBER_POT_4 },
+    { RC_SPIRIT_TEMPLE_MQ_STATUE_2F_EASTMOST_POT,                       RAND_INF_SPIRIT_TEMPLE_MQ_CENTRAL_CHAMBER_POT_5 },
+    { RC_SPIRIT_TEMPLE_MQ_SUN_BLOCKS_POT_1,                             RAND_INF_SPIRIT_TEMPLE_MQ_SUN_BLOCKS_POT_1 },
+    { RC_SPIRIT_TEMPLE_MQ_SUN_BLOCKS_POT_2,                             RAND_INF_SPIRIT_TEMPLE_MQ_SUN_BLOCKS_POT_2 },
+    { RC_SPIRIT_TEMPLE_MQ_LONG_CLIMB_POT_1,                             RAND_INF_SPIRIT_TEMPLE_MQ_LONG_CLIMB_POT_1 },
+    { RC_SPIRIT_TEMPLE_MQ_LONG_CLIMB_POT_2,                             RAND_INF_SPIRIT_TEMPLE_MQ_LONG_CLIMB_POT_2 },
+    { RC_SPIRIT_TEMPLE_MQ_BIG_MIRROR_POT_1,                             RAND_INF_SPIRIT_TEMPLE_MQ_BIG_MIRROR_POT_1 },
+    { RC_SPIRIT_TEMPLE_MQ_BIG_MIRROR_POT_2,                             RAND_INF_SPIRIT_TEMPLE_MQ_BIG_MIRROR_POT_2 },
+    { RC_SPIRIT_TEMPLE_MQ_BIG_MIRROR_POT_3,                             RAND_INF_SPIRIT_TEMPLE_MQ_BIG_MIRROR_POT_3 },
+    { RC_SPIRIT_TEMPLE_MQ_BIG_MIRROR_POT_4,                             RAND_INF_SPIRIT_TEMPLE_MQ_BIG_MIRROR_POT_4 },
+    { RC_SPIRIT_TEMPLE_MQ_BEFORE_MIRROR_POT_1,                          RAND_INF_SPIRIT_TEMPLE_MQ_BEFORE_MIRROR_POT_1 },
+    { RC_SPIRIT_TEMPLE_MQ_BEFORE_MIRROR_POT_2,                          RAND_INF_SPIRIT_TEMPLE_MQ_BEFORE_MIRROR_POT_2 },
+    { RC_SPIRIT_TEMPLE_MQ_EARLY_ADULT_POT_1,                            RAND_INF_SPIRIT_TEMPLE_MQ_EARLY_ADULT_POT_1 },
+    { RC_SPIRIT_TEMPLE_MQ_EARLY_ADULT_POT_2,                            RAND_INF_SPIRIT_TEMPLE_MQ_EARLY_ADULT_POT_2 },
+    { RC_WATER_TEMPLE_MQ_LIZALFOS_HALLWAY_WEST_POT,                     RAND_INF_WATER_TEMPLE_MQ_CENTRAL_GATE_POT_1 },
+    { RC_WATER_TEMPLE_MQ_LIZALFOS_HALLWAY_SOUTH_POT,                    RAND_INF_WATER_TEMPLE_MQ_CENTRAL_GATE_POT_2 },
+    { RC_WATER_TEMPLE_MQ_LIZALFOS_HALLWAY_SE_POT,                       RAND_INF_WATER_TEMPLE_MQ_CENTRAL_GATE_POT_3 },
+    { RC_WATER_TEMPLE_MQ_LIZALFOS_CAGE_SOUTH_POT,                       RAND_INF_WATER_TEMPLE_MQ_CENTRAL_GATE_POT_4 },
+    { RC_WATER_TEMPLE_MQ_LIZALFOS_CAGE_NORTH_POT,                       RAND_INF_WATER_TEMPLE_MQ_CENTRAL_GATE_POT_5 },
+    { RC_WATER_TEMPLE_MQ_STORAGE_ROOM_A_POT_1,                          RAND_INF_WATER_TEMPLE_MQ_STORAGE_ROOM_A_POT_1 },
+    { RC_WATER_TEMPLE_MQ_STORAGE_ROOM_A_POT_2,                          RAND_INF_WATER_TEMPLE_MQ_STORAGE_ROOM_A_POT_2 },
+    { RC_WATER_TEMPLE_MQ_STORAGE_ROOM_A_POT_3,                          RAND_INF_WATER_TEMPLE_MQ_STORAGE_ROOM_A_POT_3 },
+    { RC_WATER_TEMPLE_MQ_BEFORE_DARK_LINK_POT_1,                        RAND_INF_WATER_TEMPLE_MQ_BEFORE_DARK_LINK_POT_1 },
+    { RC_WATER_TEMPLE_MQ_BEFORE_DARK_LINK_POT_2,                        RAND_INF_WATER_TEMPLE_MQ_BEFORE_DARK_LINK_POT_2 },
+    { RC_WATER_TEMPLE_MQ_STALFOS_PIT_MIDDLE_POT,                        RAND_INF_WATER_TEMPLE_MQ_BEFORE_DARK_LINK_POT_3 },
+    { RC_WATER_TEMPLE_MQ_STALFOS_PIT_SOUTH_POT,                         RAND_INF_WATER_TEMPLE_MQ_BEFORE_DARK_LINK_POT_4 },
+    { RC_WATER_TEMPLE_MQ_STALFOS_PIT_NORTH_POT,                         RAND_INF_WATER_TEMPLE_MQ_BEFORE_DARK_LINK_POT_5 },
+    { RC_WATER_TEMPLE_MQ_AFTER_DARK_LINK_POT_1,                         RAND_INF_WATER_TEMPLE_MQ_AFTER_DARK_LINK_POT_1 },
+    { RC_WATER_TEMPLE_MQ_AFTER_DARK_LINK_POT_2,                         RAND_INF_WATER_TEMPLE_MQ_AFTER_DARK_LINK_POT_2 },
+    { RC_WATER_TEMPLE_MQ_RIVER_POT_1,                                   RAND_INF_WATER_TEMPLE_MQ_RIVER_POT_1 },
+    { RC_WATER_TEMPLE_MQ_RIVER_POT_2,                                   RAND_INF_WATER_TEMPLE_MQ_RIVER_POT_2 },
+    { RC_WATER_TEMPLE_MQ_MINI_DODONGO_POT_1,                            RAND_INF_WATER_TEMPLE_MQ_MINI_DODONGO_POT_1 },
+    { RC_WATER_TEMPLE_MQ_MINI_DODONGO_POT_2,                            RAND_INF_WATER_TEMPLE_MQ_MINI_DODONGO_POT_2 },
+    { RC_WATER_TEMPLE_MQ_STORAGE_ROOM_B_POT_1,                          RAND_INF_WATER_TEMPLE_MQ_STORAGE_ROOM_B_POT_1 },
+    { RC_WATER_TEMPLE_MQ_STORAGE_ROOM_B_POT_2,                          RAND_INF_WATER_TEMPLE_MQ_STORAGE_ROOM_B_POT_2 },
+    { RC_WATER_TEMPLE_MQ_GS_STORAGE_ROOM_POT_1,                         RAND_INF_WATER_TEMPLE_MQ_GS_STORAGE_ROOM_POT_1 },
+    { RC_WATER_TEMPLE_MQ_GS_STORAGE_ROOM_POT_2,                         RAND_INF_WATER_TEMPLE_MQ_GS_STORAGE_ROOM_POT_2 },
+    { RC_WATER_TEMPLE_MQ_GS_STORAGE_ROOM_POT_3,                         RAND_INF_WATER_TEMPLE_MQ_GS_STORAGE_ROOM_POT_3 },
+    { RC_WATER_TEMPLE_MQ_LOWER_TORCHES_POT_1,                           RAND_INF_WATER_TEMPLE_MQ_LOWER_TORCHES_POT_1 },
+    { RC_WATER_TEMPLE_MQ_LOWER_TORCHES_POT_2,                           RAND_INF_WATER_TEMPLE_MQ_LOWER_TORCHES_POT_2 },
+    { RC_WATER_TEMPLE_MQ_LOWEST_GS_POT_1,                               RAND_INF_WATER_TEMPLE_MQ_LOWEST_GS_POT_1 },
+    { RC_WATER_TEMPLE_MQ_LOWEST_GS_POT_2,                               RAND_INF_WATER_TEMPLE_MQ_LOWEST_GS_POT_2 },
+    { RC_WATER_TEMPLE_MQ_LOWEST_GS_POT_3,                               RAND_INF_WATER_TEMPLE_MQ_LOWEST_GS_POT_3 },
+    { RC_WATER_TEMPLE_MQ_LOWEST_GS_POT_4,                               RAND_INF_WATER_TEMPLE_MQ_LOWEST_GS_POT_4 },
+    { RC_WATER_TEMPLE_MQ_BOSS_KEY_POT,                                  RAND_INF_WATER_TEMPLE_MQ_BOSS_KEY_POT },
+    { RC_GERUDO_TRAINING_GROUND_MQ_LOBBY_LEFT_POT_1,                   RAND_INF_GERUDO_TRAINING_GROUND_MQ_LOBBY_LEFT_POT_1 },
+    { RC_GERUDO_TRAINING_GROUND_MQ_LOBBY_LEFT_POT_2,                   RAND_INF_GERUDO_TRAINING_GROUND_MQ_LOBBY_LEFT_POT_2 },
+    { RC_GERUDO_TRAINING_GROUND_MQ_LOBBY_RIGHT_POT_1,                  RAND_INF_GERUDO_TRAINING_GROUND_MQ_LOBBY_RIGHT_POT_1 },
+    { RC_GERUDO_TRAINING_GROUND_MQ_LOBBY_RIGHT_POT_2,                  RAND_INF_GERUDO_TRAINING_GROUND_MQ_LOBBY_RIGHT_POT_2 },
 };
 
 BeehiveIdentity Randomizer::IdentifyBeehive(s32 sceneNum, s16 xPosition, s32 respawnData) {
@@ -1582,15 +1681,6 @@ Rando::Location* Randomizer::GetCheckObjectFromActor(s16 actorId, s16 sceneNum, 
                 specialRc = RC_DODONGOS_CAVERN_GOSSIP_STONE;
             }
             break;
-        case SCENE_GROTTOS:
-            // Grotto fish are identified by respawn data
-            if (actorId == ACTOR_EN_FISH && actorParams == 1) {
-                int8_t data = gSaveContext.respawn[RESPAWN_MODE_RETURN].data;
-                if (Rando::StaticData::randomizerGrottoFishMap.contains(data)) {
-                    specialRc = Rando::StaticData::randomizerGrottoFishMap[data];
-                }
-            }
-            break;
     }
 
     if (specialRc != RC_UNKNOWN_CHECK) {
@@ -1634,10 +1724,10 @@ ScrubIdentity Randomizer::IdentifyScrub(s32 sceneNum, s32 actorParams, s32 respa
         scrubIdentity.randomizerInf = rcToRandomizerInf[location->GetRandomizerCheck()];
         scrubIdentity.randomizerCheck = location->GetRandomizerCheck();
         scrubIdentity.getItemId = (GetItemID)Rando::StaticData::RetrieveItem(location->GetVanillaItem()).GetItemID();
-        scrubIdentity.isShuffled = GetRandoSettingValue(RSK_SHUFFLE_SCRUBS) != RO_SCRUBS_OFF;
+        scrubIdentity.isShuffled = GetRandoSettingValue(RSK_SHUFFLE_SCRUBS) == RO_SCRUBS_ALL;
 
         if (location->GetRandomizerCheck() == RC_HF_DEKU_SCRUB_GROTTO || location->GetRandomizerCheck() == RC_LW_DEKU_SCRUB_GROTTO_FRONT || location->GetRandomizerCheck() == RC_LW_DEKU_SCRUB_NEAR_BRIDGE) {
-            scrubIdentity.isShuffled = true;
+            scrubIdentity.isShuffled = GetRandoSettingValue(RSK_SHUFFLE_SCRUBS) != RO_SCRUBS_OFF;
         }
 
         scrubIdentity.itemPrice = OTRGlobals::Instance->gRandoContext->GetItemLocation(scrubIdentity.randomizerCheck)->GetPrice();
@@ -1655,9 +1745,13 @@ ShopItemIdentity Randomizer::IdentifyShopItem(s32 sceneNum, u8 slotIndex) {
     shopItemIdentity.itemPrice = -1;
     shopItemIdentity.enGirlAShopItem = 0x32;
 
+    if (slotIndex == 0) {
+        return shopItemIdentity;
+    }
+
     Rando::Location* location = GetCheckObjectFromActor(ACTOR_EN_GIRLA,
         // Bazaar (SHOP1) scene is reused, so if entering from Kak use debug scene to identify
-        (sceneNum == SCENE_BAZAAR && gSaveContext.entranceIndex == ENTR_BAZAAR_0) ? SCENE_TEST01 : sceneNum, slotIndex);
+        (sceneNum == SCENE_BAZAAR && gSaveContext.entranceIndex == ENTR_BAZAAR_0) ? SCENE_TEST01 : sceneNum, slotIndex - 1);
 
     if (location->GetRandomizerCheck() != RC_UNKNOWN_CHECK) {
         shopItemIdentity.randomizerInf = rcToRandomizerInf[location->GetRandomizerCheck()];
@@ -1698,6 +1792,32 @@ CowIdentity Randomizer::IdentifyCow(s32 sceneNum, s32 posX, s32 posZ) {
     return cowIdentity;
 }
 
+PotIdentity Randomizer::IdentifyPot(s32 sceneNum, s32 posX, s32 posZ) {
+    struct PotIdentity potIdentity;
+    uint32_t potSceneNum = sceneNum;
+
+    if (sceneNum == SCENE_GANONDORF_BOSS) {
+        potSceneNum = SCENE_GANONS_TOWER;
+    }
+
+    potIdentity.randomizerInf = RAND_INF_MAX;
+    potIdentity.randomizerCheck = RC_UNKNOWN_CHECK;
+
+    s32 actorParams = TWO_ACTOR_PARAMS(posX, posZ);
+
+    Rando::Location* location = GetCheckObjectFromActor(ACTOR_OBJ_TSUBO, potSceneNum, actorParams);
+
+    if (location->GetRandomizerCheck() == RC_UNKNOWN_CHECK) {
+        LUSLOG_WARN("IdentifyPot did not receive a valid RC value (%d).", location->GetRandomizerCheck());
+        assert(false);
+    } else {
+        potIdentity.randomizerInf = rcToRandomizerInf[location->GetRandomizerCheck()];
+        potIdentity.randomizerCheck = location->GetRandomizerCheck();
+    }
+
+    return potIdentity;
+}
+
 FishIdentity Randomizer::IdentifyFish(s32 sceneNum, s32 actorParams) {
     struct FishIdentity fishIdentity;
 
@@ -1720,7 +1840,7 @@ FishIdentity Randomizer::IdentifyFish(s32 sceneNum, s32 actorParams) {
 }
 
 u8 Randomizer::GetRandoSettingValue(RandomizerSettingKey randoSettingKey) {
-    return Rando::Context::GetInstance()->GetOption(randoSettingKey).GetSelectedOptionIndex();
+    return Rando::Context::GetInstance()->GetOption(randoSettingKey).GetContextOptionIndex();
 }
 
 GetItemEntry Randomizer::GetItemFromKnownCheck(RandomizerCheck randomizerCheck, GetItemID ogItemId, bool checkObtainability) {
@@ -1789,8 +1909,7 @@ void GenerateRandomizerImgui(std::string seed = "") {
     RandoMain::GenerateRando(excludedLocations, enabledTricks, seed);
 
     CVarSetInteger(CVAR_GENERAL("RandoGenerating"), 0);
-    CVarSave();
-    CVarLoad();
+    Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
 
     generated = 1;
 }
@@ -1813,13 +1932,6 @@ void RandomizerSettingsWindow::DrawElement() {
         generated = 0;
         randoThread.join();
     }
-
-    ImGui::SetNextWindowSize(ImVec2(920, 600), ImGuiCond_FirstUseEver);
-    if (!ImGui::Begin("Randomizer Editor", &mIsVisible, ImGuiWindowFlags_NoFocusOnAppearing)) {
-        ImGui::End();
-        return;
-    }
-
     bool disableEditingRandoSettings = CVarGetInteger(CVAR_GENERAL("RandoGenerating"), 0) || CVarGetInteger(CVAR_GENERAL("OnFileSelectNameEntry"), 0);
     if (disableEditingRandoSettings) {
         UIWidgets::DisableComponent(ImGui::GetStyle().Alpha * 0.5f);
@@ -1850,7 +1962,8 @@ void RandomizerSettingsWindow::DrawElement() {
     }
 
     UIWidgets::Spacer(0);
-    ImGui::BeginDisabled(CVarGetInteger(CVAR_RANDOMIZER_SETTING("DontGenerateSpoiler"), 0) && gSaveContext.gameMode != GAMEMODE_FILE_SELECT);
+    ImGui::BeginDisabled((CVarGetInteger(CVAR_RANDOMIZER_SETTING("DontGenerateSpoiler"), 0) && gSaveContext.gameMode != GAMEMODE_FILE_SELECT) ||
+                          GameInteractor::IsSaveLoaded());
     if (ImGui::Button("Generate Randomizer")) {
         ctx->SetSpoilerLoaded(false);
         GenerateRandomizer(CVarGetInteger(CVAR_RANDOMIZER_SETTING("ManualSeedEntry"), 0) ? seedString : "");
@@ -1968,7 +2081,7 @@ void RandomizerSettingsWindow::DrawElement() {
                                             excludedLocationString += ",";
                                         }
                                         CVarSetString(CVAR_RANDOMIZER_SETTING("ExcludedLocations"), excludedLocationString.c_str());
-                                        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesOnNextTick();
+                                        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
                                     }
                                     ImGui::SameLine();
                                     ImGui::Text("%s", Rando::StaticData::GetLocation(location)->GetShortName().c_str());
@@ -2013,7 +2126,7 @@ void RandomizerSettingsWindow::DrawElement() {
                                         } else {
                                             CVarSetString(CVAR_RANDOMIZER_SETTING("ExcludedLocations"), excludedLocationString.c_str());
                                         }
-                                        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesOnNextTick();
+                                        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
                                     }
                                     ImGui::SameLine();
                                     ImGui::Text("%s", Rando::StaticData::GetLocation(location)->GetShortName().c_str());
@@ -2183,7 +2296,7 @@ void RandomizerSettingsWindow::DrawElement() {
                         enabledTrickString += ",";
                     }
                     CVarClear(CVAR_RANDOMIZER_SETTING("EnabledTricks"));
-                    Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesOnNextTick();
+                    Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Enable All")) {
@@ -2198,7 +2311,7 @@ void RandomizerSettingsWindow::DrawElement() {
                         enabledTrickString += ",";
                     }
                     CVarSetString(CVAR_RANDOMIZER_SETTING("EnabledTricks"), enabledTrickString.c_str());
-                    Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesOnNextTick();
+                    Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
                 }
             }
             if (ImGui::BeginTable("trickTags", showTag.size(), ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_Borders)) {  
@@ -2253,7 +2366,7 @@ void RandomizerSettingsWindow::DrawElement() {
                             enabledTrickString += ",";
                         }
                         CVarSetString(CVAR_RANDOMIZER_SETTING("EnabledTricks"), enabledTrickString.c_str());
-                        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesOnNextTick();
+                        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
                     }
                     
                     ImGui::BeginChild("ChildTricksDisabled", ImVec2(0, -8), false, ImGuiWindowFlags_HorizontalScrollbar);
@@ -2288,7 +2401,7 @@ void RandomizerSettingsWindow::DrawElement() {
                                                 enabledTrickString += ",";
                                             }
                                             CVarSetString(CVAR_RANDOMIZER_SETTING("EnabledTricks"), enabledTrickString.c_str());
-                                            Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesOnNextTick();
+                                            Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
                                         }
                                         Rando::Tricks::DrawTagChips(option.GetTags());
                                         ImGui::SameLine();
@@ -2344,7 +2457,7 @@ void RandomizerSettingsWindow::DrawElement() {
                         } else {
                             CVarSetString(CVAR_RANDOMIZER_SETTING("EnabledTricks"), enabledTrickString.c_str());
                         }
-                        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesOnNextTick();
+                        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
                     }
                     
                     ImGui::BeginChild("ChildTricksEnabled", ImVec2(0, -8), false, ImGuiWindowFlags_HorizontalScrollbar);
@@ -2383,7 +2496,7 @@ void RandomizerSettingsWindow::DrawElement() {
                                         } else {
                                             CVarSetString(CVAR_RANDOMIZER_SETTING("EnabledTricks"), enabledTrickString.c_str());
                                         }
-                                        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesOnNextTick();
+                                        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
                                     }
                                     Rando::Tricks::DrawTagChips(option.GetTags());
                                     ImGui::SameLine();
@@ -2440,7 +2553,6 @@ void RandomizerSettingsWindow::DrawElement() {
     if (disableEditingRandoSettings) {
         UIWidgets::ReEnableComponent("");
     }
-    ImGui::End();
 }
 
 void RandomizerSettingsWindow::UpdateElement() {
@@ -2522,23 +2634,15 @@ CustomMessage Randomizer::GetFishingPondOwnerMessage(u16 originalTextId) {
     return messageEntry;
 }
 
-CustomMessage Randomizer::GetMerchantMessage(RandomizerInf randomizerInf, u16 textId, bool mysterious) {
-    auto ctx = Rando::Context::GetInstance(); //RANDOTODO If scrubs are allowed to have ambiguous hints, they need to be RandomiserHint objects for logging
-    CustomMessage messageEntry = CustomMessageManager::Instance->RetrieveMessage(Randomizer::merchantMessageTableID, textId);
-    RandomizerCheck rc = GetCheckFromRandomizerInf(randomizerInf);
+CustomMessage Randomizer::GetMerchantMessage(RandomizerCheck rc, TextIDs textId, TextIDs freeTextId, bool mysterious) {
+    auto ctx = Rando::Context::GetInstance();
+    CustomMessage messageEntry;
     RandomizerGet shopItemGet = ctx->GetItemLocation(rc)->GetPlacedRandomizerGet();
     CustomMessage shopItemName;
-    if (mysterious|| CVarGetInteger(CVAR_RANDOMIZER_ENHANCEMENT("MysteriousShuffle"), 0)) {
-        if (randomizerInf >= RAND_INF_SHOP_ITEMS_KF_SHOP_ITEM_1 && randomizerInf <= RAND_INF_SHOP_ITEMS_MARKET_BOMBCHU_SHOP_ITEM_8) {
-            shopItemName = {
-                "Mysterious Item",
-                "Mysteriöser Gegenstand",
-                "Objet Mystérieux"
-            };
-        } else {
-            shopItemName = Rando::StaticData::hintTextTable[RHT_MYSTERIOUS_ITEM].GetHintMessage(); 
-        }
-    // TODO: This should eventually be replaced with a full fledged trick model & trick name system
+    u16 shopItemPrice = ctx->GetItemLocation(rc)->GetPrice();
+
+    if (mysterious || CVarGetInteger(CVAR_RANDOMIZER_ENHANCEMENT("MysteriousShuffle"), 0)) {
+        shopItemName = Rando::StaticData::hintTextTable[RHT_MYSTERIOUS_ITEM_CAPITAL].GetHintMessage();
     } else if (shopItemGet == RG_ICE_TRAP) {
         shopItemGet = ctx->overrides[rc].LooksLike();
         shopItemName = CustomMessage(ctx->overrides[rc].GetTrickName());
@@ -2546,14 +2650,15 @@ CustomMessage Randomizer::GetMerchantMessage(RandomizerInf randomizerInf, u16 te
         auto shopItem = Rando::StaticData::RetrieveItem(shopItemGet);
         shopItemName = {shopItem.GetName()};
     }
-    u16 shopItemPrice = ctx->GetItemLocation(rc)->GetPrice();
-
-    if (textId == TEXT_SCRUB_RANDOM && shopItemPrice == 0) {
-        messageEntry = CustomMessageManager::Instance->RetrieveMessage(Randomizer::merchantMessageTableID, TEXT_SCRUB_RANDOM_FREE);
+    
+    if (freeTextId != TEXT_NONE && shopItemPrice == 0) {
+        messageEntry = CustomMessageManager::Instance->RetrieveMessage(Randomizer::merchantMessageTableID, freeTextId, MF_RAW);
+    } else {
+        messageEntry = CustomMessageManager::Instance->RetrieveMessage(Randomizer::merchantMessageTableID, textId, MF_RAW);
     }
 
-    messageEntry.Replace("[[item]]", shopItemName);
-    messageEntry.Replace("[[price]]", std::to_string(shopItemPrice));
+    messageEntry.InsertNames({shopItemName, {std::to_string(shopItemPrice)}});
+    messageEntry.AutoFormat();
     return messageEntry;
 }
 
@@ -2647,7 +2752,7 @@ void CreateRupeeMessages() {
 }
 
 CustomMessage Randomizer::GetRupeeMessage(u16 rupeeTextId) {
-    CustomMessage messageEntry = CustomMessageManager::Instance->RetrieveMessage(Randomizer::rupeeMessageTableID, rupeeTextId);
+    CustomMessage messageEntry = CustomMessageManager::Instance->RetrieveMessage(Randomizer::rupeeMessageTableID, rupeeTextId, MF_AUTO_FORMAT);
     messageEntry.Replace("[[rupee]]", CustomMessage(RandomElement(englishRupeeNames),
                                                     RandomElement(germanRupeeNames),
                                                     RandomElement(frenchRupeeNames)));
@@ -2715,6 +2820,7 @@ CustomMessage Randomizer::GetTriforcePieceMessage() {
     messageEntry.Replace("[[current]]", std::to_string(current));
     messageEntry.Replace("[[remaining]]", std::to_string(remaining));
     messageEntry.Replace("[[required]]", std::to_string(required));
+    messageEntry.Format();
     return messageEntry;
 }
 
@@ -2728,11 +2834,6 @@ void CreateNaviRandoMessages() {
         { "%cSometimes you can use the %rMegaton&Hammer %cinstead of bombs!",
           "%cManchmal kannst Du den %rStahlhammer&%cstatt Bomben verwenden!",
           "%cParfois, tu peux utiliser la %rMasse&des Titans %cau lieu de tes bombes!" },
-
-        { "%cThere are three %gbusiness scrubs %cin &Hyrule who sell %wmysterious items%c. Do&you know where they are?",
-          "%cEs gibt drei %gDeku-Händler %cin Hyrule&die mysteriöse Gegenstände&verkaufen. Weißt Du wo sie sind?",
-          "%cIl y a trois %gPestes Marchandes%c en&Hyrule qui vendent des %wobjets&mystérieux%c. Tu sais où elles "
-          "sont?" },
 
         { "%cStuck on this seed? You could &throw in the towel and check the&%wspoiler log%c...",
           "%cHängst Du bei diesem Seed fest?&Du könntest die Flinte ins Korn&werfen und ins %wSpoiler Log %cschauen...",
@@ -2835,89 +2936,262 @@ void CreateNaviRandoMessages() {
     }
 }
 
-void CreateIceTrapRandoMessages() {
-    CustomMessage IceTrapMessages[NUM_ICE_TRAP_MESSAGES] = {
-        { "You are a %bFOOL%w!", "Du bist ein %bDUMMKOPF%w!", "%bPauvre fou%w..." },
-
-        { "You are a %bFOWL%w!", "Du bist eine %bFrostbeule%w!", "Tu es un %bglaçon%w, Harry!" },
-
-        { "%bFOOL%w!", "%bDUMMKOPF%w!", "%bSot%w que tu es." },
-
-        { "You just got %bPUNKED%w!", "Du wurdest %beiskalt%w erwischt!", "Ça me %bglace%w le sang!" },
-
-        { "Stay %bfrosty%w, @.", "Es läuft Dir %beiskalt%w den Rücken&hinunter, @.", "%bReste au frais%w, @." },
-
-        { "Take a %bchill pill%w, @.", "Bleib %bcool%w, @.", "Et c'est la douche %bfroide%w!" },
-
-        { "%bWinter%w is coming.", "Der %bWinter%w naht.", "L'%bhiver%w vient." },
-
-        { "%bICE%w to see you, @.", "Alles %bcool%w im Pool?", "%bGlacier%w!" },
-
-        { "Feeling a little %rhot%w under the collar?&%bLet's fix that%w.", "%bAbkühlung gefällig%w?",
-          "%Ça en jette un %bfroid%w." },
-
-        { "It's a %bcold day%w in the Evil Realm.", "Es ist ein %kalter%w Tag im Herzen&von Hyrule.",
-          "Est-ce que tu as déjà eu des sueurs&%bfroides%w?" },
-
-        { "Getting %bcold feet%w?", "Bekommst Du etwa %bkalte%w Füße?",
-          "La vengeance est un plat qui se mange&%bfroid%w!" },
-
-        { "Say hello to the %bZoras%w for me!", "Sag den %bZoras%w viele Grüße von mir!",
-          "Dit bonjour aux %bZoras%w pour moi!" },
-
-        { "Can you keep a %bcool head%w?", "Bewahre einen %bkühlen%w! Kopf.",
-          "Il faut parfois savoir garder la tête&%bfroide%w!" },
-
-        { "Ganondorf used %bIce Trap%w!&It's super effective!",
-          "Ganondorf setzt %bEisstrahl%w ein.&Das ist sehr effektiv!",
-          "Ganondorf utilise %bPiège de Glace%w!&C'est super efficace!" },
-
-        { "Allow me to break the %bice%w!", "Ein Lächeln ist der beste Weg,&um das %bEis%w zu brechen!",
-          "Laisse moi briser la %bglace%w!" },
-
-        { "%bCold pun%w.", "%bEiskalt%w lässt du meine Seele&erfrier'n.",
-          "Balance man...,&Cadence man...,&Trace la %bglace%w...,&c'est le Cooooolllll Rasta!" },
-
-        { "The %bTitanic%w would be scared of you,&@.", "Die %bTitanic%w hätte Angst vor Dir,&@.",
-          "Le %bTitanic%w aurait peur de toi,&@." },
-
-        { "Oh no!", "Oh nein!", "Oh non!" },
-
-        { "What killed the dinosaurs?&The %bICE%w age!", "Was die Dinosaurier getötet hat?&Die %bEiszeit%w!",
-          "Qu'est-ce qui a tué les dinosaures?&L'ère %bglacière%w!" },
-
-        { "Knock knock. Who's there? Ice. Ice&who? Ice see that you're a %bFOOL%w.",
-          "Nachts ist es %bkälter%w als draußen.",
-          "L'imbécile réfléchit uniquement quand il&s'observe dans la %bglace%w." },
-
-        { "Never gonna %bgive you up%w. Never&gonna %blet you down%w. Never gonna&run around and %bdesert you%w.",
-          "Never gonna %bgive you up%w. Never&gonna %blet you down%w. Never gonna&run around and %bdesert you%w.",
-          "Never gonna %bgive you up%w. Never&gonna %blet you down%w. Never gonna&run around and %bdesert you%w." },
-
-        { "Thank you %b@%w!&But your item is in another castle!",
-          "Danke %b@%w!&Aber der Gegenstand ist in&einem anderem Schloß!",
-          "Merci %b@%w!&Mais ton objet est dans un autre&château!" },
-
-        { "%bFREEZE%w! Don't move!", "	Kalt. Kalt. Kälter. %bEISKALT%w!",
-          "J'espère que ça ne te fait ni chaud, ni&%bfroid%w." },
-
+CustomMessage Randomizer::GetIceTrapMessage() {
+    static const char* const englishIceTrapMessages[169] = {
+        "You are a #FOOL#!",
+        "You are a #FOWL#!",
+        "#FOOL#!",
+        "You just got #PUNKED#!",
+        "Stay #frosty#, @.",
+        "Take a #chill pill#, @.",
+        "#Winter# is coming.",
+        "#ICE# to see you, @.",
+        "Feeling a little %rhot%w under the collar? #Let's fix that#.",
+        "It's a #cold day# in the Evil Realm.",
+        "Getting #cold feet#?",
+        "Say hello to the #Zoras# for me!",
+        "Can you keep a #cool head#?",
+        "Ganondorf used #Ice Trap#!&It's super effective!",
+        "Allow me to break the #ice#!",
+        "#Cold pun#.",
+        "The #Titanic# would be scared of you, @.",
+        "Oh no!",
+        "Uh oh!",
+        "What killed the dinosaurs?&The #ICE# age!",
+        "Knock knock. Who's there? Ice. Ice who? Ice see that you're a #FOOL#.",
+        "Never gonna #give you up#. Never gonna #let you down#. Never gonna run around and #desert you#.",
+        "Thank you #@#! But your item is in another castle!",
+        "#FREEZE#! Don't move!",
+        "Wouldn't it be #ice# if we were colder?",
+        "Greetings from #Snowhead#! Wish you were here",
+        "Too #cool# for you?",
+        "#Ice#, #ice#, baby...",
+        "Time to break the #ice#.",
+        "We wish that you would read this... We wish that you would read this... But we set our bar low.",
+        "#Freeze# and put your hands in the air!",
+        "#Ice# to meet you!",
+        "Do you want to #freeze# a snowman?",
+        "Isn't there a #mansion# around here?",
+        "Now you know how #King Zora# feels",
+        "May the #Frost# be with you.",
+        "Carpe diem. #Freeze# the day.",
+        "There #snow# place like home.",
+        "That'll do, #ice#. That'll do.",
+        "All that is #cold# does not glitter, Not all those who wander are #frost#.",
+        "I Used To Be An Adventurer Like You. Then I Took An #Icetrap# To The Knee.",
+        "Would you like #ice# with that?",
+        "You have obtained the #Ice# Medallion!",
+        "Quick, do a #Zora# impression!",
+        "One item #on the rocks#!",//would be better if it could display the name of the item
+        "How much does a polar bear weigh?&Enough to break the #ice#.",
+        "You got Din's #Ice#!",
+        "You got Nayru's #Cold#!",
+        "You got Farore's #Freeze#!",
+        "KEKW",
+        "You just got #ICE TRAPPED#! Tag your friends to totally #ICE TRAP# them!",
+        "Are you okay, @? You're being #cold# today.",
+        "In a moment, your game might experience some #freezing#.",
+        "Breeze? Trees? Squeeze? No, it's a #freeze#!",
+        "After collecting this item, @ was assaulted in #cold# blood.",
+        "Only #chill# vibes around here!",
+        "Here's a #cool# gift for you!",
+        "Aha! You THOUGHT.",
+        "Stay hydrated and brush your teeth!",
+        "Isn't it too hot here? Let's turn the #AC# on.",
+        "One serving of #cold# @, coming right up!",
+        "Is it #cold# in here is that just me?",
+        "Yahaha! You found me!",
+        "You'd made a great #ice#-tronaut!",
+        "That's just the tip of the #iceberg#!",
+        "It's the triforce!&No, just kidding, it's an #ice trap#.",
+        "WINNER!",
+        "LOSER!",
+        "Greetings from #Cold Miser#!",
+        "Pardon me while I turn up the #AC#.",
+        "If you can't stand the #cold#, get out of the #freezer#.",
+        "Oh, goodie! #Frozen @# for the main course!",
+        "You have #freeze# power!",
+        "You obtained the #Ice Beam#! No wait, wrong game.",
+        "Here's to another lousy millenium!",
+        "You've activated my #trap card#!",
+        "I love #refrigerators#!",
+        "You expected an item,&BUT IT WAS I, AN #ICE TRAP#!",
+        "It's dangerous to go alone! Take #this#!",
+        "soh.exe has #stopped responding#.",
+        "Enough! My #Ice Trap# thaws in the morning!",
+        "Nobody expects the span-#ice# inquisition!",
+        "This is one #cool# item!",
+        "Say hello to my #little friend#!",
+        "We made you an offer you #can't refuse#.",
+        "Hyrule? More like #Hycool#!",
+        "Ice puns are #snow# problem!",
+        "This #ice# is #snow# joke!",
+        "There's no business like #snow# business!",
+        "no, dude",
+        "N#ice# trap ya got here!",
+        "Quick do your best impression of #Zoras Domain#!",
+        "Ganon used #ice beam#, it's super effective!",
+        "I was #frozen# today.",
+        "You're not in a #hurry#, right?",
+        "It's a #trap#!",
+        "At least it's not a VC crash and only Link is #frozen#!",
+        "Oh no! #BRAIN FREEZE#!",
+        "Looks like your game #froze#! Nope just you!",
+        "PK #FREEZE#!",
+        "May I interest you in some #iced# Tea?",
+        "Time for some Netflix and #chill#.",
+        "I know, I know... #FREEZE#!",
+        "#Ice# of you to drop by!",
+        "STOP!&You violated the #Thaw#!",
+        "I wanted to give you a treasure, but it looks like you got #cold feet#",
+        "You told me you wanted to deliver #just ice# to Ganondorf!",
+        "You got the triforce!&This ancient artifact of divine power can grant any- wait, no, sorry, it's just an ice trap. My bad",
+        "Time to #cool off#!",
+        "The #Ice Cavern# sends its regards.",
+        "Loading item, please #wait#...",
+        "Mash A+B to not #die#.",
+        "Sorry, your item is in another location.", //would be better if it could have the name of the item
+        "You only wish this was %gGreg%w.",
+        "Do you want to drink a hot chocolate?",
+        "The #cold# never bothered me anyway",
+        "Hope you're too school for #cool#!",
+        "Be thankful this isn't #absolute zero#.",
+        "Did you know the F in ZFG stands for #Freeze#?",
+        "You got #Ice Age (2002)#!",
+        "Now you can cast a #spell# you don't know",
+        "How's about a hero #on the rocks#?",
+        "Ain't no tunic for #this#!",
+        "I knew you were #part metroid#!",
+        "That's just the #icing on the cake#!",
+        "You're so #cool#, @!",
+        "You found #disappointment#!",
+        "You got #FOOLED#!",
+        "Start Mashing.",
+        "This item will #self-destruct# in 5 seconds...",
+        "Remember, there may be some momentary #discomfort#.",
+        "In a perfect world #ice traps# like me would not exist, but this is not a perfect world.",
+        "Gee, it sure is #cold# around here.",
+        "You tested the item with your #ice detector#, it beeped.", //would be better if it could have the name of the item
+        "You have found the way of the zero. The #sub-zero#.",
+        "Mweep... mweep... mweep...",
+        "Scum, #freezebag#! I mean #freeze#, scumbag!",
+        "Is it #chilly# in here or is it just #you#?",
+        "#Proceed#",
+        "WHAT'S SHE GONNA DO, MAKE ME AN #[Ice Cream]#!?",
+        "You've met with a #terrible fate#, haven't you?",
+        "So I heard you like the Shining, here's how it #ends#.",
+        "Minor routing mistake. #I win#.",
+        "Hold this #L#, @.",
+        "#SKILL ISSUE#",
+        "All you heat are belong to us",
+        "Wait a second, don't you already have #this item#?",
+        "#Freeze#! We have you surrounded!",
+        "Error 404 - Item not #found#.",
+        "Hydration break! Hey, who #froze# my water?",
+        "Oops, wrong #item model#.",
+        "Whoops! You have to put the item #in your inventory#.",
+        "You dropped the item, shattering it into #shards of ice#!", //would be better if it could have the name of the item
+        "Is this... golden age Simpsons?&BECAUSE I'M ABOUT TO #CHOKE A CHILD#.",
+        "You are the weakest @, #goodbye#!",
+        "Ugh... Why did we even randomize #this item#?",
+        "The #Frost Moon# is rising...",
+        "According to all known laws of physics and biology, there is no way that @ should be able to survive #getting fully encased in ice#. The cells in @'s body would all die by the time they #unthaw#. Of course, this is a video game, so @ survives anyway... #Probably#.",
+        "Okay, so stop me if you've heard this one - a gamer and a bottle of #liquid nitrogen# walk into a milk bar...",
+        "Lástima, es una #trampa de hielo#...&&Nobody expects the Spanish #ice trap#!",
+        "Gee, it sure is #BURR#ing around here.",
+        "Navi? Oh! I thought she was called #Névé#!",
+        "It's fine, @ knew this was a #trap#, they're just using it to take damage intentionally to manipulate RNG.",
+        "Unfortunately, the item has #stopped#.", //would be better if it could have the name of the item
+        "This item is #not available# in your country.", //would be better if it could have the name of the item
+        "#Ice# try. #;)#",
+        "D'oh, I #missed#!",
+        "Where is my #super suit#?",
+        "#Titanic's revenge#.",
     };
-    CustomMessageManager* customMessageManager = CustomMessageManager::Instance;
-    customMessageManager->AddCustomMessageTable(Randomizer::IceTrapRandoMessageTableID);
-    for (u8 i = 0; i <= (NUM_ICE_TRAP_MESSAGES - 1); i++) {
-        customMessageManager->CreateMessage(Randomizer::IceTrapRandoMessageTableID, i,
-                                            IceTrapMessages[i]);
+
+    static const char* const germanIceTrapMessages[23] = {
+        "Du bist ein #DUMMKOPF#!",
+        "Du bist eine #Frostbeule#!",
+        "#DUMMKOPF#!",
+        "Du wurdest #eiskalt# erwischt!",
+        "Es läuft Dir #eiskalt# den Rücken hinunter, @.",
+        "Bleib #cool#, @.",
+        "Der #Winter# naht.",
+        "Alles #cool# im Pool?",
+        "#Abkühlung gefällig#?",
+        "Es ist ein %kalter%w Tag im Herzen von Hyrule.",
+        "Bekommst Du etwa #kalte# Füße?",
+        "Sag den #Zoras# viele Grüße von mir!",
+        "Bewahre einen #kühlen#! Kopf.",
+        "Ganondorf setzt #Eisstrahl# ein. Das ist sehr effektiv!",
+        "Ein Lächeln ist der beste Weg, um das #Eis# zu brechen!",
+        "#Eiskalt# lässt du meine Seele erfrier'n.",
+        "Die #Titanic# hätte Angst vor Dir, @.",
+        "Oh nein!",
+        "Was die Dinosaurier getötet hat?&Die #Eiszeit#!",
+        "Nachts ist es #kälter# als draußen.",
+        "Never gonna #give you up#. Never gonna #let you down#. Never gonna run around and #desert you#.",
+        "Danke #@#! Aber der Gegenstand ist in einem anderem Schloß!",
+        "Kalt. Kalt. Kälter. #EISKALT#!",
+    };
+
+    static const char* const frenchIceTrapMessages[23] = {
+        "#Pauvre fou#...",
+        "Tu es un #glaçon#, Harry!",
+        "#Sot# que tu es.",
+        "Ça me #glace# le sang!",
+        "#Reste au frais#, @.",
+        "Et c'est la douche #froide#!",
+        "L'#hiver# vient.",
+        "#Glacier#!",
+        "Ça en jette un #froid#.",
+        "Est-ce que tu as déjà eu des sueurs #froides#?",
+        "La vengeance est un plat qui se mange #froid#!",
+        "Dit bonjour aux #Zoras# pour moi!",
+        "Il faut parfois savoir garder la tête #froide#!",
+        "Ganondorf utilise #Piège de Glace#! C'est super efficace!",
+        "Laisse moi briser la #glace#!",
+        "Balance man..., Cadence man..., Trace la #glace#..., c'est le Cooooolllll Rasta!",
+        "Le #Titanic# aurait peur de toi, @.",
+        "Oh non!",
+        "Qu'est-ce qui a tué les dinosaures?&L'ère #glacière#!",
+        "L'imbécile réfléchit uniquement quand il s'observe dans la #glace#.",
+        "Never gonna #give you up#. Never gonna #let you down#. Never gonna run around and #desert you#.",
+        "Merci #@#! Mais ton objet est dans un autre château!",
+        "J'espère que ça ne te fait ni chaud, ni #froid#.",
+    };
+
+    CustomMessage msg;
+
+    if (CVarGetInteger(CVAR_GENERAL("LetItSnow"), 0)) {
+        msg = CustomMessage(
+            /*english*/ "This year for Christmas, all you get is #COAL#!",
+            /*german*/  "This year for Christmas, all you get is #COAL#!",
+            /*french*/  "Pour Noël, cette année, tu n'auras que du #CHARBON#! %rJoyeux Noël%w!",
+                        { QM_BLUE }
+        );
+    } else {
+        msg = CustomMessage(
+            RandomElement(englishIceTrapMessages),
+            RandomElement(germanIceTrapMessages),
+            RandomElement(frenchIceTrapMessages),
+            { QM_BLUE, QM_BLUE, QM_BLUE }
+        );
     }
 
-    // We only use this ice trap message for christmas, so we don't want it in the normal ice trap messages rotation
-    customMessageManager->CreateMessage(
-        Randomizer::IceTrapRandoMessageTableID, NUM_ICE_TRAP_MESSAGES + 1,
-        CustomMessage("This year for Christmas, all&you get is %BCOAL%w!",
-                      "This year for Christmas, all&you get is %BCOAL%w!",
-                      "Pour Noël, cette année, tu&n'auras que du %BCHARBON!&%rJoyeux Noël%w!"));
+    msg.AutoFormat();
+    return msg;
 }
 
-static int goronIDs[9] = { 0x3052, 0x3069, 0x306A, 0x306B, 0x306C, 0x306D, 0x306E, 0x306F, 0x3070 };
+static int goronIDs[9] = { TEXT_FIRE_TEMPLE_GORON_OWE_YOU_BIG_TIME,
+                           TEXT_FIRE_TEMPLE_GORON_FALLING_DOORS_SECRET,
+                           TEXT_FIRE_TEMPLE_GORON_FIRE_SECRET,
+                           TEXT_FIRE_TEMPLE_GORON_FLAME_DANCER_SECRET,
+                           TEXT_FIRE_TEMPLE_GORON_SWITCH_SECRET,
+                           TEXT_FIRE_TEMPLE_GORON_OCARINA_SECRET,
+                           TEXT_FIRE_TEMPLE_GORON_PILLAR_SECRET,
+                           TEXT_FIRE_TEMPLE_GORON_HIDDEN_DOOR_SECRET,
+                           TEXT_FIRE_TEMPLE_GORON_SOUNDS_DIFFERENT_SECRET};
 
 void CreateFireTempleGoronMessages() {
     CustomMessage FireTempleGoronMessages[NUM_GORON_MESSAGES] = {
@@ -3005,6 +3279,7 @@ CustomMessage Randomizer::GetGoronMessage(u16 index) {
     CustomMessage messageEntry = CustomMessageManager::Instance->RetrieveMessage(customMessageTableID, goronIDs[index]);
     messageEntry.Replace("[[days]]", std::to_string(gSaveContext.totalDays));
     messageEntry.Replace("[[a_btn]]", std::to_string(gSaveContext.sohStats.count[COUNT_BUTTON_PRESSES_A]));
+    messageEntry.Format();
     return messageEntry;
 }
 
@@ -3085,7 +3360,7 @@ void Randomizer::CreateCustomMessages() {
 			"You found a %pBottom of the &Well %wSmall Key!",
 			"Du erhältst einen %rKleinen&Schlüssel%w für den %pGrund des Brunnens%w!",
 			"Vous obtenez une %rPetite Clé %w&du %pPuits%w!"),
-        GIMESSAGE(RG_GERUDO_TRAINING_GROUNDS_SMALL_KEY, ITEM_KEY_SMALL,
+        GIMESSAGE(RG_GERUDO_TRAINING_GROUND_SMALL_KEY, ITEM_KEY_SMALL,
 			"You found a %yGerudo Training &Grounds %wSmall Key!",
 			"Du erhältst einen %rKleinen&Schlüssel%w für die %yGerudo-Trainingsarena%w!",
 			"Vous obtenez une %rPetite Clé %w&du %yGymnase Gerudo%w!"),
@@ -3122,7 +3397,7 @@ void Randomizer::CreateCustomMessages() {
 			"You found a %pBottom of the &Well %wKeyring!",
 			"Du erhältst ein %rSchlüsselbund%w&für den %pGrund des Brunnens%w!",
 			"Vous obtenez un trousseau de&clés du %pPuits%w!"),
-        GIMESSAGE(RG_GERUDO_TRAINING_GROUNDS_KEY_RING, ITEM_KEY_SMALL,
+        GIMESSAGE(RG_GERUDO_TRAINING_GROUND_KEY_RING, ITEM_KEY_SMALL,
 			"You found a %yGerudo Training &Grounds %wKeyring!",
 			"Du erhältst ein %rSchlüsselbund%w&für die %yGerudo-Trainingsarena%w!",
 			"Vous obtenez un trousseau de&clés du %yGymnase Gerudo%w!"),
@@ -3299,7 +3574,6 @@ void Randomizer::CreateCustomMessages() {
     CreateRupeeMessages();
     CreateTriforcePieceMessages();
     CreateNaviRandoMessages();
-    CreateIceTrapRandoMessages();
     CreateFireTempleGoronMessages();
 }
 
@@ -3320,4 +3594,353 @@ void RandomizerSettingsWindow::InitElement() {
     Randomizer::CreateCustomMessages();
     seedString = (char*)calloc(MAX_SEED_STRING_SIZE, sizeof(char));
     Rando::Context::GetInstance()->GetSettings()->UpdateOptionProperties();
+}
+
+// Gameplay stat tracking: Update time the item was acquired
+// (special cases for rando items)
+void Randomizer_GameplayStats_SetTimestamp(uint16_t item) {
+
+    u32 time = GAMEPLAYSTAT_TOTAL_TIME;
+
+    // Have items in Link's pocket shown as being obtained at 0.1 seconds
+    if (time == 0) {
+        time = 1;
+    }
+
+    // Use ITEM_KEY_BOSS to timestamp Ganon's boss key
+    if (item == RG_GANONS_CASTLE_BOSS_KEY) {
+        gSaveContext.sohStats.itemTimestamp[ITEM_KEY_BOSS] = time;
+    }
+
+    // Count any bottled item as a bottle
+    if (item >= RG_EMPTY_BOTTLE && item <= RG_BOTTLE_WITH_BIG_POE) {
+        if (gSaveContext.sohStats.itemTimestamp[ITEM_BOTTLE] == 0) {
+            gSaveContext.sohStats.itemTimestamp[ITEM_BOTTLE] = time;
+        }
+        return;
+    }
+    // Count any bombchu pack as bombchus
+    if ((item >= RG_BOMBCHU_5 && item <= RG_BOMBCHU_20) || item == RG_PROGRESSIVE_BOMBCHUS) {
+        if (gSaveContext.sohStats.itemTimestamp[ITEM_BOMBCHU] = 0) {
+            gSaveContext.sohStats.itemTimestamp[ITEM_BOMBCHU] = time;
+        }
+        return;
+    }
+    if (item == RG_MAGIC_SINGLE) {
+        gSaveContext.sohStats.itemTimestamp[ITEM_SINGLE_MAGIC] = time;
+    }
+    if (item == RG_DOUBLE_DEFENSE) {
+        gSaveContext.sohStats.itemTimestamp[ITEM_DOUBLE_DEFENSE] = time;
+    }
+}
+
+extern "C" u8 Return_Item_Entry(GetItemEntry itemEntry, u8 returnItem);
+
+// used for items that only set a rand inf when obtained
+std::map<RandomizerGet, RandomizerInf> randomizerGetToRandInf = {
+    { RG_FISHING_POLE,           RAND_INF_FISHING_POLE_FOUND },
+    { RG_BRONZE_SCALE,           RAND_INF_CAN_SWIM },
+    { RG_QUIVER_INF,             RAND_INF_HAS_INFINITE_QUIVER },
+    { RG_BOMB_BAG_INF,           RAND_INF_HAS_INFINITE_BOMB_BAG },
+    { RG_BULLET_BAG_INF,         RAND_INF_HAS_INFINITE_BULLET_BAG },
+    { RG_STICK_UPGRADE_INF,      RAND_INF_HAS_INFINITE_STICK_UPGRADE },
+    { RG_NUT_UPGRADE_INF,        RAND_INF_HAS_INFINITE_NUT_UPGRADE },
+    { RG_MAGIC_INF,              RAND_INF_HAS_INFINITE_MAGIC_METER },
+    { RG_BOMBCHU_INF,            RAND_INF_HAS_INFINITE_BOMBCHUS },
+    { RG_WALLET_INF,             RAND_INF_HAS_INFINITE_MONEY },
+    { RG_SKELETON_KEY,           RAND_INF_HAS_SKELETON_KEY },
+    { RG_OCARINA_A_BUTTON,       RAND_INF_HAS_OCARINA_A },
+    { RG_OCARINA_C_UP_BUTTON,    RAND_INF_HAS_OCARINA_C_UP },
+    { RG_OCARINA_C_DOWN_BUTTON,  RAND_INF_HAS_OCARINA_C_DOWN },
+    { RG_OCARINA_C_LEFT_BUTTON,  RAND_INF_HAS_OCARINA_C_LEFT },
+    { RG_OCARINA_C_RIGHT_BUTTON, RAND_INF_HAS_OCARINA_C_RIGHT },
+    { RG_GOHMA_SOUL,             RAND_INF_GOHMA_SOUL },
+    { RG_KING_DODONGO_SOUL,      RAND_INF_KING_DODONGO_SOUL },
+    { RG_BARINADE_SOUL,          RAND_INF_BARINADE_SOUL },
+    { RG_PHANTOM_GANON_SOUL,     RAND_INF_PHANTOM_GANON_SOUL },
+    { RG_VOLVAGIA_SOUL,          RAND_INF_VOLVAGIA_SOUL },
+    { RG_MORPHA_SOUL,            RAND_INF_MORPHA_SOUL },
+    { RG_BONGO_BONGO_SOUL,       RAND_INF_BONGO_BONGO_SOUL },
+    { RG_TWINROVA_SOUL,          RAND_INF_TWINROVA_SOUL },
+    { RG_GANON_SOUL,             RAND_INF_GANON_SOUL },
+};
+
+extern "C" u16 Randomizer_Item_Give(PlayState* play, GetItemEntry giEntry) {
+    if (giEntry.modIndex != MOD_RANDOMIZER) {
+        LUSLOG_WARN("Randomizer_Item_Give was called with a GetItemEntry with a mod index different from MOD_RANDOMIZER (%d)", giEntry.modIndex);
+        assert(false);
+        return -1;
+    }
+
+    RandomizerGet item = (RandomizerGet)giEntry.getItemId;
+
+    // Gameplay stats: Update the time the item was obtained
+    Randomizer_GameplayStats_SetTimestamp(item);
+
+    //if it's an item that just sets a randomizerInf, set it
+    if (randomizerGetToRandInf.find(item) != randomizerGetToRandInf.end()) {
+        Flags_SetRandomizerInf(randomizerGetToRandInf.find(item)->second);
+        return Return_Item_Entry(giEntry, RG_NONE);
+    }
+
+    //bottle items
+    if (item >= RG_BOTTLE_WITH_RED_POTION && item <= RG_BOTTLE_WITH_BIG_POE) {
+        for (u16 i = 0; i < 4; i++) {
+            if (gSaveContext.inventory.items[SLOT_BOTTLE_1 + i] == ITEM_NONE) {
+                ItemID bottleItem = ITEM_NONE;
+                switch (item) {
+                    case RG_BOTTLE_WITH_RED_POTION:
+                        bottleItem = ITEM_POTION_RED;
+                        break;
+                    case RG_BOTTLE_WITH_GREEN_POTION:
+                        bottleItem = ITEM_POTION_GREEN;
+                        break;
+                    case RG_BOTTLE_WITH_BLUE_POTION:
+                        bottleItem = ITEM_POTION_BLUE;
+                        break;
+                    case RG_BOTTLE_WITH_FAIRY:
+                        bottleItem = ITEM_FAIRY;
+                        break;
+                    case RG_BOTTLE_WITH_FISH:
+                        bottleItem = ITEM_FISH;
+                        break;
+                    case RG_BOTTLE_WITH_BLUE_FIRE:
+                        bottleItem = ITEM_BLUE_FIRE;
+                        break;
+                    case RG_BOTTLE_WITH_BUGS:
+                        bottleItem = ITEM_BUG;
+                        break;
+                    case RG_BOTTLE_WITH_POE:
+                        bottleItem = ITEM_POE;
+                        break;
+                    case RG_BOTTLE_WITH_BIG_POE:
+                        bottleItem = ITEM_BIG_POE;
+                        break;
+                    default:
+                        break;
+                }
+
+                gSaveContext.inventory.items[SLOT_BOTTLE_1 + i] = bottleItem;
+                return Return_Item_Entry(giEntry, RG_NONE);
+            }
+        }
+    }
+
+    //dungeon items
+    if (
+        (item >= RG_FOREST_TEMPLE_SMALL_KEY && item <= RG_GANONS_CASTLE_SMALL_KEY) ||
+        (item >= RG_FOREST_TEMPLE_KEY_RING && item <= RG_GANONS_CASTLE_KEY_RING) ||
+        (item >= RG_FOREST_TEMPLE_BOSS_KEY && item <= RG_GANONS_CASTLE_BOSS_KEY) ||
+        (item >= RG_DEKU_TREE_MAP && item <= RG_ICE_CAVERN_MAP) ||
+        (item >= RG_DEKU_TREE_COMPASS && item <= RG_ICE_CAVERN_COMPASS)
+    ) {
+        u16 mapIndex = gSaveContext.mapIndex;
+        u8 numOfKeysOnKeyring = 0;
+        switch (item) {
+            case RG_DEKU_TREE_MAP:
+            case RG_DEKU_TREE_COMPASS:
+                mapIndex = SCENE_DEKU_TREE;
+                break;
+            case RG_DODONGOS_CAVERN_MAP:
+            case RG_DODONGOS_CAVERN_COMPASS:
+                mapIndex = SCENE_DODONGOS_CAVERN;
+                break;
+            case RG_JABU_JABUS_BELLY_MAP:
+            case RG_JABU_JABUS_BELLY_COMPASS:
+                mapIndex = SCENE_JABU_JABU;
+                break;
+            case RG_FOREST_TEMPLE_MAP:
+            case RG_FOREST_TEMPLE_COMPASS:
+            case RG_FOREST_TEMPLE_SMALL_KEY:
+            case RG_FOREST_TEMPLE_KEY_RING:
+            case RG_FOREST_TEMPLE_BOSS_KEY:
+                mapIndex = SCENE_FOREST_TEMPLE;
+                numOfKeysOnKeyring = FOREST_TEMPLE_SMALL_KEY_MAX;
+                break;
+            case RG_FIRE_TEMPLE_MAP:
+            case RG_FIRE_TEMPLE_COMPASS:
+            case RG_FIRE_TEMPLE_SMALL_KEY:
+            case RG_FIRE_TEMPLE_KEY_RING:
+            case RG_FIRE_TEMPLE_BOSS_KEY:
+                mapIndex = SCENE_FIRE_TEMPLE;
+                numOfKeysOnKeyring = FIRE_TEMPLE_SMALL_KEY_MAX;
+                break;
+            case RG_WATER_TEMPLE_MAP:
+            case RG_WATER_TEMPLE_COMPASS:
+            case RG_WATER_TEMPLE_SMALL_KEY:
+            case RG_WATER_TEMPLE_KEY_RING:
+            case RG_WATER_TEMPLE_BOSS_KEY:
+                mapIndex = SCENE_WATER_TEMPLE;
+                numOfKeysOnKeyring = WATER_TEMPLE_SMALL_KEY_MAX;
+                break;
+            case RG_SPIRIT_TEMPLE_MAP:
+            case RG_SPIRIT_TEMPLE_COMPASS:
+            case RG_SPIRIT_TEMPLE_SMALL_KEY:
+            case RG_SPIRIT_TEMPLE_KEY_RING:
+            case RG_SPIRIT_TEMPLE_BOSS_KEY:
+                mapIndex = SCENE_SPIRIT_TEMPLE;
+                numOfKeysOnKeyring = SPIRIT_TEMPLE_SMALL_KEY_MAX;
+                break;
+            case RG_SHADOW_TEMPLE_MAP:
+            case RG_SHADOW_TEMPLE_COMPASS:
+            case RG_SHADOW_TEMPLE_SMALL_KEY:
+            case RG_SHADOW_TEMPLE_KEY_RING:
+            case RG_SHADOW_TEMPLE_BOSS_KEY:
+                mapIndex = SCENE_SHADOW_TEMPLE;
+                numOfKeysOnKeyring = SHADOW_TEMPLE_SMALL_KEY_MAX;
+                break;
+            case RG_BOTTOM_OF_THE_WELL_MAP:
+            case RG_BOTTOM_OF_THE_WELL_COMPASS:
+            case RG_BOTTOM_OF_THE_WELL_SMALL_KEY:
+            case RG_BOTTOM_OF_THE_WELL_KEY_RING:
+                mapIndex = SCENE_BOTTOM_OF_THE_WELL;
+                numOfKeysOnKeyring = BOTTOM_OF_THE_WELL_SMALL_KEY_MAX;
+                break;
+            case RG_ICE_CAVERN_MAP:
+            case RG_ICE_CAVERN_COMPASS:
+                mapIndex = SCENE_ICE_CAVERN;
+                break;
+            case RG_GANONS_CASTLE_BOSS_KEY:
+                mapIndex = SCENE_GANONS_TOWER;
+                break;
+            case RG_GERUDO_TRAINING_GROUND_SMALL_KEY:
+            case RG_GERUDO_TRAINING_GROUND_KEY_RING:
+                mapIndex = SCENE_GERUDO_TRAINING_GROUND;
+                numOfKeysOnKeyring = GERUDO_TRAINING_GROUND_SMALL_KEY_MAX;
+                break;
+            case RG_GERUDO_FORTRESS_SMALL_KEY:
+            case RG_GERUDO_FORTRESS_KEY_RING:
+                mapIndex = SCENE_THIEVES_HIDEOUT;
+                numOfKeysOnKeyring = GERUDO_FORTRESS_SMALL_KEY_MAX;
+                break;
+            case RG_GANONS_CASTLE_SMALL_KEY:
+            case RG_GANONS_CASTLE_KEY_RING:
+                mapIndex = SCENE_INSIDE_GANONS_CASTLE;
+                numOfKeysOnKeyring = GANONS_CASTLE_SMALL_KEY_MAX;
+                break;
+            default:
+                break;
+        }
+
+        if ((item >= RG_FOREST_TEMPLE_SMALL_KEY) && (item <= RG_GANONS_CASTLE_SMALL_KEY)) {
+            gSaveContext.sohStats.dungeonKeys[mapIndex]++;
+            if (gSaveContext.inventory.dungeonKeys[mapIndex] < 0) {
+                gSaveContext.inventory.dungeonKeys[mapIndex] = 1;
+            } else {
+                gSaveContext.inventory.dungeonKeys[mapIndex]++;
+            }
+            return Return_Item_Entry(giEntry, RG_NONE);
+        }
+
+        if ((item >= RG_FOREST_TEMPLE_KEY_RING) && (item <= RG_GANONS_CASTLE_KEY_RING)) {
+            gSaveContext.sohStats.dungeonKeys[mapIndex] = numOfKeysOnKeyring;
+            gSaveContext.inventory.dungeonKeys[mapIndex] = numOfKeysOnKeyring;
+            return Return_Item_Entry(giEntry, RG_NONE);
+        }
+
+        u32 bitmask;
+        if ((item >= RG_DEKU_TREE_MAP) && (item <= RG_ICE_CAVERN_MAP)) {
+            bitmask = gBitFlags[2];
+        } else if ((item >= RG_DEKU_TREE_COMPASS) && (item <= RG_ICE_CAVERN_COMPASS)) {
+            bitmask = gBitFlags[1];
+        } else {
+            bitmask = gBitFlags[0];
+        }
+
+        gSaveContext.inventory.dungeonItems[mapIndex] |= bitmask;
+        return Return_Item_Entry(giEntry, RG_NONE);
+    }
+
+    switch (item) {
+        case RG_MAGIC_SINGLE:
+            gSaveContext.isMagicAcquired = true;
+            gSaveContext.magicFillTarget = MAGIC_NORMAL_METER;
+            Magic_Fill(play);
+            break;
+        case RG_MAGIC_DOUBLE:
+            if (!gSaveContext.isMagicAcquired) {
+                gSaveContext.isMagicAcquired = true;
+            }
+            gSaveContext.isDoubleMagicAcquired = true;
+            gSaveContext.magicFillTarget = MAGIC_DOUBLE_METER;
+            gSaveContext.magicLevel = 0;
+            Magic_Fill(play);
+            break;
+        case RG_MAGIC_BEAN_PACK:
+            if (INV_CONTENT(ITEM_BEAN) == ITEM_NONE) {
+                INV_CONTENT(ITEM_BEAN) = ITEM_BEAN;
+                AMMO(ITEM_BEAN) = 10;
+            }
+            break;
+        case RG_DOUBLE_DEFENSE:
+            gSaveContext.isDoubleDefenseAcquired = true;
+            gSaveContext.inventory.defenseHearts = 20;
+            gSaveContext.healthAccumulator = 0x140;
+            break;
+        case RG_TYCOON_WALLET:
+            Inventory_ChangeUpgrade(UPG_WALLET, 3);
+            if (OTRGlobals::Instance->gRandomizer->GetRandoSettingValue(RSK_FULL_WALLETS)) {
+                Rupees_ChangeBy(999);
+            }
+            break;
+        case RG_CHILD_WALLET:
+            Flags_SetRandomizerInf(RAND_INF_HAS_WALLET);
+            if (OTRGlobals::Instance->gRandomizer->GetRandoSettingValue(RSK_FULL_WALLETS)) {
+                Rupees_ChangeBy(99);
+            }
+            break;
+        case RG_GREG_RUPEE:
+            Rupees_ChangeBy(1);
+            Flags_SetRandomizerInf(RAND_INF_GREG_FOUND);
+            gSaveContext.sohStats.itemTimestamp[TIMESTAMP_FOUND_GREG] = GAMEPLAYSTAT_TOTAL_TIME;
+            break;
+        case RG_TRIFORCE_PIECE:
+            gSaveContext.triforcePiecesCollected++;
+            GameInteractor_SetTriforceHuntPieceGiven(true);
+
+            // Teleport to credits when goal is reached.
+            if (gSaveContext.triforcePiecesCollected == (OTRGlobals::Instance->gRandomizer->GetRandoSettingValue(RSK_TRIFORCE_HUNT_PIECES_REQUIRED) + 1)) {
+                gSaveContext.sohStats.itemTimestamp[TIMESTAMP_TRIFORCE_COMPLETED] = GAMEPLAYSTAT_TOTAL_TIME;
+                gSaveContext.sohStats.gameComplete = 1;
+                Flags_SetRandomizerInf(RAND_INF_GRANT_GANONS_BOSSKEY);
+                Play_PerformSave(play);
+                GameInteractor_SetTriforceHuntCreditsWarpActive(true);
+            }
+
+            break;
+        case RG_PROGRESSIVE_BOMBCHUS:
+            if (INV_CONTENT(ITEM_BOMBCHU) == ITEM_NONE) {
+                INV_CONTENT(ITEM_BOMBCHU) = ITEM_BOMBCHU;
+                AMMO(ITEM_BOMBCHU) = 20;
+            } else if (OTRGlobals::Instance->gRandomizer->GetRandoSettingValue(RSK_INFINITE_UPGRADES)) {
+                Flags_SetRandomizerInf(RAND_INF_HAS_INFINITE_BOMBCHUS);
+            } else {
+                AMMO(ITEM_BOMBCHU) += AMMO(ITEM_BOMBCHU) < 5 ? 10 : 5;
+                if (AMMO(ITEM_BOMBCHU) > 50) {
+                    AMMO(ITEM_BOMBCHU) = 50;
+                }
+            }
+            break;
+        case RG_MASTER_SWORD:
+            if (!CHECK_OWNED_EQUIP(EQUIP_TYPE_SWORD, EQUIP_INV_SWORD_MASTER)) {
+                gSaveContext.inventory.equipment |= gBitFlags[1] << gEquipShifts[EQUIP_TYPE_SWORD];
+            }
+            break;
+        case RG_DEKU_STICK_BAG:
+            Inventory_ChangeUpgrade(UPG_STICKS, 1);
+            INV_CONTENT(ITEM_STICK) = ITEM_STICK;
+            AMMO(ITEM_STICK) = CUR_CAPACITY(UPG_STICKS);
+            break;
+        case RG_DEKU_NUT_BAG:
+            Inventory_ChangeUpgrade(UPG_NUTS, 1);
+            INV_CONTENT(ITEM_NUT) = ITEM_NUT;
+            AMMO(ITEM_NUT) = CUR_CAPACITY(UPG_NUTS);
+            break;
+        default:
+            LUSLOG_WARN("Randomizer_Item_Give didn't have behaviour specified for getItemId=%d", item);
+            assert(false);
+            return -1;
+    }
+
+    return Return_Item_Entry(giEntry, RG_NONE);
 }

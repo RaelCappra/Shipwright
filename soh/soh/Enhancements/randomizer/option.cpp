@@ -31,10 +31,7 @@ Option Option::LogicTrick(std::string name_) {
 }
 
 Option::operator bool() const {
-    if (std::holds_alternative<bool>(var)) {
-        return Value<bool>();
-    }
-    return Value<uint8_t>() != 0;
+    return contextSelection != 0;
 }
 
 size_t Option::GetOptionCount() const {
@@ -49,12 +46,16 @@ const std::string& Option::GetDescription() const {
     return description;
 }
 
-uint8_t Option::GetSelectedOptionIndex() const {
-    return selectedOption;
+uint8_t Option::GetMenuOptionIndex() const {
+    return menuSelection;
+}
+
+uint8_t Option::GetContextOptionIndex() const {
+    return contextSelection;
 }
 
 const std::string& Option::GetSelectedOptionText() const {
-    return options[selectedOption];
+    return options[contextSelection];
 }
 
 const std::string& Option::GetCVarName() const {
@@ -63,39 +64,45 @@ const std::string& Option::GetCVarName() const {
 
 void Option::SetVariable() {
     if (std::holds_alternative<bool>(var)) {
-        var.emplace<bool>(selectedOption != 0);
+        var.emplace<bool>(menuSelection != 0);
     } else {
-        var.emplace<uint8_t>(selectedOption);
+        var.emplace<uint8_t>(menuSelection);
     }
 }
 
-void Option::SetCVar() const {
+void Option::SaveCVar() const {
     if (!cvarName.empty()) {
-        CVarSetInteger(cvarName.c_str(), GetSelectedOptionIndex());
+        CVarSetInteger(cvarName.c_str(), GetMenuOptionIndex());
     }
 }
 
 void Option::SetFromCVar() {
     if (!cvarName.empty()) {
-        SetSelectedIndex(CVarGetInteger(cvarName.c_str(), defaultOption));
+        SetMenuIndex(CVarGetInteger(cvarName.c_str(), defaultOption));
     }
 }
 
 void Option::SetDelayedOption() {
-    delayedOption = selectedOption;
+    delayedSelection = contextSelection;
 }
 
 void Option::RestoreDelayedOption() {
-    selectedOption = delayedOption;
+    contextSelection = delayedSelection;
+}
+
+void Option::SetMenuIndex(size_t idx) {
+    menuSelection = idx;
+    if (menuSelection > options.size() - 1) {
+        menuSelection = options.size() - 1;
+    }
     SetVariable();
 }
 
-void Option::SetSelectedIndex(const size_t idx) {
-    selectedOption = idx;
-    if (selectedOption >= options.size()) {
-        selectedOption = 0;
+void Option::SetContextIndex(size_t idx) {
+    contextSelection = idx;
+    if (contextSelection > options.size() - 1) {
+        contextSelection = options.size() - 1;
     }
-    SetVariable();
 }
 
 void Option::Hide() {
@@ -111,8 +118,8 @@ bool Option::IsHidden() const {
 }
 
 void Option::ChangeOptions(std::vector<std::string> opts) {
-    if (selectedOption >= opts.size()) {
-        selectedOption = opts.size() - 1;
+    if (menuSelection >= opts.size()) {
+        menuSelection = opts.size() - 1;
     }
     options = std::move(opts);
 }
@@ -133,7 +140,7 @@ bool Option::IsCategory(const OptionCategory category) const {
     return category == this->category;
 }
 
-bool Option::RenderImGui() const {
+bool Option::RenderImGui() {
     bool changed = false;
     ImGui::BeginGroup();
     switch (widgetType) {
@@ -171,15 +178,25 @@ void Option::RemoveFlag(const int imFlag_) {
     imFlags &= ~imFlag_;
 }
 
+void Option::SetContextIndexFromText(const std::string text) {
+    if (optionsTextToVar.contains(text)){
+        SetContextIndex(optionsTextToVar[text]);
+    } else {
+        SPDLOG_ERROR("Option {} does not have a var named {}.", name, text);
+        assert(false);
+    }
+}
+
 Option::Option(uint8_t var_, std::string name_, std::vector<std::string> options_, OptionCategory category_,
                std::string cvarName_, std::string description_, WidgetType widgetType_, uint8_t defaultOption_,
                bool defaultHidden_, int imFlags_)
     : var(var_), name(std::move(name_)), options(std::move(options_)), category(category_),
       cvarName(std::move(cvarName_)), description(std::move(description_)), widgetType(widgetType_),
       defaultOption(defaultOption_), defaultHidden(defaultHidden_), imFlags(imFlags_) {
-    selectedOption = defaultOption;
+    menuSelection = contextSelection = defaultOption;
     hidden = defaultHidden;
-    SetVariable();
+    PopulateTextToNum();
+    SetFromCVar();
 }
 Option::Option(bool var_, std::string name_, std::vector<std::string> options_, const OptionCategory category_,
                std::string cvarName_, std::string description_, WidgetType widgetType_, const uint8_t defaultOption_,
@@ -187,12 +204,13 @@ Option::Option(bool var_, std::string name_, std::vector<std::string> options_, 
     : var(var_), name(std::move(name_)), options(std::move(options_)), category(category_),
       cvarName(std::move(cvarName_)), description(std::move(description_)), widgetType(widgetType_),
       defaultOption(defaultOption_), defaultHidden(defaultHidden_), imFlags(imFlags_) {
-    selectedOption = defaultOption;
+    menuSelection = contextSelection = defaultOption;
     hidden = defaultHidden;
-    SetVariable();
+    PopulateTextToNum();
+    SetFromCVar();
 }
 
-bool Option::RenderCheckbox() const {
+bool Option::RenderCheckbox() {
     bool changed = false;
     if (disabled) {
         UIWidgets::DisableComponent(ImGui::GetStyle().Alpha * 0.5f);
@@ -201,7 +219,7 @@ bool Option::RenderCheckbox() const {
     if (CustomCheckbox(name.c_str(), &val, disabled, disabledGraphic)) {
         CVarSetInteger(cvarName.c_str(), val);
         changed = true;
-        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesOnNextTick();
+        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
     }
     if (!description.empty()) {
         UIWidgets::InsertHelpHoverText(description.c_str());
@@ -212,7 +230,7 @@ bool Option::RenderCheckbox() const {
     return changed;
 }
 
-bool Option::RenderTristateCheckbox() const {
+bool Option::RenderTristateCheckbox() {
     bool changed = false;
     if (disabled) {
         UIWidgets::DisableComponent(ImGui::GetStyle().Alpha * 0.5f);
@@ -221,7 +239,7 @@ bool Option::RenderTristateCheckbox() const {
     if (CustomCheckboxTristate(name.c_str(), &val, disabled, disabledGraphic)) {
         CVarSetInteger(cvarName.c_str(), val);
         changed = true;
-        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesOnNextTick();
+        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
     }
     if (!description.empty()) {
         UIWidgets::InsertHelpHoverText(description.c_str());
@@ -232,7 +250,7 @@ bool Option::RenderTristateCheckbox() const {
     return changed;
 }
 
-bool Option::RenderCombobox() const {
+bool Option::RenderCombobox() {
     bool changed = false;
     if (disabled) {
         UIWidgets::DisableComponent(ImGui::GetStyle().Alpha * 0.5f);
@@ -240,10 +258,10 @@ bool Option::RenderCombobox() const {
     ImGui::Text("%s", name.c_str());
     uint8_t selected = CVarGetInteger(cvarName.c_str(), defaultOption);
     if (selected >= options.size()) {
-        selected--;
+        selected = options.size();
         CVarSetInteger(cvarName.c_str(), selected);
         changed = true;
-        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesOnNextTick();
+        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
     }
     if (!description.empty()) {
         UIWidgets::InsertHelpHoverText(description.c_str());
@@ -256,7 +274,7 @@ bool Option::RenderCombobox() const {
                     CVarSetInteger(cvarName.c_str(), static_cast<int>(i));
                     changed = true;
                     selected = i;
-                    Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesOnNextTick();
+                    Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
                 }
             }
         }
@@ -268,11 +286,12 @@ bool Option::RenderCombobox() const {
     return changed;
 }
 
-bool Option::RenderSlider() const {
+bool Option::RenderSlider() {
     bool changed = false;
-    int val = CVarGetInteger(cvarName.c_str(), defaultOption);
-    if (val >= options.size()) {
-        val--;
+    int val = GetMenuOptionIndex();
+    if (val > options.size() - 1) {
+        val = options.size() - 1;
+        CVarSetInteger(cvarName.c_str(), val);
         changed = true;
     }
     if (disabled) {
@@ -319,9 +338,16 @@ bool Option::RenderSlider() const {
     }
     if (changed) {
         CVarSetInteger(cvarName.c_str(), val);
-        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesOnNextTick();
+        SetFromCVar();
+        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
     }
     return changed;
+}
+
+void Option::PopulateTextToNum(){
+    for (uint8_t count = 0; count < options.size(); count++){
+        optionsTextToVar[options[count]] = count;
+    }
 }
 
 TrickOption::TrickOption(const RandomizerCheckQuest quest_, const RandomizerArea area_, std::set<Tricks::Tag> tags_, const bool glitch_, const std::string& name_, std::string description_) :
@@ -354,26 +380,26 @@ const std::set<Tricks::Tag>& TrickOption::GetTags() const {
 }
 
 OptionGroup::OptionGroup(std::string name, std::vector<Option*> options, const OptionGroupType groupType,
-                         const bool printInSpoiler, const WidgetContainerType containerType, std::string description)
-    : mName(std::move(name)), mOptions(std::move(options)), mGroupType(groupType), mPrintInSpoiler(printInSpoiler),
+                         const WidgetContainerType containerType, std::string description)
+    : mName(std::move(name)), mOptions(std::move(options)), mGroupType(groupType),
       mContainerType(containerType), mDescription(std::move(description)) {
 }
 
 OptionGroup::OptionGroup(std::string name, std::vector<OptionGroup*> subGroups, const OptionGroupType groupType,
-                         const bool printInSpoiler, const WidgetContainerType containerType, std::string description)
-    : mName(std::move(name)), mSubGroups(std::move(subGroups)), mGroupType(groupType), mPrintInSpoiler(printInSpoiler),
+                         const WidgetContainerType containerType, std::string description)
+    : mName(std::move(name)), mSubGroups(std::move(subGroups)), mGroupType(groupType),
       mContainsType(OptionGroupType::SUBGROUP), mContainerType(containerType), mDescription(std::move(description)) {
 }
 
-OptionGroup OptionGroup::SubGroup(std::string name, std::vector<Option*> options, const bool printInSpoiler,
+OptionGroup OptionGroup::SubGroup(std::string name, std::vector<Option*> options,
                                   const WidgetContainerType containerType, std::string description) {
-    return {std::move(name), std::move(options), OptionGroupType::SUBGROUP, printInSpoiler, containerType,
+    return {std::move(name), std::move(options), OptionGroupType::SUBGROUP, containerType,
                        std::move(description)};
 }
 
-OptionGroup OptionGroup::SubGroup(std::string name, std::vector<OptionGroup*> subGroups, const bool printInSpoiler,
+OptionGroup OptionGroup::SubGroup(std::string name, std::vector<OptionGroup*> subGroups,
                                   const WidgetContainerType containerType, std::string description) {
-    return {std::move(name), std::move(subGroups), OptionGroupType::SUBGROUP, printInSpoiler, containerType,
+    return {std::move(name), std::move(subGroups), OptionGroupType::SUBGROUP, containerType,
                        std::move(description)};
 }
 
@@ -387,10 +413,6 @@ const std::vector<Option*>& OptionGroup::GetOptions() const {
 
 const std::vector<OptionGroup*>& OptionGroup::GetSubGroups() const {
     return mSubGroups;
-}
-
-bool OptionGroup::PrintInSpoiler() const {
-    return mPrintInSpoiler;
 }
 
 OptionGroupType OptionGroup::GetGroupType() const {
@@ -477,7 +499,7 @@ bool OptionGroup::RenderImGui() const { // NOLINT(*-no-recursion)
                 ImGui::Unindent();
             }
             if (option->HasFlag(IMFLAG_SEPARATOR_BOTTOM)) {
-                UIWidgets::PaddedSeparator();
+                UIWidgets::PaddedSeparator(false, true);
             }
         }
     }

@@ -6,6 +6,7 @@
 
 #include "z_item_ocarina.h"
 #include "scenes/overworld/spot00/spot00_scene.h"
+#include "soh/OTRGlobals.h"
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
 
 #define FLAGS ACTOR_FLAG_UPDATE_WHILE_CULLED
@@ -81,7 +82,7 @@ void ItemOcarina_Destroy(Actor* thisx, PlayState* play) {
 void ItemOcarina_Fly(ItemOcarina* this, PlayState* play) {
     Vec3f ripplePos;
 
-    func_8002D7EC(&this->actor);
+    Actor_UpdatePos(&this->actor);
     this->actor.shape.rot.x += this->spinRotOffset * 2;
     this->actor.shape.rot.y += this->spinRotOffset * 3;
 
@@ -132,7 +133,7 @@ void ItemOcarina_GetThrown(ItemOcarina* this, PlayState* play) {
 }
 
 void func_80B864EC(ItemOcarina* this, PlayState* play) {
-    func_8002D7EC(&this->actor);
+    Actor_UpdatePos(&this->actor);
     this->actor.shape.rot.x += this->spinRotOffset * 2;
     this->actor.shape.rot.y += this->spinRotOffset * 3;
 
@@ -179,7 +180,7 @@ void ItemOcarina_WaitInWater(ItemOcarina* this, PlayState* play) {
     if (
         Actor_HasParent(&this->actor, play) || 
         (
-            !GameInteractor_Should(VB_GIVE_ITEM_OCARINA_OF_TIME, true, NULL) &&
+            !GameInteractor_Should(VB_GIVE_ITEM_OCARINA_OF_TIME, true) &&
             (this->actor.xzDistToPlayer < 20.0f) && (fabsf(this->actor.yDistToPlayer) < 10.0f) &&
             GET_PLAYER(play)->stateFlags2 & PLAYER_STATE2_DIVING
         )
@@ -189,7 +190,7 @@ void ItemOcarina_WaitInWater(ItemOcarina* this, PlayState* play) {
         this->actionFunc = ItemOcarina_StartSoTCutscene;
         this->actor.draw = NULL;
     } else {
-        if (GameInteractor_Should(VB_GIVE_ITEM_OCARINA_OF_TIME, true, NULL)) {
+        if (GameInteractor_Should(VB_GIVE_ITEM_OCARINA_OF_TIME, true)) {
             Actor_OfferGetItem(&this->actor, play, GI_OCARINA_OOT, 30.0f, 50.0f);
         }
 

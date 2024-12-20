@@ -190,7 +190,7 @@ void BgHakaShip_Update(Actor* thisx, PlayState* play) {
 
     this->actionFunc(this, play);
     if (this->dyna.actor.params == 0) {
-        Actor_MoveForward(&this->dyna.actor);
+        Actor_MoveXZGravity(&this->dyna.actor);
     }
 }
 
@@ -230,6 +230,6 @@ void BgHakaShip_Draw(Actor* thisx, PlayState* play) {
         sp2C.z = this->dyna.actor.world.pos.z;
 
         SkinMatrix_Vec3fMtxFMultXYZ(&play->viewProjectionMtxF, &sp2C, &this->bellSoundPos);
-        func_80078914(&this->bellSoundPos, NA_SE_EV_SHIP_BELL - SFX_FLAG);
+        Sfx_PlaySfxAtPos(&this->bellSoundPos, NA_SE_EV_SHIP_BELL - SFX_FLAG);
     }
 }

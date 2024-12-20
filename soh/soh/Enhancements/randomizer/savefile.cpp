@@ -1,5 +1,6 @@
 #include "savefile.h"
 #include "soh/OTRGlobals.h"
+#include "soh/ResourceManagerHelpers.h"
 #include "soh/Enhancements/game-interactor/GameInteractor.h"
 
 extern "C" {
@@ -8,12 +9,14 @@ extern "C" {
 #include "functions.h"
 #include "macros.h"
 
-uint32_t ResourceMgr_IsSceneMasterQuest(s16 sceneNum);
 uint8_t Randomizer_GetSettingValue(RandomizerSettingKey randoSettingKey);
 GetItemEntry Randomizer_GetItemFromKnownCheck(RandomizerCheck randomizerCheck, GetItemID ogId);
 }
 
-void StartingItemGive(GetItemEntry getItemEntry) {
+void StartingItemGive(GetItemEntry getItemEntry, RandomizerCheck randomizerCheck) {
+    if (randomizerCheck != RC_MAX) {
+        OTRGlobals::Instance->gRandoContext->GetItemLocation(randomizerCheck)->SetCheckStatus(RCSHOW_SAVED);
+    }
     if (getItemEntry.modIndex == MOD_NONE) {
         if (getItemEntry.getItemId == GI_SWORD_BGS) {
             gSaveContext.bgsFlag = true;
@@ -32,7 +35,7 @@ void StartingItemGive(GetItemEntry getItemEntry) {
 // Item_Give in z_parameter, we'll need to update Item_Give to ensure
 // nothing breaks when calling it without a valid play first
 void GiveLinkRupees(int numOfRupees) {
-    int maxRupeeCount;
+    int maxRupeeCount = 0;
     if (CUR_UPG_VALUE(UPG_WALLET) == 0) {
         maxRupeeCount = 99;
     } else if (CUR_UPG_VALUE(UPG_WALLET) == 1) {
@@ -52,7 +55,7 @@ void GiveLinkRupees(int numOfRupees) {
 }
 
 void GiveLinkDekuSticks(int howManySticks) {
-    int maxStickCount;
+    int maxStickCount = 0;
     if (CUR_UPG_VALUE(UPG_STICKS) == 0) {
         INV_CONTENT(ITEM_STICK) = ITEM_STICK;
         Inventory_ChangeUpgrade(UPG_STICKS, 1);
@@ -73,7 +76,7 @@ void GiveLinkDekuSticks(int howManySticks) {
 }
 
 void GiveLinkDekuNuts(int howManyNuts) {
-    int maxNutCount;
+    int maxNutCount = 0;
     if (CUR_UPG_VALUE(UPG_NUTS) == 0) {
         INV_CONTENT(ITEM_NUT) = ITEM_NUT;
         Inventory_ChangeUpgrade(UPG_NUTS, 1);
@@ -96,8 +99,7 @@ void GiveLinkDekuNuts(int howManyNuts) {
 void GiveLinksPocketItem() {
     if (Randomizer_GetSettingValue(RSK_LINKS_POCKET) != RO_LINKS_POCKET_NOTHING) {
         GetItemEntry getItemEntry = Randomizer_GetItemFromKnownCheck(RC_LINKS_POCKET, (GetItemID)RG_NONE);
-        StartingItemGive(getItemEntry);
-        Rando::Context::GetInstance()->GetItemLocation(RC_LINKS_POCKET)->MarkAsObtained();
+        StartingItemGive(getItemEntry, RC_LINKS_POCKET);
         // If we re-add the above, we'll get the item on save creation, now it's given on first load
         Flags_SetRandomizerInf(RAND_INF_LINKS_POCKET);
     }
@@ -149,13 +151,11 @@ void SetStartingItems() {
         INV_CONTENT(ITEM_OCARINA_FAIRY) = ITEM_OCARINA_FAIRY;
     }
 
-    if (Randomizer_GetSettingValue(RSK_STARTING_CONSUMABLES)) {
-        if (!Randomizer_GetSettingValue(RSK_SHUFFLE_DEKU_STICK_BAG)) {
-            GiveLinkDekuSticks(10);
-        }
-        if (!Randomizer_GetSettingValue(RSK_SHUFFLE_DEKU_NUT_BAG)) {
-            GiveLinkDekuNuts(20);
-        }
+    if (Randomizer_GetSettingValue(RSK_STARTING_STICKS) && !Randomizer_GetSettingValue(RSK_SHUFFLE_DEKU_STICK_BAG)) {
+        GiveLinkDekuSticks(10);
+    }
+    if (Randomizer_GetSettingValue(RSK_STARTING_NUTS) && !Randomizer_GetSettingValue(RSK_SHUFFLE_DEKU_NUT_BAG)) {
+        GiveLinkDekuNuts(20);
     }
 
     if (Randomizer_GetSettingValue(RSK_FULL_WALLETS)) {
@@ -184,8 +184,8 @@ void SetStartingItems() {
         gSaveContext.sohStats.dungeonKeys[SCENE_SHADOW_TEMPLE] = SHADOW_TEMPLE_SMALL_KEY_MAX;         // Shadow
         gSaveContext.inventory.dungeonKeys[SCENE_BOTTOM_OF_THE_WELL] = BOTTOM_OF_THE_WELL_SMALL_KEY_MAX; // BotW
         gSaveContext.sohStats.dungeonKeys[SCENE_BOTTOM_OF_THE_WELL] = BOTTOM_OF_THE_WELL_SMALL_KEY_MAX;  // BotW
-        gSaveContext.inventory.dungeonKeys[SCENE_GERUDO_TRAINING_GROUND] = GERUDO_TRAINING_GROUNDS_SMALL_KEY_MAX;  // GTG
-        gSaveContext.sohStats.dungeonKeys[SCENE_GERUDO_TRAINING_GROUND] = GERUDO_TRAINING_GROUNDS_SMALL_KEY_MAX;   // GTG
+        gSaveContext.inventory.dungeonKeys[SCENE_GERUDO_TRAINING_GROUND] = GERUDO_TRAINING_GROUND_SMALL_KEY_MAX;  // GTG
+        gSaveContext.sohStats.dungeonKeys[SCENE_GERUDO_TRAINING_GROUND] = GERUDO_TRAINING_GROUND_SMALL_KEY_MAX;   // GTG
         gSaveContext.inventory.dungeonKeys[SCENE_INSIDE_GANONS_CASTLE] = GANONS_CASTLE_SMALL_KEY_MAX;      // Ganon
         gSaveContext.sohStats.dungeonKeys[SCENE_INSIDE_GANONS_CASTLE] = GANONS_CASTLE_SMALL_KEY_MAX;       // Ganon
     } else if (Randomizer_GetSettingValue(RSK_KEYSANITY) == RO_DUNGEON_ITEM_LOC_VANILLA) {
@@ -251,10 +251,11 @@ extern "C" void Randomizer_InitSaveFile() {
     // Flags_SetInfTable(INFTABLE_CHILD_MALON_SAID_EPONA_WAS_AFRAID_OF_YOU);
     // Flags_SetInfTable(INFTABLE_SPOKE_TO_INGO_ONCE_AS_ADULT);
 
+    // Now handled by cutscene skips
     // Ruto already met in jabu and spawns down the hole immediately
-    Flags_SetInfTable(INFTABLE_RUTO_IN_JJ_MEET_RUTO);
-    Flags_SetInfTable(INFTABLE_RUTO_IN_JJ_TALK_FIRST_TIME);
-    Flags_SetInfTable(INFTABLE_RUTO_IN_JJ_WANTS_TO_BE_TOSSED_TO_SAPPHIRE);
+    // Flags_SetInfTable(INFTABLE_RUTO_IN_JJ_MEET_RUTO);
+    // Flags_SetInfTable(INFTABLE_RUTO_IN_JJ_TALK_FIRST_TIME);
+    // Flags_SetInfTable(INFTABLE_RUTO_IN_JJ_WANTS_TO_BE_TOSSED_TO_SAPPHIRE);
 
     // Now handled by cutscene skips
     // Skip cutscenes before Nabooru fight
@@ -327,6 +328,10 @@ extern "C" void Randomizer_InitSaveFile() {
         Flags_SetRandomizerInf(RAND_INF_HAS_WALLET);
     }
 
+    if (Randomizer_GetSettingValue(RSK_SHUFFLE_FISHING_POLE) == RO_GENERIC_OFF) {
+        Flags_SetRandomizerInf(RAND_INF_FISHING_POLE_FOUND);
+    }
+
     // Give Link's pocket item
     GiveLinksPocketItem();
 
@@ -335,11 +340,18 @@ extern "C" void Randomizer_InitSaveFile() {
         gSaveContext.adultTradeItems = 0;
     }
 
+    // remove One Time scrubs with scrubsanity off
+    if (Randomizer_GetSettingValue(RSK_SHUFFLE_SCRUBS) == RO_SCRUBS_OFF) {
+        Flags_SetRandomizerInf(RAND_INF_SCRUBS_PURCHASED_LW_DEKU_SCRUB_NEAR_BRIDGE);
+        Flags_SetRandomizerInf(RAND_INF_SCRUBS_PURCHASED_LW_DEKU_SCRUB_GROTTO_FRONT);
+        Flags_SetRandomizerInf(RAND_INF_SCRUBS_PURCHASED_HF_DEKU_SCRUB_GROTTO);
+    }
+
     int startingAge = OTRGlobals::Instance->gRandoContext->GetSettings()->ResolvedStartingAge();
     switch (startingAge) {
         case RO_AGE_ADULT: // Adult
             gSaveContext.linkAge = LINK_AGE_ADULT;
-            gSaveContext.entranceIndex = ENTR_TEMPLE_OF_TIME_7;
+            gSaveContext.entranceIndex = ENTR_TEMPLE_OF_TIME_WARP_PAD;
             gSaveContext.savedSceneNum = SCENE_LON_LON_RANCH; // Set scene num manually to ToT
             break;
         case RO_AGE_CHILD: // Child
@@ -370,7 +382,7 @@ extern "C" void Randomizer_InitSaveFile() {
 
     if (Randomizer_GetSettingValue(RSK_SKIP_CHILD_ZELDA)) {
         GetItemEntry getItemEntry = Randomizer_GetItemFromKnownCheck(RC_SONG_FROM_IMPA, (GetItemID)RG_ZELDAS_LULLABY);
-        StartingItemGive(getItemEntry);
+        StartingItemGive(getItemEntry, RC_SONG_FROM_IMPA);
 
         // malon/talon back at ranch
         Flags_SetEventChkInf(EVENTCHKINF_OBTAINED_POCKET_EGG);
@@ -392,7 +404,7 @@ extern "C" void Randomizer_InitSaveFile() {
 
     if (Randomizer_GetSettingValue(RSK_SHUFFLE_MASTER_SWORD) && startingAge == RO_AGE_ADULT) {
         GetItemEntry getItemEntry = Randomizer_GetItemFromKnownCheck(RC_TOT_MASTER_SWORD, GI_NONE);
-        StartingItemGive(getItemEntry);
+        StartingItemGive(getItemEntry, RC_TOT_MASTER_SWORD);
         Flags_SetRandomizerInf(RAND_INF_TOT_MASTER_SWORD);
     }
 
@@ -421,10 +433,10 @@ extern "C" void Randomizer_InitSaveFile() {
     // Now handled on the fly
     // int openForest = Randomizer_GetSettingValue(RSK_FOREST);
     // switch (openForest) {
-    //     case RO_FOREST_OPEN:
+    //     case RO_CLOSED_FOREST_OFF:
     //         Flags_SetEventChkInf(EVENTCHKINF_SHOWED_MIDO_SWORD_SHIELD);
     //         // Fallthrough
-    //     case RO_FOREST_CLOSED_DEKU:
+    //     case RO_CLOSED_FOREST_DEKU_ONLY:
     //         Flags_SetEventChkInf(EVENTCHKINF_OBTAINED_KOKIRI_EMERALD_DEKU_TREE_DEAD);
     //         break;
     // }
@@ -440,8 +452,8 @@ extern "C" void Randomizer_InitSaveFile() {
         Flags_SetInfTable(INFTABLE_SHOWED_ZELDAS_LETTER_TO_GATE_GUARD);
     }
 
-    if (Randomizer_GetSettingValue(RSK_GERUDO_FORTRESS) == RO_GF_FAST ||
-        Randomizer_GetSettingValue(RSK_GERUDO_FORTRESS) == RO_GF_OPEN) {
+    if (Randomizer_GetSettingValue(RSK_GERUDO_FORTRESS) == RO_GF_CARPENTERS_FAST ||
+        Randomizer_GetSettingValue(RSK_GERUDO_FORTRESS) == RO_GF_CARPENTERS_FREE) {
         Flags_SetEventChkInf(EVENTCHKINF_CARPENTERS_FREE(1));
         Flags_SetEventChkInf(EVENTCHKINF_CARPENTERS_FREE(2));
         Flags_SetEventChkInf(EVENTCHKINF_CARPENTERS_FREE(3));
@@ -459,7 +471,7 @@ extern "C" void Randomizer_InitSaveFile() {
         gSaveContext.sceneFlags[SCENE_THIEVES_HIDEOUT].collect |= (1 << 0x0F);
     }
 
-    if (Randomizer_GetSettingValue(RSK_GERUDO_FORTRESS) == RO_GF_OPEN) {
+    if (Randomizer_GetSettingValue(RSK_GERUDO_FORTRESS) == RO_GF_CARPENTERS_FREE) {
         Flags_SetEventChkInf(EVENTCHKINF_CARPENTERS_FREE(0));
         gSaveContext.sceneFlags[SCENE_THIEVES_HIDEOUT].swch |= (1 << 0x01); // heard yell and unlocked door
         gSaveContext.sceneFlags[SCENE_THIEVES_HIDEOUT].swch |= (1 << 0x05);

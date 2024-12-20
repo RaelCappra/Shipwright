@@ -1,5 +1,5 @@
 #include "custom_messages.hpp"
-#include "shops.hpp"
+#include "../../custom-message/CustomMessageManager.h"
 #include "z64item.h"
 
 #include <array>
@@ -29,7 +29,7 @@ constexpr std::array EnglishDungeonNames = {
     "Bottom of the Well",
     "Ice Cavern",
     "Ganon's Tower",
-    "Gerudo Training Grounds",
+    "Gerudo Training Ground",
     "Gerudo Fortress",
     "Ganon's Castle",
 };

@@ -4,7 +4,7 @@
 
 void (*sKaleidoScopeUpdateFunc)(PlayState* play);
 void (*sKaleidoScopeDrawFunc)(PlayState* play);
-f32 gBossMarkScale;
+f32 gBossMarkScale = 1.0f;
 u32 D_8016139C;
 PauseMapMarksData* gLoadedPauseMarkDataTable;
 
@@ -69,7 +69,7 @@ void KaleidoScopeCall_Update(PlayState* play) {
             if (ShrinkWindow_GetCurrentVal() == 0) {
                 HREG(80) = 7;
                 HREG(82) = 3;
-                R_PAUSE_MENU_MODE = 3;
+                R_PAUSE_MENU_MODE = 1;
                 pauseCtx->unk_1E4 = 0;
                 pauseCtx->unk_1EC = 0;
                 pauseCtx->state = (pauseCtx->state & 0xFFFF) + 1;
