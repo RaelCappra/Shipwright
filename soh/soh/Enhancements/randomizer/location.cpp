@@ -370,15 +370,6 @@ Rando::Location Rando::Location::GrottoFish(RandomizerCheck rc, RandomizerCheckQ
             SpoilerCollectionCheck(SPOILER_CHK_RANDOMIZER_INF, SCENE_GROTTOS, flag_)};
 }
 
-Rando::Location Rando::Location::Fairy(RandomizerCheck rc, RandomizerCheckQuest quest_,
-                                        RandomizerCheckArea area_, uint8_t scene_,
-                                        int32_t actorParams_, RandomizerInf flag_, std::string&& shortName_,
-                                        const RandomizerHintTextKey hintKey, SpoilerCollectionCheckGroup collectionCheckGroup) {
-    return {rc, quest_, RCTYPE_FAIRY, area_, LocationType::Base, ACTOR_EN_ELF, scene_, actorParams_, flag_,
-                    std::move(shortName_), hintKey, RG_NONE, { Category::cFairy }, false,
-                    SpoilerCollectionCheck(SPOILER_CHK_RANDOMIZER_INF, scene_, flag_), collectionCheckGroup};
-}
-
 Rando::Location Rando::Location::Pot(RandomizerCheck rc, RandomizerCheckQuest quest_, RandomizerCheckArea area_,
                                      SceneID scene_, int32_t actorParams_, std::string&& shortName_,
                                      std::string&& spoilerName_, RandomizerHintTextKey hintKey,
@@ -392,9 +383,8 @@ Rando::Location Rando::Location::HintStone(RandomizerCheck rc, RandomizerCheckQu
 }
 
 Rando::Location Rando::Location::Fairy(RandomizerCheck rc, RandomizerCheckQuest quest_,
-                                        RandomizerCheckArea area_, uint8_t scene_,
-                                        int32_t actorParams_, std::string&& shortName_,
-                                        const RandomizerHintTextKey hintKey, SpoilerCollectionCheck collectionCheck) {
-    return {rc, quest_, RCTYPE_FAIRY, area_, ACTOR_EN_ELF, scene_, actorParams_,
-                    std::move(shortName_), hintKey, RG_NONE, collectionCheck};
+                                        RandomizerCheckArea area_, SceneID scene_,
+                                        int32_t actorParams_, std::string&& shortName_, std::string&& spoilerName_,
+                                        RandomizerHintTextKey hintKey, SpoilerCollectionCheck collectionCheck) {
+    return {rc, quest_, RCTYPE_FAIRY, area_, ACTOR_EN_ELF, scene_, actorParams_, std::move(shortName_), std::move(spoilerName_), hintKey, RG_NONE, false, collectionCheck};
 }

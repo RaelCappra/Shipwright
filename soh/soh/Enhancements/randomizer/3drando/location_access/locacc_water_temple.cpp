@@ -399,10 +399,8 @@ void RegionTable_Init_WaterTemple() {
   //Raising the targets by clearing this room achieves nothing logically because it requires WL_LOW to do and hookshot to use, which implies access to WL_MID and WL_HIGH already
   areaTable[RR_WATER_TEMPLE_MQ_EAST_TOWER_1F_ROOM] = Region("Water Temple MQ East Tower 1F Room", "Water Temple", {RA_WATER_TEMPLE}, NO_DAY_NIGHT_CYCLE, {}, {
                   //Locations
-                  LOCATION(RC_WATER_TEMPLE_MQ_DARK_LINK_PILAR_SUN_FAIRY, logic->SmallKeys(RR_WATER_TEMPLE, 1) && logic->CanUse(RG_SUNS_SONG) && logic->CanUse(RG_LONGSHOT) && (logic->CanUse(RG_HOVER_BOOTS) || (logic->CanJumpslash && logic->Hearts > 0)))
-                
-                  //Locations
-                  LOCATION(RC_WATER_TEMPLE_MQ_COMPASS_CHEST,  logic->CanKillEnemy(RE_LIZALFOS) && logic->CanKillEnemy(RE_SPIKE)),
+                  LOCATION(RC_WATER_TEMPLE_MQ_DARK_LINK_PILAR_SUN_FAIRY, logic->SmallKeys(RR_WATER_TEMPLE, 1) && logic->CanUse(RG_SUNS_SONG) && logic->CanUse(RG_LONGSHOT) && (logic->CanUse(RG_HOVER_BOOTS) || (logic->CanJumpslash() && logic->Hearts() > 0))),
+                  LOCATION(RC_WATER_TEMPLE_MQ_COMPASS_CHEST,             logic->CanKillEnemy(RE_LIZALFOS) && logic->CanKillEnemy(RE_SPIKE)),
   }, {
                   Entrance(RR_WATER_TEMPLE_MQ_EAST_TOWER, {[]{return true;}}),
   });

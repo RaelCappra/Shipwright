@@ -353,6 +353,7 @@ void RegionTable_Init_GanonsCastle() {
   areaTable[RR_GANONS_CASTLE_MQ_SPIRIT_TRIAL_BEFORE_SWITCH] = Region("Ganon's Castle MQ Spirit Trial Before Switch", "Ganons Castle", {RA_GANONS_CASTLE}, NO_DAY_NIGHT_CYCLE, {}, {
                   //Locations
                   LOCATION(RC_GANONS_CASTLE_MQ_SPIRIT_TRIAL_FIRST_CHEST, logic->CanPassEnemy(RE_GREEN_BUBBLE)),
+                  LOCATION(RC_GANONS_CASTLE_SPIRIT_TRIAL_SUN_FAIRY,                  logic->CanUse(RG_SUNS_SONG)),
   }, {
                   //Exits
                   Entrance(RR_GANONS_CASTLE_MQ_SPIRIT_TRIAL_CHAIRS_ROOM,  {[]{return true;}}),
@@ -414,7 +415,7 @@ void RegionTable_Init_GanonsCastle() {
                   Entrance(RR_GANONS_CASTLE_MQ_LIGHT_TRIAL_BOULDER_ROOM_FRONT, {[]{return logic->CanUse(RG_HOOKSHOT) || ctx->GetTrickOption(RT_GANON_MQ_LIGHT_TRIAL);}}),
                   Entrance(RR_GANONS_CASTLE_MQ_LIGHT_TRIAL_FINAL_ROOM,         {[]{return logic->SmallKeys(RR_GANONS_CASTLE, 3) && (ctx->GetTrickOption(RT_LENS_GANON_MQ) || logic->CanUse(RG_LENS_OF_TRUTH)) && 
                                                                                           (logic->CanUse(RG_FAIRY_SLINGSHOT) || logic->CanJumpslash() || logic->HasExplosives() || logic->CanUse(RG_FAIRY_BOW) || logic->CanUse(RG_BOOMERANG));}}),
-                  LOCATION(RC_GANONS_CASTLE_SPIRIT_TRIAL_SUN_FAIRY,                  logic->CanUse(RG_SUNS_SONG)),
+                  
   });
 
   areaTable[RR_GANONS_CASTLE_MQ_LIGHT_TRIAL_FINAL_ROOM] = Region("Ganon's Castle MQ Light Trial Final Room", "Ganons Castle", {RA_GANONS_CASTLE}, NO_DAY_NIGHT_CYCLE, {

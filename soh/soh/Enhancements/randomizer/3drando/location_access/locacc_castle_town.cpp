@@ -38,13 +38,13 @@ void RegionTable_Init_CastleTown() {
                   EventAccess(&logic->GossipStoneFairy, {[]{return logic->CallGossipFairyExceptSuns();}}),
                 }, {
                   //Locations
-                  LOCATION(RC_TOT_LEFTMOST_GOSSIP_STONE_FAIRY,          logic->CanSummonGossipFairyWithoutSuns || (logic->CanUse(RG_SUNS_SONG) && logic->IsAdult)),
+                  LOCATION(RC_TOT_LEFTMOST_GOSSIP_STONE_FAIRY,          logic->CallGossipFairyExceptSuns() || (logic->CanUse(RG_SUNS_SONG) && logic->IsAdult)),
                   LOCATION(RC_TOT_LEFTMOST_GOSSIP_STONE_FAIRY_BIG,      logic->CanUse(RG_SONG_OF_STORMS)),
-                  LOCATION(RC_TOT_LEFT_CENTER_GOSSIP_STONE_FAIRY,       logic->CanSummonGossipFairyWithoutSuns || (logic->CanUse(RG_SUNS_SONG) && logic->IsAdult)),
+                  LOCATION(RC_TOT_LEFT_CENTER_GOSSIP_STONE_FAIRY,       logic->CallGossipFairyExceptSuns() || (logic->CanUse(RG_SUNS_SONG) && logic->IsAdult)),
                   LOCATION(RC_TOT_LEFT_CENTER_GOSSIP_STONE_FAIRY_BIG,   logic->CanUse(RG_SONG_OF_STORMS)),
-                  LOCATION(RC_TOT_RIGHT_CENTER_GOSSIP_STONE_FAIRY,      logic->CanSummonGossipFairyWithoutSuns || (logic->CanUse(RG_SUNS_SONG) && logic->IsAdult)),
+                  LOCATION(RC_TOT_RIGHT_CENTER_GOSSIP_STONE_FAIRY,      logic->CallGossipFairyExceptSuns() || (logic->CanUse(RG_SUNS_SONG) && logic->IsAdult)),
                   LOCATION(RC_TOT_RIGHT_CENTER_GOSSIP_STONE_FAIRY_BIG,  logic->CanUse(RG_SONG_OF_STORMS)),
-                  LOCATION(RC_TOT_RIGHTMOST_GOSSIP_STONE_FAIRY,         logic->CanSummonGossipFairyWithoutSuns || (logic->CanUse(RG_SUNS_SONG) && logic->IsAdult)),
+                  LOCATION(RC_TOT_RIGHTMOST_GOSSIP_STONE_FAIRY,         logic->CallGossipFairyExceptSuns() || (logic->CanUse(RG_SUNS_SONG) && logic->IsAdult)),
                   LOCATION(RC_TOT_RIGHTMOST_GOSSIP_STONE_FAIRY_BIG,     logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_TOT_LEFTMOST_GOSSIP_STONE,     true),
                   LOCATION(RC_TOT_LEFT_CENTER_GOSSIP_STONE,  true),
@@ -99,9 +99,9 @@ void RegionTable_Init_CastleTown() {
                   //Locations
                   LOCATION(RC_HC_MALON_EGG,              true),
                   LOCATION(RC_HC_GS_TREE,                logic->IsChild && logic->CanAttack()),
-                  LOCATION(RC_HC_MALON_GOSSIP_STONE_FAIRY,          logic->CanSummonGossipFairy),
+                  LOCATION(RC_HC_MALON_GOSSIP_STONE_FAIRY,          logic->CallGossipFairy()),
                   LOCATION(RC_HC_MALON_GOSSIP_STONE_FAIRY_BIG,      logic->CanUse(RG_SONG_OF_STORMS)),
-                  LOCATION(RC_HC_ROCK_WALL_GOSSIP_STONE_FAIRY,      logic->CanSummonGossipFairy),
+                  LOCATION(RC_HC_ROCK_WALL_GOSSIP_STONE_FAIRY,      logic->CallGossipFairy()),
                   LOCATION(RC_HC_ROCK_WALL_GOSSIP_STONE_FAIRY_BIG,  logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_HC_MALON_GOSSIP_STONE,     true),
                   LOCATION(RC_HC_ROCK_WALL_GOSSIP_STONE, true),
@@ -140,8 +140,8 @@ void RegionTable_Init_CastleTown() {
                 }, {
                   //Locations
                   LOCATION(RC_HC_GS_STORMS_GROTTO,           (logic->BlastOrSmash() && logic->HookshotOrBoomerang()) || (logic->CanUse(RG_BOOMERANG) && ctx->GetTrickOption(RT_HC_STORMS_GS))),
-                  LOCATION(RC_HC_STORMS_GROTTO_GOSSIP_STONE_FAIRY,      logic->CanBlastOrSmash && logic->CanSummonGossipFairy),
-                  LOCATION(RC_HC_STORMS_GROTTO_GOSSIP_STONE_FAIRY_BIG,  logic->CanBlastOrSmash && logic->CanUse(RG_SONG_OF_STORMS)),
+                  LOCATION(RC_HC_STORMS_GROTTO_GOSSIP_STONE_FAIRY,      logic->BlastOrSmash() && logic->CallGossipFairy()),
+                  LOCATION(RC_HC_STORMS_GROTTO_GOSSIP_STONE_FAIRY_BIG,  logic->BlastOrSmash() && logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_HC_STORMS_GROTTO_GOSSIP_STONE, logic->BlastOrSmash()),
                   LOCATION(RC_HC_STORMS_GROTTO_POT_1,        logic->BlastOrSmash() && logic->CanBreakPots()),
                   LOCATION(RC_HC_STORMS_GROTTO_POT_2,        logic->BlastOrSmash() && logic->CanBreakPots()),

@@ -31,7 +31,7 @@ void RegionTable_Init_GerudoValley() {
                   LOCATION(RC_GV_BEAN_SPROUT_FAIRY_1,        logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_GV_BEAN_SPROUT_FAIRY_2,        logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_GV_BEAN_SPROUT_FAIRY_3,        logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
-                  LOCATION(RC_GV_GOSSIP_STONE_FAIRY,         logic->CanSummonGossipFairy),
+                  LOCATION(RC_GV_GOSSIP_STONE_FAIRY,         logic->CallGossipFairy()),
                   LOCATION(RC_GV_GOSSIP_STONE_FAIRY_BIG,     logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_GV_GOSSIP_STONE,               true),
                 }, {
@@ -217,7 +217,7 @@ void RegionTable_Init_GerudoValley() {
                   LOCATION(RC_COLOSSUS_BEAN_SPROUT_FAIRY_1,     logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_COLOSSUS_BEAN_SPROUT_FAIRY_2,     logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_COLOSSUS_BEAN_SPROUT_FAIRY_3,     logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
-                  LOCATION(RC_COLOSSUS_GOSSIP_STONE_FAIRY,      logic->CanSummonGossipFairy),
+                  LOCATION(RC_COLOSSUS_GOSSIP_STONE_FAIRY,      logic->CallGossipFairy()),
                   LOCATION(RC_COLOSSUS_GOSSIP_STONE_FAIRY_BIG,  logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_COLOSSUS_GOSSIP_STONE,     true),
                 }, {

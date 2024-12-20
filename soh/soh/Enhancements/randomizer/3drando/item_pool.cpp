@@ -688,7 +688,7 @@ static void PlaceVanillaFairies() {
   if (ctx->GetDungeon(Rando::ICE_CAVERN)->IsVanilla()) {
     ctx->PlaceItemInLocation(RC_ICE_CAVERN_ENTRANCE_STORMS_FAIRY, GetJunkItem(), false, true);
   }
-  if (ctx->GetDungeon(Rando::GERUDO_TRAINING_GROUNDS)->IsVanilla()) {
+  if (ctx->GetDungeon(Rando::GERUDO_TRAINING_GROUND)->IsVanilla()) {
     ctx->PlaceItemInLocation(RC_GERUDO_TRAINING_GROUND_ENTRANCE_STORMS_FAIRY, GetJunkItem(), false, true);
   }
   if (ctx->GetDungeon(Rando::GANONS_CASTLE)->IsVanilla()) {
@@ -1296,7 +1296,7 @@ void GenerateItemPool() {
     extra += ctx->GetDungeon(Rando::SPIRIT_TEMPLE)->IsVanilla() ? 2 : 1;
     extra += ctx->GetDungeon(Rando::BOTTOM_OF_THE_WELL)->IsVanilla() ? 1 : 2;
     extra += ctx->GetDungeon(Rando::ICE_CAVERN)->IsVanilla() ? 1 : 0;
-    extra += ctx->GetDungeon(Rando::GERUDO_TRAINING_GROUNDS)->IsVanilla() ? 1 : 0;
+    extra += ctx->GetDungeon(Rando::GERUDO_TRAINING_GROUND)->IsVanilla() ? 1 : 0;
     extra += ctx->GetDungeon(Rando::GANONS_CASTLE)->IsVanilla() ? 1 : 0;
     for (int i = 0; i < extra; i++) {
       AddItemToMainPool(GetJunkItem());

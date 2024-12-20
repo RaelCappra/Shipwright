@@ -156,8 +156,8 @@ void RegionTable_Init_BottomOfTheWell() {
   areaTable[RR_BOTTOM_OF_THE_WELL_BASEMENT_USEFUL_BOMB_FLOWERS] = Region("Bottom of the Well Basement Useful Bomb Flowers", "Bottom of the Well", {RA_BOTTOM_OF_THE_WELL}, NO_DAY_NIGHT_CYCLE, {}, {
                   //Locations
                   //Assumes RR_BOTTOM_OF_THE_WELL_BASEMENT access
-                  LOCATION(RC_BOTTOM_OF_THE_WELL_MAP_CHEST, logic->HasItem(RG_GORONS_BRACELET)),
-                  LOCATION(RC_BOTTOM_OF_THE_WELL_BASEMENT_SUN_FAIRY,           (randoCtx->GetTrickOption(RT_LENS_BOTW) || logic->CanUse(RG_LENS_OF_TRUTH)) && logic->CanUse(RG_SUNS_SONG)),
+                  LOCATION(RC_BOTTOM_OF_THE_WELL_MAP_CHEST,           logic->HasItem(RG_GORONS_BRACELET)),
+                  LOCATION(RC_BOTTOM_OF_THE_WELL_BASEMENT_SUN_FAIRY,  (ctx->GetTrickOption(RT_LENS_BOTW) || logic->CanUse(RG_LENS_OF_TRUTH)) && logic->CanUse(RG_SUNS_SONG)),
                 }, {
                   //Exits
                   Entrance(RR_BOTTOM_OF_THE_WELL_BASEMENT, {[]{return logic->CanDetonateUprightBombFlower();}}),

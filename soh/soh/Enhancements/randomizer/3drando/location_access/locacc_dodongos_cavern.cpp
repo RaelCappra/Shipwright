@@ -32,7 +32,7 @@ void RegionTable_Init_DodongosCavern() {
                   //Locations
                   LOCATION(RC_DODONGOS_CAVERN_MAP_CHEST,        Here(RR_DODONGOS_CAVERN_LOBBY, []{return logic->CanBreakMudWalls() || logic->HasItem(RG_GORONS_BRACELET);})),
                   LOCATION(RC_DODONGOS_CAVERN_DEKU_SCRUB_LOBBY, logic->CanStunDeku() || logic->HasItem(RG_GORONS_BRACELET)),
-                  LOCATION(RC_DODONGOS_CAVERN_GOSSIP_STONE_FAIRY,     logic->CanSummonGossipFairy),
+                  LOCATION(RC_DODONGOS_CAVERN_GOSSIP_STONE_FAIRY,     logic->CallGossipFairy()),
                   LOCATION(RC_DODONGOS_CAVERN_GOSSIP_STONE_FAIRY_BIG, logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_DODONGOS_CAVERN_GOSSIP_STONE,     Here(RR_DODONGOS_CAVERN_LOBBY, []{return logic->CanBreakMudWalls() || logic->HasItem(RG_GORONS_BRACELET);})),
                 }, {
@@ -461,7 +461,7 @@ void RegionTable_Init_DodongosCavern() {
 
   areaTable[RR_DODONGOS_CAVERN_MQ_MAD_SCRUB_ROOM] = Region("Dodongos Cavern Mad Scrub Room", "Dodongos Cavern", {RA_DODONGOS_CAVERN}, NO_DAY_NIGHT_CYCLE, {}, {
                   //Locations
-                  LOCATION(RC_DODONGOS_CAVERN_MQ_GOSSIP_STONE_FAIRY,         logic->CanSummonGossipFairy),
+                  LOCATION(RC_DODONGOS_CAVERN_MQ_GOSSIP_STONE_FAIRY,         logic->CallGossipFairy()),
                   LOCATION(RC_DODONGOS_CAVERN_MQ_GOSSIP_STONE_FAIRY_BIG,     logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_DODONGOS_CAVERN_MQ_GS_SCRUB_ROOM,  (logic->CanGetEnemyDrop(RE_GOLD_SKULLTULA, ED_BOOMERANG, true))), //Implies you can avoid/kill the enemies with what you use on the skull, if this assumption is broken, add
                                                                 //&& (Here(RR_DODONGOS_CAVERN_MQ_POES_ROOM, []{return logic->CanKillEnemy(RE_FIRE_KEESE) && logic->CanKillEnemy(RE_MAD_SCRUB);}) || (logic->CanAvoidEnemy(RE_FIRE_KEESE) && logic->CanAvoidEnemy(RE_MAD_SCRUB)))
