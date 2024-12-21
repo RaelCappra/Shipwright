@@ -6,6 +6,7 @@
 #include "src/overlays/actors/ovl_Obj_Bean/z_obj_bean.h"
 #include "randomizer.h"
 #include "../../OTRGlobals.h"
+#include "../../cvar_prefixes.h"
 
 #define FAIRY_FLAG_TIMED (1 << 8)
 #define FAIRY_FLAG_BIG (1 << 9)
