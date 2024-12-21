@@ -5,7 +5,7 @@
 #include "src/overlays/actors/ovl_En_Elf/z_en_elf.h"
 #include "src/overlays/actors/ovl_Obj_Bean/z_obj_bean.h"
 #include "randomizer.h"
-//#include "../../OTRGlobals.h"
+#include "../../OTRGlobals.h"
 
 #define FAIRY_FLAG_TIMED (1 << 8)
 #define FAIRY_FLAG_BIG (1 << 9)
@@ -31,7 +31,7 @@ bool FairyInitialise(EnElf* fairy, int32_t params) {
         sceneNum = SCENE_TEMPLE_OF_TIME_EXTERIOR_DAY;
     }
     auto ctx = Rando::Context::GetInstance();
-    Rando::Location* location = ctx->GetCheckObjectFromActor(ACTOR_EN_ELF, sceneNum, params);
+    Rando::Location* location = OTRGlobals::Instance->gRandomizer->GetCheckObjectFromActor(ACTOR_EN_ELF, sceneNum, params);
     RandomizerInf flag = static_cast<RandomizerInf>(location->GetCollectionCheck().flag);
     if (location->GetRandomizerCheck() != RC_UNKNOWN_CHECK && !Flags_GetRandomizerInf(flag)) {
         GetItemEntry item = Rando::Context::GetInstance()->GetFinalGIEntry(location->GetRandomizerCheck(), true, GI_FAIRY);

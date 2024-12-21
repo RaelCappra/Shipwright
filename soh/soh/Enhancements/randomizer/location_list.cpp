@@ -12,30 +12,129 @@ std::vector<RandomizerCheck> Rando::StaticData::dungeonRewardLocations = {
     RC_MORPHA,      RC_TWINROVA,     RC_BONGO_BONGO, RC_LINKS_POCKET,
 };
 
-typedef enum {
-    DUNGEON_DEKU_TREE = 0,
-    DUNGEON_DODONGOS_CAVERN,
-    DUNGEON_JABUJABUS_BELLY,
-    DUNGEON_FOREST_TEMPLE,
-    DUNGEON_FIRE_TEMPLE,
-    DUNGEON_WATER_TEMPLE,
-    DUNGEON_SPIRIT_TEMPLE,
-    DUNGEON_SHADOW_TEMPLE,
-    DUNGEON_BOTTOM_OF_THE_WELL,
-    DUNGEON_ICE_CAVERN,
-    DUNGEON_GANONS_CASTLE_SECOND_PART,
-    DUNGEON_GERUDO_TRAINING_GROUNDS,
-    DUNGEON_GERUDO_FORTRESS,
-    DUNGEON_GANONS_CASTLE_FIRST_PART,
-    DUNGEON_GANONS_CASTLE_FLOOR_BENEATH_BOSS_CHAMBER,
-    DUNGEON_GANONS_CASTLE_CRUMBLING,
-    DUNGEON_TREASURE_CHEST_SHOP,
-    DUNGEON_DEKU_TREE_BOSS_ROOM,
-    DUNGEON_DODONGOS_CAVERN_BOSS_ROOM,
-    DUNGEON_JABUJABUS_BELLY_BOSS_ROOM,
-} DungeonId;
-
 using namespace Rando;
+
+std::vector<RandomizerCheck> Rando::StaticData::GetPondFishLocations() {
+    std::vector<RandomizerCheck> pondFishLocations = {};
+    for (Location& location : locationTable) {
+        if (location.GetRCType() == RCTYPE_FISH && location.GetScene() == SCENE_FISHING_POND && location.GetRandomizerCheck() != RC_UNKNOWN_CHECK) {
+            pondFishLocations.push_back(location.GetRandomizerCheck());
+        }
+    }
+    return pondFishLocations;
+}
+std::vector<RandomizerCheck> Rando::StaticData::GetOverworldFishLocations() {
+    std::vector<RandomizerCheck> overworldFishLocations = {};
+    for (Location& location : locationTable) {
+        if (location.GetRCType() == RCTYPE_FISH && location.GetScene() != SCENE_FISHING_POND && location.GetRandomizerCheck() != RC_UNKNOWN_CHECK) {
+            overworldFishLocations.push_back(location.GetRandomizerCheck());
+        }
+    }
+    return overworldFishLocations;
+}
+
+std::vector<RandomizerCheck> Rando::StaticData::GetOverworldPotLocations() {
+    std::vector<RandomizerCheck> overworldPotLocations = {};
+    for (Location& location : locationTable) {
+        if (location.GetRCType() == RCTYPE_POT && location.IsOverworld() && location.GetRandomizerCheck() != RC_UNKNOWN_CHECK) {
+            overworldPotLocations.push_back(location.GetRandomizerCheck());
+        }
+    }
+    return overworldPotLocations;
+}
+
+std::vector<RandomizerCheck> Rando::StaticData::GetStaticHintLocations() {
+    std::vector<RandomizerCheck> staticHintLocations = {};
+    for (Location& location : locationTable) {
+        if (location.GetRCType() == RCTYPE_STATIC_HINT && location.GetRandomizerCheck() != RC_UNKNOWN_CHECK) {
+            staticHintLocations.push_back(location.GetRandomizerCheck());
+        }
+    }
+    return staticHintLocations;
+}
+
+std::vector<RandomizerCheck> Rando::StaticData::GetScrubLocations() {
+    std::vector<RandomizerCheck> scrubLocations = {};
+    for (Location& location : locationTable) {
+        if (location.GetRCType() == RCTYPE_SCRUB && location.GetRandomizerCheck() != RC_UNKNOWN_CHECK) {
+            scrubLocations.push_back(location.GetRandomizerCheck());
+        }
+    }
+    return scrubLocations;
+}
+
+std::vector<RandomizerCheck> Rando::StaticData::GetMerchantLocations() {
+    std::vector<RandomizerCheck> scrubLocations = {};
+    for (Location& location : locationTable) {
+        if (location.GetRCType() == RCTYPE_MERCHANT && location.GetRandomizerCheck() != RC_UNKNOWN_CHECK) {
+            scrubLocations.push_back(location.GetRandomizerCheck());
+        }
+    }
+    return scrubLocations;
+}
+
+std::vector<RandomizerCheck> Rando::StaticData::GetAdultTradeLocations() {
+    std::vector<RandomizerCheck> tradeLocations = {};
+    for (Location& location : locationTable) {
+        if (location.GetRCType() == RCTYPE_ADULT_TRADE && location.GetRandomizerCheck() != RC_UNKNOWN_CHECK) {
+            tradeLocations.push_back(location.GetRandomizerCheck());
+        }
+    }
+    return tradeLocations;
+}
+
+std::vector<RandomizerCheck> Rando::StaticData::GetGossipStoneLocations() {
+    std::vector<RandomizerCheck> gossipStoneLocations = {};
+    for (Location& location : locationTable) {
+        if (location.GetRCType() == RCTYPE_GOSSIP_STONE && location.GetRandomizerCheck() != RC_UNKNOWN_CHECK) {
+            gossipStoneLocations.push_back(location.GetRandomizerCheck());
+        }
+    }
+    return gossipStoneLocations;
+}
+
+std::vector<RandomizerCheck> Rando::StaticData::GetShopLocations() {
+    std::vector<RandomizerCheck> shopLocations = {};
+    for (Location& location : locationTable) {
+        if (location.GetRCType() == RCTYPE_SHOP && location.GetRandomizerCheck() != RC_UNKNOWN_CHECK) {
+            shopLocations.push_back(location.GetRandomizerCheck());
+        }
+    }
+    return shopLocations;
+}
+
+
+std::vector<RandomizerCheck> Rando::StaticData::GetOverworldLocations() {
+    //RANDOTODO better way of filling the initial location pool, among other things. 
+    std::vector<RandomizerCheck> overworldLocations = {};
+    auto ctx = Rando::Context::GetInstance();
+    for (Location& location : locationTable) {
+        if (
+            location.IsOverworld() &&
+            location.GetRandomizerCheck() != RC_UNKNOWN_CHECK &&
+            location.GetRandomizerCheck() != RC_TRIFORCE_COMPLETED && //not really an overworld check
+            location.GetRCType() != RCTYPE_FISH && // temp fix while locations are properly sorted out
+            location.GetRCType() != RCTYPE_POT &&  // Same as fish
+            location.GetRCType() != RCTYPE_CHEST_GAME && //this is supposed to be excluded
+            (ctx->GetOption(RSK_SHUFFLE_ADULT_TRADE) || location.GetRCType() != RCTYPE_ADULT_TRADE) && //trade is handled elsewhere in location pool
+            location.GetRCType() != RCTYPE_STATIC_HINT && 
+            location.GetRCType() != RCTYPE_GOSSIP_STONE  //don't put items on hints
+        ) {
+            overworldLocations.push_back(location.GetRandomizerCheck());
+        }
+    }
+    return overworldLocations;
+}
+
+std::vector<RandomizerCheck> Rando::StaticData::GetAllDungeonLocations() {
+    auto ctx = Rando::Context::GetInstance();
+    std::vector<RandomizerCheck> dungeonLocations;
+    for (const auto dungeon : ctx->GetDungeons()->GetDungeonList()) {
+        std::vector<RandomizerCheck> dungeonLoc = dungeon->GetDungeonLocations();
+        dungeonLocations.insert(dungeonLocations.end(), dungeonLoc.begin(), dungeonLoc.end());
+    }
+    return dungeonLocations;
+}
 
 void Rando::StaticData::InitLocationTable() { //                                                      Randomizer Check                                                 Quest            Type                                Area                                 Actor ID              Scene ID                            Params                        Flags Short Name                                     Hint Text Key                                                    Vanilla Item                                                        Spoiler Collection Check                                                                                                      Vanilla Progression  Price
     // clang-format off
