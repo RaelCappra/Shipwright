@@ -11,16 +11,34 @@ void RegionTable_Init_LostWoods() {
                   EventAccess(&logic->ShowedMidoSwordAndShield, {[]{return logic->ShowedMidoSwordAndShield || (logic->IsChild && logic->CanUse(RG_KOKIRI_SWORD) && logic->CanUse(RG_DEKU_SHIELD));}}),
                 }, {
                   //Locations
-                  LOCATION(RC_KF_KOKIRI_SWORD_CHEST,   logic->IsChild),
-                  LOCATION(RC_KF_GS_KNOW_IT_ALL_HOUSE, logic->IsChild && logic->CanAttack() && logic->AtNight && (/*TODO: HasNightStart ||*/ logic->CanLeaveForest() || logic->CanUse(RG_SUNS_SONG)) && logic->CanGetNightTimeGS()),
-                  LOCATION(RC_KF_GS_BEAN_PATCH,        logic->CanSpawnSoilSkull() && logic->CanAttack()),
-                  LOCATION(RC_KF_GS_HOUSE_OF_TWINS,    logic->IsAdult && logic->AtNight && (logic->HookshotOrBoomerang() || (ctx->GetTrickOption(RT_KF_ADULT_GS) && logic->CanUse(RG_HOVER_BOOTS))) && logic->CanGetNightTimeGS()),
+                  LOCATION(RC_KF_KOKIRI_SWORD_CHEST,      logic->IsChild),
+                  LOCATION(RC_KF_GS_KNOW_IT_ALL_HOUSE,    logic->IsChild && logic->CanAttack() && logic->AtNight && (/*TODO: HasNightStart ||*/ logic->CanLeaveForest() || logic->CanUse(RG_SUNS_SONG)) && logic->CanGetNightTimeGS()),
+                  LOCATION(RC_KF_GS_BEAN_PATCH,           logic->CanSpawnSoilSkull() && logic->CanAttack()),
+                  LOCATION(RC_KF_GS_HOUSE_OF_TWINS,       logic->IsAdult && logic->AtNight && (logic->HookshotOrBoomerang() || (ctx->GetTrickOption(RT_KF_ADULT_GS) && logic->CanUse(RG_HOVER_BOOTS))) && logic->CanGetNightTimeGS()),
                   LOCATION(RC_KF_BEAN_SPROUT_FAIRY_1,  logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_KF_BEAN_SPROUT_FAIRY_2,  logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_KF_BEAN_SPROUT_FAIRY_3,  logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_KF_GOSSIP_STONE_FAIRY,      logic->CallGossipFairyExceptSuns()),
                   LOCATION(RC_KF_GOSSIP_STONE_FAIRY_BIG,  logic->CanUse(RG_SONG_OF_STORMS)),
-                  LOCATION(RC_KF_GOSSIP_STONE,         true),
+                  LOCATION(RC_KF_BRIDGE_RUPEE,            logic->IsChild),
+                  LOCATION(RC_KF_BEHIND_MIDOS_RUPEE,      logic->IsChild),
+                  LOCATION(RC_KF_SOUTH_GRASS_WEST_RUPEE,  logic->IsChild),
+                  LOCATION(RC_KF_SOUTH_GRASS_EAST_RUPEE,  logic->IsChild),
+                  LOCATION(RC_KF_NORTH_GRASS_WEST_RUPEE,  logic->IsChild),
+                  LOCATION(RC_KF_NORTH_GRASS_EAST_RUPEE,  logic->IsChild),
+                  LOCATION(RC_KF_BOULDER_RUPEE_1,         logic->IsChild),
+                  LOCATION(RC_KF_BOULDER_RUPEE_2,         logic->IsChild),
+                  LOCATION(RC_KF_BEAN_RUPEE_1,            logic->IsAdult && (CanPlantBean(RR_KOKIRI_FOREST) || logic->CanUse(RG_HOVER_BOOTS) || logic->CanUse(RG_BOOMERANG))),
+                  LOCATION(RC_KF_BEAN_RUPEE_2,            logic->IsAdult && (CanPlantBean(RR_KOKIRI_FOREST) || logic->CanUse(RG_HOVER_BOOTS) || logic->CanUse(RG_BOOMERANG))),
+                  LOCATION(RC_KF_BEAN_RUPEE_3,            logic->IsAdult && (CanPlantBean(RR_KOKIRI_FOREST) || logic->CanUse(RG_HOVER_BOOTS) || logic->CanUse(RG_BOOMERANG))),
+                  LOCATION(RC_KF_BEAN_RUPEE_4,            logic->IsAdult && (CanPlantBean(RR_KOKIRI_FOREST) || logic->CanUse(RG_HOVER_BOOTS) || logic->CanUse(RG_BOOMERANG))),
+                  LOCATION(RC_KF_BEAN_RUPEE_5,            logic->IsAdult && (CanPlantBean(RR_KOKIRI_FOREST) || logic->CanUse(RG_HOVER_BOOTS) || logic->CanUse(RG_BOOMERANG))),
+                  LOCATION(RC_KF_BEAN_RUPEE_6,            logic->IsAdult && (CanPlantBean(RR_KOKIRI_FOREST) || logic->CanUse(RG_HOVER_BOOTS) || logic->CanUse(RG_BOOMERANG))),
+                  LOCATION(RC_KF_BEAN_RED_RUPEE,          logic->IsAdult && (CanPlantBean(RR_KOKIRI_FOREST) || logic->CanUse(RG_HOVER_BOOTS) || logic->CanUse(RG_BOOMERANG))),
+                  LOCATION(RC_KF_SARIAS_ROOF_WEST_HEART,  logic->IsChild),
+                  LOCATION(RC_KF_SARIAS_ROOF_EAST_HEART,  logic->IsChild),
+                  LOCATION(RC_KF_SARIAS_ROOF_NORTH_HEART, logic->IsChild),
+                  LOCATION(RC_KF_GOSSIP_STONE,            true),
                 }, {
                   //Exits
                   Entrance(RR_KF_LINKS_HOUSE,        {[]{return true;}}),
@@ -74,7 +92,13 @@ void RegionTable_Init_LostWoods() {
                   Entrance(RR_KOKIRI_FOREST, {[]{return true;}}),
   });
 
-  areaTable[RR_KF_SARIAS_HOUSE] = Region("KF Saria's House", "KF Saria's House", {}, NO_DAY_NIGHT_CYCLE, {}, {}, {
+  areaTable[RR_KF_SARIAS_HOUSE] = Region("KF Saria's House", "KF Saria's House", {}, NO_DAY_NIGHT_CYCLE, {}, {
+                  //Locations
+                  LOCATION(RC_KF_SARIAS_TOP_LEFT_HEART,     true),
+                  LOCATION(RC_KF_SARIAS_TOP_RIGHT_HEART,    true),
+                  LOCATION(RC_KF_SARIAS_BOTTOM_LEFT_HEART,  true),
+                  LOCATION(RC_KF_SARIAS_BOTTOM_RIGHT_HEART, true),
+                }, {
                   //Exits
                   Entrance(RR_KOKIRI_FOREST, {[]{return true;}}),
   });
@@ -154,6 +178,15 @@ void RegionTable_Init_LostWoods() {
                   LOCATION(RC_LW_TARGET_IN_WOODS,           logic->IsChild && logic->CanUse(RG_FAIRY_SLINGSHOT)),
                   LOCATION(RC_LW_DEKU_SCRUB_NEAR_BRIDGE,    logic->IsChild && logic->CanStunDeku()),
                   LOCATION(RC_LW_GS_BEAN_PATCH_NEAR_BRIDGE, logic->CanSpawnSoilSkull() && logic->CanAttack()),
+                  //RANDOTODO handle collecting some of these as you leave the shortcut from the other side
+                  LOCATION(RC_LW_SHORTCUT_RUPEE_1,          logic->IsChild && (logic->HasItem(RG_SILVER_SCALE) || logic->CanUse(RG_IRON_BOOTS))),
+                  LOCATION(RC_LW_SHORTCUT_RUPEE_2,          logic->IsChild && (logic->HasItem(RG_SILVER_SCALE) || logic->CanUse(RG_IRON_BOOTS))),
+                  LOCATION(RC_LW_SHORTCUT_RUPEE_3,          logic->IsChild && (logic->HasItem(RG_SILVER_SCALE) || logic->CanUse(RG_IRON_BOOTS))),
+                  LOCATION(RC_LW_SHORTCUT_RUPEE_4,          logic->IsChild && (logic->HasItem(RG_SILVER_SCALE) || logic->CanUse(RG_IRON_BOOTS))),
+                  LOCATION(RC_LW_SHORTCUT_RUPEE_5,          logic->IsChild && (logic->HasItem(RG_SILVER_SCALE) || logic->CanUse(RG_IRON_BOOTS))),
+                  LOCATION(RC_LW_SHORTCUT_RUPEE_6,          logic->IsChild && (logic->HasItem(RG_SILVER_SCALE) || logic->CanUse(RG_IRON_BOOTS))),
+                  LOCATION(RC_LW_SHORTCUT_RUPEE_7,          logic->IsChild && (logic->HasItem(RG_SILVER_SCALE) || logic->CanUse(RG_IRON_BOOTS))),
+                  LOCATION(RC_LW_SHORTCUT_RUPEE_8,          logic->IsChild && (logic->HasItem(RG_SILVER_SCALE) || logic->CanUse(RG_IRON_BOOTS))),
                   LOCATION(RC_LW_BEAN_SPROUT_NEAR_BRIDGE_FAIRY_1, logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_LW_BEAN_SPROUT_NEAR_BRIDGE_FAIRY_2, logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_LW_BEAN_SPROUT_NEAR_BRIDGE_FAIRY_3, logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
@@ -180,6 +213,7 @@ void RegionTable_Init_LostWoods() {
                   LOCATION(RC_LW_DEKU_SCRUB_NEAR_DEKU_THEATER_LEFT,  logic->IsChild && logic->CanStunDeku()),
                   LOCATION(RC_LW_GS_ABOVE_THEATER,                   logic->IsAdult && logic->AtNight && ((CanPlantBean(RR_LW_BEYOND_MIDO) && logic->CanAttack()) || (ctx->GetTrickOption(RT_LW_GS_BEAN) && logic->CanUse(RG_HOOKSHOT) && (logic->CanUse(RG_LONGSHOT) || logic->CanUse(RG_FAIRY_BOW) || logic->CanUse(RG_FAIRY_SLINGSHOT) || logic->CanUse(RG_BOMBCHU_5) || logic->CanUse(RG_DINS_FIRE)))) && logic->CanGetNightTimeGS()),
                   LOCATION(RC_LW_GS_BEAN_PATCH_NEAR_THEATER,         logic->CanSpawnSoilSkull() && (logic->CanAttack() || (ctx->GetOption(RSK_SHUFFLE_SCRUBS).Is(RO_SCRUBS_OFF) && logic->CanReflectNuts()))),
+                  LOCATION(RC_LW_BOULDER_RUPEE,                      logic->BlastOrSmash()),
                   LOCATION(RC_LW_BEAN_SPROUT_NEAR_THEATER_FAIRY_1,   logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_LW_BEAN_SPROUT_NEAR_THEATER_FAIRY_2,   logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_LW_BEAN_SPROUT_NEAR_THEATER_FAIRY_3,   logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
