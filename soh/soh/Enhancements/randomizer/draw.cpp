@@ -506,10 +506,11 @@ extern "C" void Randomizer_DrawBossSoul(PlayState* play, GetItemEntry* getItemEn
     Gfx_SetupDL_25Xlu(play->state.gfxCtx);
     gSPMatrix(POLY_XLU_DISP++, Matrix_NewMtx(play->state.gfxCtx, (char*)__FILE__, __LINE__),
               G_MTX_MODELVIEW | G_MTX_LOAD);
+    
     if (slot == 8) { // For Ganon only...
-        gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, 0, 0, 0, 255);
+        gDPSetEnvColor(POLY_XLU_DISP++, 0, 0, 0, 255);
     } else {
-        gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, 255, 255, 255, 255);
+        gDPSetEnvColor(POLY_XLU_DISP++, 255, 255, 255, 255);
     }
     gSPDisplayList(POLY_XLU_DISP++, (Gfx*)gBossSoulSkullDL);
     
