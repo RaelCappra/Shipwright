@@ -1402,9 +1402,11 @@ void RegisterRandomizerCompasses() {
 }
 
 #define FAIRY_FLAG_BIG (1 << 9)
+
+
 void RegisterFairyCustomization() {
-    GameInteractor::Instance->RegisterGameHookForID<GameInteractor::OnVanillaBehavior>(VB_FAIRY_HEAL, [](GIVanillaBehavior id, bool* should, void* refActor) {
-        EnElf* enElf = static_cast<EnElf*>(refActor);
+    REGISTER_VB_SHOULD(VB_FAIRY_HEAL, {
+        EnElf* enElf = va_arg(args, EnElf*);
         // Don't trigger if fairy is shuffled
         if (!IS_RANDO || !OTRGlobals::Instance->gRandomizer->GetRandoSettingValue(RSK_SHUFFLE_FAIRIES) || enElf->sohFairyIdentity.randomizerInf == RAND_INF_MAX) {
             if (CVarGetInteger(CVAR_ENHANCEMENT("FairyEffect"), 0) && !(enElf->fairyFlags & FAIRY_FLAG_BIG))
