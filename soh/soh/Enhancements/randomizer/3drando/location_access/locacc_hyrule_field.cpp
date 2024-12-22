@@ -181,7 +181,7 @@ void RegionTable_Init_HyruleField() {
                   Entrance(RR_ZORAS_DOMAIN,          {[]{return logic->IsChild && (logic->HasItem(RG_SILVER_SCALE) || logic->CanUse(RG_IRON_BOOTS));}}),
                   Entrance(RR_LH_OWL_FLIGHT,         {[]{return logic->IsChild;}}),
                   Entrance(RR_LH_FISHING_ISLAND,     {[]{return ((logic->IsChild || logic->WaterTempleClear) && logic->HasItem(RG_BRONZE_SCALE)) || (logic->IsAdult && (logic->CanUse(RG_SCARECROW) || CanPlantBean(RR_LAKE_HYLIA)));}}),
-                  Entrance(RR_LH_LAB,                {[]{return true;}}),
+                  Entrance(RR_LH_LAB,                {[]{return logic->CanOpenOverworldDoor(RG_HYLIA_LAB_KEY);}}),
                   Entrance(RR_WATER_TEMPLE_ENTRYWAY, {[]{return logic->CanUse(RG_HOOKSHOT) && ((logic->CanUse(RG_IRON_BOOTS) || (ctx->GetTrickOption(RT_LH_WATER_HOOKSHOT) && logic->HasItem(RG_GOLDEN_SCALE))) || (logic->IsAdult && logic->CanUse(RG_LONGSHOT) && logic->HasItem(RG_GOLDEN_SCALE)));}}),
                   Entrance(RR_LH_GROTTO,             {[]{return true;}}),
   });
@@ -189,7 +189,7 @@ void RegionTable_Init_HyruleField() {
   areaTable[RR_LH_FISHING_ISLAND] = Region("LH Fishing Island", "Lake Hylia", {RA_LAKE_HYLIA}, DAY_NIGHT_CYCLE, {}, {}, {
                   //Exits
                   Entrance(RR_LAKE_HYLIA,      {[]{return logic->HasItem(RG_BRONZE_SCALE);}}),
-                  Entrance(RR_LH_FISHING_POND, {[]{return true;}}),
+                  Entrance(RR_LH_FISHING_POND, {[]{return logic->CanOpenOverworldDoor(RG_FISHING_HOLE_KEY);}}),
   });
 
   areaTable[RR_LH_OWL_FLIGHT] = Region("LH Owl Flight", "Lake Hylia", {RA_LAKE_HYLIA}, NO_DAY_NIGHT_CYCLE, {}, {}, {
@@ -207,7 +207,7 @@ void RegionTable_Init_HyruleField() {
                   LOCATION(RC_LH_LAB_RIGHT_RUPEE, logic->CanUse(RG_IRON_BOOTS) || logic->HasItem(RG_GOLDEN_SCALE)),
                 }, {
                   //Exits
-                  Entrance(RR_LAKE_HYLIA, {[]{return true;}}),
+                  Entrance(RR_LAKE_HYLIA, {[]{return logic->CanOpenOverworldDoor(RG_HYLIA_LAB_KEY);}}),
   });
 
   areaTable[RR_LH_FISHING_POND] = Region("LH Fishing Hole", "LH Fishing Hole", {}, DAY_NIGHT_CYCLE, {}, {
@@ -251,7 +251,7 @@ void RegionTable_Init_HyruleField() {
                   LOCATION(RC_FISHING_POLE_HINT, true),
                 }, {
                   //Exits
-                  Entrance(RR_LH_FISHING_ISLAND, {[]{return true;}}),
+                  Entrance(RR_LH_FISHING_ISLAND, {[]{return logic->CanOpenOverworldDoor(RG_FISHING_HOLE_KEY);}}),
   });
 
   areaTable[RR_LH_GROTTO] = Region("LH Grotto", "LH Grotto", {}, NO_DAY_NIGHT_CYCLE, {}, {
@@ -286,9 +286,9 @@ void RegionTable_Init_HyruleField() {
                 }, {
                   //Exits
                   Entrance(RR_HYRULE_FIELD,     {[]{return true;}}),
-                  Entrance(RR_LLR_TALONS_HOUSE, {[]{return true;}}),
-                  Entrance(RR_LLR_STABLES,      {[]{return true;}}),
-                  Entrance(RR_LLR_TOWER,        {[]{return true;}}),
+                  Entrance(RR_LLR_TALONS_HOUSE, {[]{return logic->CanOpenOverworldDoor(RG_TALONS_HOUSE_KEY);}}),
+                  Entrance(RR_LLR_STABLES,      {[]{return logic->CanOpenOverworldDoor(RG_STABLES_KEY);}}),
+                  Entrance(RR_LLR_TOWER,        {[]{return logic->CanOpenOverworldDoor(RG_BACK_TOWER_KEY);}}),
                   Entrance(RR_LLR_GROTTO,       {[]{return logic->IsChild;}}),
   });
 
@@ -300,7 +300,7 @@ void RegionTable_Init_HyruleField() {
                   LOCATION(RC_LLR_TALONS_HOUSE_POT_3, logic->CanBreakPots()),
                 }, {
                   //Exits
-                  Entrance(RR_LON_LON_RANCH, {[]{return true;}}),
+                  Entrance(RR_LON_LON_RANCH, {[]{return logic->CanOpenOverworldDoor(RG_TALONS_HOUSE_KEY);}}),
   });
 
   areaTable[RR_LLR_STABLES] = Region("LLR Stables", "LLR Stables", {}, NO_DAY_NIGHT_CYCLE, {}, {
@@ -309,7 +309,7 @@ void RegionTable_Init_HyruleField() {
                   LOCATION(RC_LLR_STABLES_RIGHT_COW, logic->CanUse(RG_EPONAS_SONG)),
                 }, {
                   //Exits
-                  Entrance(RR_LON_LON_RANCH, {[]{return true;}}),
+                  Entrance(RR_LON_LON_RANCH, {[]{return logic->CanOpenOverworldDoor(RG_STABLES_KEY);}}),
   });
 
   areaTable[RR_LLR_TOWER] = Region("LLR Tower", "LLR Tower", {}, NO_DAY_NIGHT_CYCLE, {}, {
@@ -319,7 +319,7 @@ void RegionTable_Init_HyruleField() {
                   LOCATION(RC_LLR_TOWER_RIGHT_COW,  logic->CanUse(RG_EPONAS_SONG)),
                 }, {
                   //Exits
-                  Entrance(RR_LON_LON_RANCH, {[]{return true;}}),
+                  Entrance(RR_LON_LON_RANCH, {[]{return logic->CanOpenOverworldDoor(RG_BACK_TOWER_KEY);}}),
   });
 
   areaTable[RR_LLR_GROTTO] = Region("LLR Grotto", "LLR Grotto", {}, NO_DAY_NIGHT_CYCLE, {}, {
