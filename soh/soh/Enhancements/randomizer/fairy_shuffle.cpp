@@ -44,15 +44,22 @@ bool FairyInitialise(EnElf* fairy, int32_t params) {
     }
 }
 
-void FairyOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, void* optionalArg) {
+void FairyOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_list originalArgs) {
+    va_list args;
+    va_copy(args, originalArgs);
+
+    Actor* actor = va_arg(args, Actor*);
+
+    va_end(args);
+
     if (id == VB_FAIRY_HEAL) {
-        EnElf* enElf = static_cast<EnElf*>(optionalArg);
+        EnElf* enElf = (EnElf*)(actor);
         if (enElf->sohFairyIdentity.randomizerInf != RAND_INF_MAX) {
             Flags_SetRandomizerInf(enElf->sohFairyIdentity.randomizerInf);
             *should = false;
         }
     } else if (id == VB_SPAWN_FAIRY_GROUP) {
-        EnElf* enElf = static_cast<EnElf*>(optionalArg);
+        EnElf* enElf = (EnElf*)(actor);
         s16 grottoId = (gPlayState->sceneNum == SCENE_FAIRYS_FOUNTAIN) ? Grotto_CurrentGrotto() : 0;
         for (s16 index = 0; index < 8; index++) {
             EnElf* newFairy = (EnElf*)Actor_Spawn(&gPlayState->actorCtx, gPlayState, ACTOR_EN_ELF, enElf->actor.world.pos.x,
@@ -62,7 +69,7 @@ void FairyOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, void* opt
         }
         *should = false;
     } else if (id == VB_BEAN_SPAWN_FAIRIES) {
-        ObjBean* objBean = static_cast<ObjBean*>(optionalArg);
+        ObjBean* objBean = (ObjBean*)(actor);
         for (s16 index = 0; index < 3; index++) {
             EnElf* newFairy = (EnElf*)Actor_Spawn(&gPlayState->actorCtx, gPlayState, ACTOR_EN_ELF, objBean->dyna.actor.world.pos.x,
                         objBean->dyna.actor.world.pos.y + 15.0f, objBean->dyna.actor.world.pos.z, 0, 0, 0, FAIRY_HEAL, true);
