@@ -64,8 +64,8 @@ void RegionTable_Init_LostWoods() {
                   LOCATION(RC_KF_DEKU_TREE_LEFT_GOSSIP_STONE_FAIRY_BIG,   logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_KF_DEKU_TREE_RIGHT_GOSSIP_STONE_FAIRY,      logic->CallGossipFairyExceptSuns()),
                   LOCATION(RC_KF_DEKU_TREE_RIGHT_GOSSIP_STONE_FAIRY_BIG,  logic->CanUse(RG_SONG_OF_STORMS)),
-                  LOCATION(RC_KF_DEKU_TREE_LEFT_GOSSIP_STONE,  true),
-                  LOCATION(RC_KF_DEKU_TREE_RIGHT_GOSSIP_STONE, true),
+                  LOCATION(RC_KF_DEKU_TREE_LEFT_GOSSIP_STONE,             true),
+                  LOCATION(RC_KF_DEKU_TREE_RIGHT_GOSSIP_STONE,            true),
                 }, {
                   //Exits
                   Entrance(RR_DEKU_TREE_ENTRYWAY, {[]{return logic->IsChild || (ctx->GetOption(RSK_SHUFFLE_DUNGEON_ENTRANCES).IsNot(RO_DUNGEON_ENTRANCE_SHUFFLE_OFF) && (ctx->GetOption(RSK_FOREST).Is(RO_CLOSED_FOREST_OFF) || logic->ShowedMidoSwordAndShield));}}),
@@ -228,13 +228,13 @@ void RegionTable_Init_LostWoods() {
 
   areaTable[RR_LW_NEAR_SHORTCUTS_GROTTO] = Region("LW Near Shortcuts Grotto", "LW Near Shortcuts Grotto", {}, NO_DAY_NIGHT_CYCLE, grottoEvents, {
                   //Locations
-                  LOCATION(RC_LW_NEAR_SHORTCUTS_GROTTO_CHEST,         true),
-                  LOCATION(RC_LW_NEAR_SHORTCUTS_GROTTO_FISH,          logic->HasBottle()),
+                  LOCATION(RC_LW_NEAR_SHORTCUTS_GROTTO_CHEST,                   true),
+                  LOCATION(RC_LW_NEAR_SHORTCUTS_GROTTO_FISH,                    logic->HasBottle()),
                   LOCATION(RC_LW_NEAR_SHORTCUTS_GROTTO_GOSSIP_STONE_FAIRY,      logic->CallGossipFairy()),
                   LOCATION(RC_LW_NEAR_SHORTCUTS_GROTTO_GOSSIP_STONE_FAIRY_BIG,  logic->CanUse(RG_SONG_OF_STORMS)),
-                  LOCATION(RC_LW_NEAR_SHORTCUTS_GROTTO_GOSSIP_STONE,  true),
-                  LOCATION(RC_LW_NEAR_SHORTCUTS_GROTTO_BEEHIVE_LEFT,  logic->CanBreakLowerBeehives()),
-                  LOCATION(RC_LW_NEAR_SHORTCUTS_GROTTO_BEEHIVE_RIGHT, logic->CanBreakLowerBeehives()),
+                  LOCATION(RC_LW_NEAR_SHORTCUTS_GROTTO_GOSSIP_STONE,            true),
+                  LOCATION(RC_LW_NEAR_SHORTCUTS_GROTTO_BEEHIVE_LEFT,            logic->CanBreakLowerBeehives()),
+                  LOCATION(RC_LW_NEAR_SHORTCUTS_GROTTO_BEEHIVE_RIGHT,           logic->CanBreakLowerBeehives()),
                 }, {
                   //Exits
                   Entrance(RR_THE_LOST_WOODS, {[]{return true;}}),
@@ -271,18 +271,18 @@ void RegionTable_Init_LostWoods() {
                   EventAccess(&logic->GossipStoneFairy, {[]{return logic->CallGossipFairyExceptSuns();}}),
                 }, {
                   //Locations
-                  LOCATION(RC_SONG_FROM_SARIA,             logic->IsChild && logic->HasItem(RG_ZELDAS_LETTER)),
-                  LOCATION(RC_SHEIK_IN_FOREST,             logic->IsAdult),
-                  LOCATION(RC_SFM_GS,                      logic->IsAdult && logic->HookshotOrBoomerang() && logic->AtNight && logic->CanGetNightTimeGS()),
+                  LOCATION(RC_SONG_FROM_SARIA,                        logic->IsChild && logic->HasItem(RG_ZELDAS_LETTER)),
+                  LOCATION(RC_SHEIK_IN_FOREST,                        logic->IsAdult),
+                  LOCATION(RC_SFM_GS,                                 logic->IsAdult && logic->HookshotOrBoomerang() && logic->AtNight && logic->CanGetNightTimeGS()),
                   LOCATION(RC_SFM_MAZE_LOWER_GOSSIP_STONE_FAIRY,      logic->CallGossipFairyExceptSuns()),
                   LOCATION(RC_SFM_MAZE_LOWER_GOSSIP_STONE_FAIRY_BIG,  logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_SFM_MAZE_UPPER_GOSSIP_STONE_FAIRY,      logic->CallGossipFairyExceptSuns()),
                   LOCATION(RC_SFM_MAZE_UPPER_GOSSIP_STONE_FAIRY_BIG,  logic->CanUse(RG_SONG_OF_STORMS)),
                   LOCATION(RC_SFM_SARIA_GOSSIP_STONE_FAIRY,           logic->CallGossipFairyExceptSuns()),
                   LOCATION(RC_SFM_SARIA_GOSSIP_STONE_FAIRY_BIG,       logic->CanUse(RG_SONG_OF_STORMS)),
-                  LOCATION(RC_SFM_MAZE_LOWER_GOSSIP_STONE, true),
-                  LOCATION(RC_SFM_MAZE_UPPER_GOSSIP_STONE, true),
-                  LOCATION(RC_SFM_SARIA_GOSSIP_STONE,      true),
+                  LOCATION(RC_SFM_MAZE_LOWER_GOSSIP_STONE,            true),
+                  LOCATION(RC_SFM_MAZE_UPPER_GOSSIP_STONE,            true),
+                  LOCATION(RC_SFM_SARIA_GOSSIP_STONE,                 true),
                 }, {
                   //Exits
                   Entrance(RR_SFM_ENTRYWAY,           {[]{return true;}}),

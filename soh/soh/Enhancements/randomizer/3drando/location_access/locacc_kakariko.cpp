@@ -198,13 +198,13 @@ void RegionTable_Init_Kakariko() {
 
   areaTable[RR_KAK_OPEN_GROTTO] = Region("Kak Open Grotto", "Kak Open Grotto", {}, NO_DAY_NIGHT_CYCLE, grottoEvents, {
                   //Locations
-                  LOCATION(RC_KAK_OPEN_GROTTO_CHEST,         true),
-                  LOCATION(RC_KAK_OPEN_GROTTO_FISH,          logic->HasBottle()),
+                  LOCATION(RC_KAK_OPEN_GROTTO_CHEST,                  true),
+                  LOCATION(RC_KAK_OPEN_GROTTO_FISH,                   logic->HasBottle()),
                   LOCATION(RC_KAK_OPEN_GROTTO_GOSSIP_STONE_FAIRY,     logic->CallGossipFairy()),
                   LOCATION(RC_KAK_OPEN_GROTTO_GOSSIP_STONE_FAIRY_BIG, logic->CanUse(RG_SONG_OF_STORMS)),
-                  LOCATION(RC_KAK_OPEN_GROTTO_GOSSIP_STONE,  true),
-                  LOCATION(RC_KAK_OPEN_GROTTO_BEEHIVE_LEFT,  logic->CanBreakLowerBeehives()),
-                  LOCATION(RC_KAK_OPEN_GROTTO_BEEHIVE_RIGHT, logic->CanBreakLowerBeehives()),
+                  LOCATION(RC_KAK_OPEN_GROTTO_GOSSIP_STONE,           true),
+                  LOCATION(RC_KAK_OPEN_GROTTO_BEEHIVE_LEFT,           logic->CanBreakLowerBeehives()),
+                  LOCATION(RC_KAK_OPEN_GROTTO_BEEHIVE_RIGHT,          logic->CanBreakLowerBeehives()),
                 }, {
                   //Exits
                   Entrance(RR_KAK_BACKYARD, {[]{return true;}}),
@@ -319,11 +319,11 @@ void RegionTable_Init_Kakariko() {
                   //Locations
                   LOCATION(RC_GRAVEYARD_GOSSIP_STONE_FAIRY,     logic->CallGossipFairyExceptSuns()),
                   LOCATION(RC_GRAVEYARD_GOSSIP_STONE_FAIRY_BIG, logic->CanUse(RG_SONG_OF_STORMS)),
-                  LOCATION(RC_GRAVEYARD_GOSSIP_STONE, true),
+                  LOCATION(RC_GRAVEYARD_GOSSIP_STONE,           true),
                 }, {
                   //Exits
-                  Entrance(RR_THE_GRAVEYARD,             {[]{return true;}}),
-                  Entrance(RR_SHADOW_TEMPLE_ENTRYWAY,    {[]{return logic->CanUse(RG_DINS_FIRE) || (ctx->GetTrickOption(RT_GY_SHADOW_FIRE_ARROWS) && logic->IsAdult && logic->CanUse(RG_FIRE_ARROWS));}}),
+                  Entrance(RR_THE_GRAVEYARD,          {[]{return true;}}),
+                  Entrance(RR_SHADOW_TEMPLE_ENTRYWAY, {[]{return logic->CanUse(RG_DINS_FIRE) || (ctx->GetTrickOption(RT_GY_SHADOW_FIRE_ARROWS) && logic->IsAdult && logic->CanUse(RG_FIRE_ARROWS));}}),
   });
 
   areaTable[RR_KAK_BEHIND_GATE] = Region("Kak Behind Gate", "Kakariko Village", {RA_KAKARIKO_VILLAGE}, NO_DAY_NIGHT_CYCLE, {}, {}, {
