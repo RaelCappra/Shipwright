@@ -395,7 +395,6 @@ void RegionTable_Init_SpiritTemple() {
                   //Locations
                   LOCATION(RC_SPIRIT_TEMPLE_MQ_EARLY_ADULT_POT_1, logic->CanBreakPots()),
                   LOCATION(RC_SPIRIT_TEMPLE_MQ_EARLY_ADULT_POT_2, logic->CanBreakPots()),
-                  LOCATION(RC_SPIRIT_TEMPLE_MQ_DINALFOS_ROOM_SUN_FAIRY,        logic->SmallKeys(RR_SPIRIT_TEMPLE, 5) && logic->CanUse(RG_SONG_OF_TIME) && logic->CanUse(RG_SUNS_SONG)),
   }, {
                   //Exits
                   Entrance(RR_SPIRIT_TEMPLE_MQ_LOBBY,              {[]{return logic->CanUse(RG_MEGATON_HAMMER);}}),
@@ -441,7 +440,8 @@ void RegionTable_Init_SpiritTemple() {
 
   areaTable[RR_SPIRIT_TEMPLE_MQ_SOT_SUN_ROOM] = Region("Spirit Temple MQ SoT Sun Room", "Spirit Temple", {RA_SPIRIT_TEMPLE}, NO_DAY_NIGHT_CYCLE, {}, {
                   //Locations
-                  LOCATION(RC_SPIRIT_TEMPLE_MQ_CHEST_SWITCH_CHEST, true),
+                  LOCATION(RC_SPIRIT_TEMPLE_MQ_CHEST_SWITCH_CHEST,      true),
+                  LOCATION(RC_SPIRIT_TEMPLE_MQ_DINALFOS_ROOM_SUN_FAIRY, logic->CanUse(RG_SUNS_SONG)),
   }, {
                   //Exits
                   Entrance(RR_SPIRIT_TEMPLE_MQ_FOUR_BEAMOS_ROOM,    {[]{return true;}}),

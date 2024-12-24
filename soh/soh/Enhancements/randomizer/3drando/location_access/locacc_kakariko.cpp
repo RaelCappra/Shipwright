@@ -213,7 +213,7 @@ void RegionTable_Init_Kakariko() {
   areaTable[RR_THE_GRAVEYARD] = Region("The Graveyard", "The Graveyard", {RA_THE_GRAVEYARD}, NO_DAY_NIGHT_CYCLE, {
                   //Events
                   EventAccess(&logic->ButterflyFairy, {[]{return logic->ButterflyFairy || (logic->CanUse(RG_STICKS) && logic->AtDay);}}),
-                  EventAccess(&logic->BeanPlantFairy, {[]{return logic->BeanPlantFairy || (CanPlantBean(RR_THE_GRAVEYARD) && logic->CanUse(RG_SONG_OF_STORMS));}}),
+                  EventAccess(&logic->BeanPlantFairy, {[]{return logic->IsChild && logic->CanUse(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS);}}),
                   EventAccess(&logic->BugRock,        {[]{return true;}}),
                 }, {
                   //Locations
@@ -221,9 +221,9 @@ void RegionTable_Init_Kakariko() {
                   LOCATION(RC_GRAVEYARD_DAMPE_GRAVEDIGGING_TOUR, logic->HasItem(RG_CHILD_WALLET) && logic->IsChild && logic->AtNight), //TODO: This needs to change
                   LOCATION(RC_GRAVEYARD_GS_WALL,                 logic->IsChild && logic->HookshotOrBoomerang() && logic->AtNight && logic->CanGetNightTimeGS()),
                   LOCATION(RC_GRAVEYARD_GS_BEAN_PATCH,           logic->CanSpawnSoilSkull() && logic->CanAttack()),
-                  LOCATION(RC_GRAVEYARD_BEAN_SPROUT_FAIRY_1,     logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
-                  LOCATION(RC_GRAVEYARD_BEAN_SPROUT_FAIRY_2,     logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
-                  LOCATION(RC_GRAVEYARD_BEAN_SPROUT_FAIRY_3,     logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
+                  LOCATION(RC_GRAVEYARD_BEAN_SPROUT_FAIRY_1,     logic->IsChild && logic->CanUse(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
+                  LOCATION(RC_GRAVEYARD_BEAN_SPROUT_FAIRY_2,     logic->IsChild && logic->CanUse(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
+                  LOCATION(RC_GRAVEYARD_BEAN_SPROUT_FAIRY_3,     logic->IsChild && logic->CanUse(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS)),
                 }, {
                   //Exits
                   Entrance(RR_GRAVEYARD_SHIELD_GRAVE,       {[]{return logic->IsAdult || logic->AtNight;}}),
@@ -238,15 +238,22 @@ void RegionTable_Init_Kakariko() {
   areaTable[RR_GRAVEYARD_SHIELD_GRAVE] = Region("Graveyard Shield Grave", "Graveyard Shield Grave", {}, NO_DAY_NIGHT_CYCLE, {}, {
                   //Locations
                   LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_CHEST, true),
-                  //Free Fairies
-                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_1, logic->BlastOrSmash()),
-                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_2, logic->BlastOrSmash()),
-                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_3, logic->BlastOrSmash()),
-                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_4, logic->BlastOrSmash()),
-                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_5, logic->BlastOrSmash()),
-                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_6, logic->BlastOrSmash()),
-                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_7, logic->BlastOrSmash()),
-                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_8, logic->BlastOrSmash()),
+                }, {
+                  //Exits
+                  Entrance(RR_THE_GRAVEYARD,               {[]{return true;}}),
+                  Entrance(RR_GRAVEYARD_SHIELD_GRAVE_BACK, {[]{return Here(RR_GRAVEYARD_SHIELD_GRAVE, []{return logic->CanBreakMudWalls();});}}),
+  });
+
+  areaTable[RR_GRAVEYARD_SHIELD_GRAVE_BACK] = Region("Graveyard Shield Grave Back", "Graveyard Shield Grave", {}, NO_DAY_NIGHT_CYCLE, {}, {
+                  //Locations
+                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_1, true),
+                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_2, true),
+                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_3, true),
+                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_4, true),
+                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_5, true),
+                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_6, true),
+                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_7, true),
+                  LOCATION(RC_GRAVEYARD_SHIELD_GRAVE_FAIRY_8, true),
                 }, {
                   //Exits
                   Entrance(RR_THE_GRAVEYARD, {[]{return true;}}),

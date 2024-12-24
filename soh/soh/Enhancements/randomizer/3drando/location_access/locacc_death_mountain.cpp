@@ -6,7 +6,7 @@ using namespace Rando;
 void RegionTable_Init_DeathMountain() {
   areaTable[RR_DEATH_MOUNTAIN_TRAIL] = Region("Death Mountain", "Death Mountain", {RA_DEATH_MOUNTAIN_TRAIL}, DAY_NIGHT_CYCLE, {
                   //Events
-                  EventAccess(&logic->BeanPlantFairy, {[]{return logic->BeanPlantFairy || (CanPlantBean(RR_DEATH_MOUNTAIN_TRAIL) && logic->CanUse(RG_SONG_OF_STORMS) && (logic->HasExplosives() || logic->HasItem(RG_GORONS_BRACELET)));}}),
+                  EventAccess(&logic->BeanPlantFairy, {[]{return logic->IsChild && logic->CanUse(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS) && (logic->HasExplosives() || logic->HasItem(RG_GORONS_BRACELET));}}),
                 }, {
                   //Locations
                   LOCATION(RC_DMT_CHEST,                    logic->BlastOrSmash() || (ctx->GetTrickOption(RT_DMT_BOMBABLE) && logic->IsChild && logic->HasItem(RG_GORONS_BRACELET))),
@@ -16,9 +16,9 @@ void RegionTable_Init_DeathMountain() {
                   LOCATION(RC_DMT_GS_ABOVE_DODONGOS_CAVERN, logic->IsAdult && logic->AtNight && (logic->CanUse(RG_MEGATON_HAMMER) || (ctx->GetTrickOption(RT_DMT_HOOKSHOT_LOWER_GS) && logic->CanUse(RG_HOOKSHOT)) || (ctx->GetTrickOption(RT_DMT_BEAN_LOWER_GS) && CanPlantBean(RR_DEATH_MOUNTAIN_TRAIL)) || (ctx->GetTrickOption(RT_DMT_HOVERS_LOWER_GS) && logic->CanUse(RG_HOVER_BOOTS)) || ctx->GetTrickOption(RT_DMT_JS_LOWER_GS)) && logic->CanGetNightTimeGS()),
                   LOCATION(RC_DMT_BLUE_RUPEE,               logic->IsChild && logic->BlastOrSmash()),
                   LOCATION(RC_DMT_RED_RUPEE,                logic->IsChild && logic->BlastOrSmash()),
-                  LOCATION(RC_DMT_BEAN_SPROUT_FAIRY_1,      logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS) && (logic->HasExplosives() || logic->HasItem(RG_GORONS_BRACELET))),
-                  LOCATION(RC_DMT_BEAN_SPROUT_FAIRY_2,      logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS) && (logic->HasExplosives() || logic->HasItem(RG_GORONS_BRACELET))),
-                  LOCATION(RC_DMT_BEAN_SPROUT_FAIRY_3,      logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS) && (logic->HasExplosives() || logic->HasItem(RG_GORONS_BRACELET))),
+                  LOCATION(RC_DMT_BEAN_SPROUT_FAIRY_1,      logic->IsChild && logic->CanUse(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS) && (logic->HasExplosives() || logic->HasItem(RG_GORONS_BRACELET))),
+                  LOCATION(RC_DMT_BEAN_SPROUT_FAIRY_2,      logic->IsChild && logic->CanUse(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS) && (logic->HasExplosives() || logic->HasItem(RG_GORONS_BRACELET))),
+                  LOCATION(RC_DMT_BEAN_SPROUT_FAIRY_3,      logic->IsChild && logic->CanUse(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS) && (logic->HasExplosives() || logic->HasItem(RG_GORONS_BRACELET))),
                   LOCATION(RC_DMT_FLAG_SUN_FAIRY,           logic->CanUse(RG_SUNS_SONG)),
                 }, {
                   //Exits
@@ -265,21 +265,21 @@ void RegionTable_Init_DeathMountain() {
 
   areaTable[RR_DMC_CENTRAL_LOCAL] = Region("DMC Central Local", "Death Mountain Crater", {RA_DEATH_MOUNTAIN_CRATER}, NO_DAY_NIGHT_CYCLE, {
                   //Events
-                  EventAccess(&logic->BeanPlantFairy, {[]{return logic->BeanPlantFairy || (CanPlantBean(RR_DMC_CENTRAL_LOCAL) && logic->CanUse(RG_SONG_OF_STORMS));}}),
+                  EventAccess(&logic->BeanPlantFairy, {[]{return logic->IsChild && logic->CanUse(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS) && (logic->FireTimer() >= 8 || logic->Hearts() >= 3);}}),
                 }, {
                   //Locations
-                  LOCATION(RC_DMC_GS_BEAN_PATCH, (logic->FireTimer() >= 8 || logic->Hearts() >= 3) && logic->CanSpawnSoilSkull() && logic->CanAttack()),
-                  LOCATION(RC_DMC_NEAR_PLATFORM_RED_RUPEE, logic->IsChild),
-                  LOCATION(RC_DMC_MIDDLE_PLATFORM_RED_RUPEE, logic->IsChild && (logic->FireTimer() >= 8 || logic->Hearts() >= 3)),
+                  LOCATION(RC_DMC_GS_BEAN_PATCH, (              logic->FireTimer() >= 8 || logic->Hearts() >= 3) && logic->CanSpawnSoilSkull() && logic->CanAttack()),
+                  LOCATION(RC_DMC_NEAR_PLATFORM_RED_RUPEE,      logic->IsChild),
+                  LOCATION(RC_DMC_MIDDLE_PLATFORM_RED_RUPEE,    logic->IsChild && (logic->FireTimer() >= 8 || logic->Hearts() >= 3)),
                   LOCATION(RC_DMC_MIDDLE_PLATFORM_BLUE_RUPEE_1, logic->IsChild && (logic->FireTimer() >= 8 || logic->Hearts() >= 3)),
                   LOCATION(RC_DMC_MIDDLE_PLATFORM_BLUE_RUPEE_2, logic->IsChild && (logic->FireTimer() >= 8 || logic->Hearts() >= 3)),
                   LOCATION(RC_DMC_MIDDLE_PLATFORM_BLUE_RUPEE_3, logic->IsChild && (logic->FireTimer() >= 8 || logic->Hearts() >= 3)),
                   LOCATION(RC_DMC_MIDDLE_PLATFORM_BLUE_RUPEE_4, logic->IsChild && (logic->FireTimer() >= 8 || logic->Hearts() >= 3)),
                   LOCATION(RC_DMC_MIDDLE_PLATFORM_BLUE_RUPEE_5, logic->IsChild && (logic->FireTimer() >= 8 || logic->Hearts() >= 3)),
                   LOCATION(RC_DMC_MIDDLE_PLATFORM_BLUE_RUPEE_6, logic->IsChild && (logic->FireTimer() >= 8 || logic->Hearts() >= 3)),
-                  LOCATION(RC_DMC_BEAN_SPROUT_FAIRY_1,  logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS) && (logic->FireTimer() >= 8 || logic->Hearts() >= 3)),
-                  LOCATION(RC_DMC_BEAN_SPROUT_FAIRY_2,  logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS) && (logic->FireTimer() >= 8 || logic->Hearts() >= 3)),
-                  LOCATION(RC_DMC_BEAN_SPROUT_FAIRY_3,  logic->IsChild && logic->HasItem(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS) && (logic->FireTimer() >= 8 || logic->Hearts() >= 3)),
+                  LOCATION(RC_DMC_BEAN_SPROUT_FAIRY_1,          logic->IsChild && logic->CanUse(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS) && (logic->FireTimer() >= 8 || logic->Hearts() >= 3)),
+                  LOCATION(RC_DMC_BEAN_SPROUT_FAIRY_2,          logic->IsChild && logic->CanUse(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS) && (logic->FireTimer() >= 8 || logic->Hearts() >= 3)),
+                  LOCATION(RC_DMC_BEAN_SPROUT_FAIRY_3,          logic->IsChild && logic->CanUse(RG_MAGIC_BEAN) && logic->CanUse(RG_SONG_OF_STORMS) && (logic->FireTimer() >= 8 || logic->Hearts() >= 3)),
                 }, {
                   //Exits
                   Entrance(RR_DMC_CENTRAL_NEARBY,   {[]{return true;}}),
@@ -299,13 +299,13 @@ void RegionTable_Init_DeathMountain() {
 
   areaTable[RR_DMC_UPPER_GROTTO] = Region("DMC Upper Grotto", "DMC Upper Grotto", {}, NO_DAY_NIGHT_CYCLE, grottoEvents, {
                   //Locations
-                  LOCATION(RC_DMC_UPPER_GROTTO_CHEST,         true),
-                  LOCATION(RC_DMC_UPPER_GROTTO_FISH,          logic->HasBottle()),
+                  LOCATION(RC_DMC_UPPER_GROTTO_CHEST,                   true),
+                  LOCATION(RC_DMC_UPPER_GROTTO_FISH,                    logic->HasBottle()),
                   LOCATION(RC_DMC_UPPER_GROTTO_GOSSIP_STONE_FAIRY,      logic->CallGossipFairy()),
                   LOCATION(RC_DMC_UPPER_GROTTO_GOSSIP_STONE_FAIRY_BIG,  logic->CanUse(RG_SONG_OF_STORMS)),
-                  LOCATION(RC_DMC_UPPER_GROTTO_GOSSIP_STONE,  true),
-                  LOCATION(RC_DMC_UPPER_GROTTO_BEEHIVE_LEFT,  logic->CanBreakLowerBeehives()),
-                  LOCATION(RC_DMC_UPPER_GROTTO_BEEHIVE_RIGHT, logic->CanBreakLowerBeehives()),
+                  LOCATION(RC_DMC_UPPER_GROTTO_GOSSIP_STONE,            true),
+                  LOCATION(RC_DMC_UPPER_GROTTO_BEEHIVE_LEFT,            logic->CanBreakLowerBeehives()),
+                  LOCATION(RC_DMC_UPPER_GROTTO_BEEHIVE_RIGHT,           logic->CanBreakLowerBeehives()),
                 }, {
                   //Exits
                   Entrance(RR_DMC_UPPER_LOCAL, {[]{return true;}}),

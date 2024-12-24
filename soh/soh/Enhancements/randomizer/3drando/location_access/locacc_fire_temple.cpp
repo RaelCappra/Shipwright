@@ -355,7 +355,6 @@ void RegionTable_Init_FireTemple() {
                   //Locations
                   LOCATION(RC_FIRE_TEMPLE_MQ_ENTRANCE_POT_1, logic->CanBreakPots()),
                   LOCATION(RC_FIRE_TEMPLE_MQ_ENTRANCE_POT_2, logic->CanBreakPots()),
-                  LOCATION(RC_FIRE_TEMPLE_MQ_LOOP_STALFOS_SUN_FAIRY,  logic->SmallKeys(RR_FIRE_TEMPLE, 5) && logic->CanUse(RG_SUNS_SONG)),
   }, {
                   //Exits
                   Entrance(RR_FIRE_TEMPLE_ENTRYWAY,            {[]{return true;}}),
@@ -380,7 +379,10 @@ void RegionTable_Init_FireTemple() {
                   Entrance(RR_FIRE_TEMPLE_MQ_MAP_ROOM_CAGE,    {[]{return logic->OpenedLowestGoronCage;}}),
   });
 
-  areaTable[RR_FIRE_TEMPLE_MQ_STALFOS_ROOM] = Region("Fire Temple MQ Stalfos Room", "Fire Temple", {RA_FIRE_TEMPLE}, NO_DAY_NIGHT_CYCLE, {}, {}, {
+  areaTable[RR_FIRE_TEMPLE_MQ_STALFOS_ROOM] = Region("Fire Temple MQ Stalfos Room", "Fire Temple", {RA_FIRE_TEMPLE}, NO_DAY_NIGHT_CYCLE, {}, {
+                  //Locations
+                  LOCATION(RC_FIRE_TEMPLE_MQ_LOOP_STALFOS_SUN_FAIRY, logic->CanUse(RG_SUNS_SONG)),
+                }, {
                   //Exits
                   Entrance(RR_FIRE_TEMPLE_MQ_FIRST_ROOM_LOWER,  {[]{return true;}}),
                   Entrance(RR_FIRE_TEMPLE_MQ_IRON_KNUCKLE_ROOM, {[]{return Here(RR_FIRE_TEMPLE_MQ_FIRST_ROOM_LOWER, []{return logic->CanKillEnemy(RE_STALFOS, ED_CLOSE, true, 2);});}}),
@@ -391,6 +393,7 @@ void RegionTable_Init_FireTemple() {
                   EventAccess(&logic->FairyPot, {[]{return true;}}),
   }, {
                   //Locations
+                  LOCATION(RC_FIRE_TEMPLE_MQ_LOOP_KNUCKLE_SUN_FAIRY, logic->CanUse(RG_SUNS_SONG)),
                   LOCATION(RC_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_1, logic->CanBreakPots()),
                   LOCATION(RC_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_2, logic->CanBreakPots()),
                   LOCATION(RC_FIRE_TEMPLE_MQ_BEFORE_MINI_BOSS_POT_3, logic->CanBreakPots()),
@@ -478,7 +481,6 @@ void RegionTable_Init_FireTemple() {
                                                                                (logic->CanUse(RG_HOOKSHOT) || (logic->IsAdult && ctx->GetTrickOption(RT_FIRE_MQ_BLOCKED_CHEST)))),
                   //implies CanGetEnemyDrop(RE_GOLD_SKULLTULA)
                   LOCATION(RC_FIRE_TEMPLE_MQ_GS_BIG_LAVA_ROOM_OPEN_DOOR,       logic->FireTimer() >= 20 && logic->CanUse(RG_MEGATON_HAMMER)),
-                  LOCATION(RC_FIRE_TEMPLE_MQ_LOOP_KNUCKLE_SUN_FAIRY,  logic->CanUse(RG_SUNS_SONG)),
                   LOCATION(RC_FIRE_TEMPLE_MQ_LAVA_ROOM_NORTH_POT,              logic->CanBreakPots()),
                   LOCATION(RC_FIRE_TEMPLE_MQ_LAVA_ROOM_HIGH_POT,               logic->CanBreakPots()),
                   LOCATION(RC_FIRE_TEMPLE_MQ_LAVA_ROOM_SOUTH_POT,              logic->FireTimer() >= 40 && 
