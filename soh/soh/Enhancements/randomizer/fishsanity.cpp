@@ -5,6 +5,7 @@
 #include "variables.h"
 #include "functions.h"
 #include "macros.h"
+#include "../game-interactor/GameInteractor.h"
 #include <consolevariablebridge.h>
 
 extern "C" {
