@@ -4,7 +4,11 @@
 #include <libultraship/libultra.h>
 #include "global.h"
 #include "overlays/actors/ovl_Elf_Msg/z_elf_msg.h"
-#include "soh/Enhancements/randomizer/fairy_shuffle.h"
+
+typedef struct FairyIdentity {
+    RandomizerInf randomizerInf;
+    GetItemEntry itemEntry;
+} FairyIdentity;
 
 struct EnElf;
 
