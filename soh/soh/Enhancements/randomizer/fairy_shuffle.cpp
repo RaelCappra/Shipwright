@@ -1,10 +1,8 @@
-#include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
 #include "fairy_shuffle.h"
 #include "randomizer_grotto.h"
 #include "draw.h"
 #include "src/overlays/actors/ovl_En_Elf/z_en_elf.h"
 #include "src/overlays/actors/ovl_Obj_Bean/z_obj_bean.h"
-#include "randomizer.h"
 #include "../../OTRGlobals.h"
 #include "../../cvar_prefixes.h"
 
