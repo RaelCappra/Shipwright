@@ -146,7 +146,13 @@ void RegionTable_Init_ZorasDomain() {
                   Entrance(RR_LAKE_HYLIA,          {[]{return logic->IsChild && (logic->HasItem(RG_SILVER_SCALE) || logic->CanUse(RG_IRON_BOOTS));}}),
                   Entrance(RR_ZD_BEHIND_KING_ZORA, {[]{return logic->DeliverLetter || ctx->GetOption(RSK_ZORAS_FOUNTAIN).Is(RO_ZF_OPEN) || (ctx->GetOption(RSK_ZORAS_FOUNTAIN).Is(RO_ZF_CLOSED_CHILD) && logic->IsAdult) || (ctx->GetTrickOption(RT_ZD_KING_ZORA_SKIP) && logic->IsAdult);}}),
                   Entrance(RR_ZD_SHOP,             {[]{return logic->IsChild || logic->BlueFire();}}),
-                  Entrance(RR_ZD_STORMS_GROTTO,    {[]{return logic->CanOpenStormsGrotto();}}),
+                  Entrance(RR_ZORAS_DOMAIN_ISLAND, {[]{return true;}}),
+  });
+
+  areaTable[RR_ZORAS_DOMAIN_ISLAND] = Region("Zoras Domain Island", "Zoras Domain", {RA_ZORAS_DOMAIN}, NO_DAY_NIGHT_CYCLE, {}, {}, {
+                  //Exits
+                  Entrance(RR_ZORAS_DOMAIN,     {[]{return logic->IsAdult || logic->HasItem(RG_BRONZE_SCALE);}}),
+                  Entrance(RR_ZD_STORMS_GROTTO, {[]{return logic->CanOpenStormsGrotto();}}),
   });
 
   areaTable[RR_ZD_BEHIND_KING_ZORA] = Region("ZD Behind King Zora", "Zoras Domain", {RA_ZORAS_DOMAIN}, NO_DAY_NIGHT_CYCLE, {}, {
@@ -188,7 +194,7 @@ void RegionTable_Init_ZorasDomain() {
                   LOCATION(RC_ZD_FAIRY_GROTTO_FAIRY_8,  true),
                 }, {
                   //Exits
-                  Entrance(RR_ZORAS_DOMAIN, {[]{return true;}}),
+                  Entrance(RR_ZORAS_DOMAIN_ISLAND, {[]{return true;}}),
   });
 
   areaTable[RR_ZORAS_FOUNTAIN] = Region("Zoras Fountain", "Zoras Fountain", {RA_ZORAS_FOUNTAIN}, NO_DAY_NIGHT_CYCLE, {
