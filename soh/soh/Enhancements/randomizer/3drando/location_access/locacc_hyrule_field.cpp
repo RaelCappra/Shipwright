@@ -63,6 +63,7 @@ void RegionTable_Init_HyruleField() {
                   //Locations
                   LOCATION(RC_HF_DEKU_SCRUB_GROTTO,           logic->CanStunDeku()),
                   LOCATION(RC_HF_INSIDE_FENCE_GROTTO_BEEHIVE, logic->CanBreakLowerBeehives()),
+                  LOCATION(RC_HF_FENCE_GROTTO_STORMS_FAIRY,   logic->CanUse(RG_SONG_OF_STORMS)),
                 }, {
                   //Exits
                   Entrance(RR_HYRULE_FIELD, {[]{return true;}}),
