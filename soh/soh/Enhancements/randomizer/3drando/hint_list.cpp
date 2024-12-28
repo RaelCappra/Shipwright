@@ -918,7 +918,7 @@ void StaticData::HintTable_Init() {
                                                                       /*french*/ "Selon moi, #sous le lac# gît #[[1]]#.", {QM_RED, QM_BLUE})),
                                                                    // /*spanish*/en las #profundidades de un lago inmenso# se halla #[[1]]#.
 
-    hintTextTable[RHT_GERUDO_FORTRESS_TO_GERUDO_TRAINING_GROUNDS_LOBBY] = HintText(CustomMessage("They say that paying a #fee to the Gerudos# grants access to #[[1]]#.",
+    hintTextTable[RHT_GERUDO_FORTRESS_TO_GERUDO_TRAINING_GROUND_LOBBY] = HintText(CustomMessage("They say that paying a #fee to the Gerudos# grants access to #[[1]]#.",
                                                                                       /*german*/ "Man erzählt sich, daß das Bezahlen einer #Gebühr an die Gerudos#, Zugang zu #[[1]]# gewähre.",
                                                                                       /*french*/ "Selon moi, l'#entrée payante des Gerudo# donne accès à #[[1]]#.", {QM_RED, QM_BLUE})),
                                                                                    // /*spanish*/pagarle una #tasa a las gerudo# da acceso a #[[1]]#.
@@ -2470,7 +2470,7 @@ void StaticData::HintTable_Init() {
                                                          /*french*/ "la prison d'une ombre")});
                                                       // /*spanish*/la prisión de las sombras
 
-    hintTextTable[RHT_GERUDO_TRAINING_GROUND] = HintText(CustomMessage("Gerudo Training Grounds",
+    hintTextTable[RHT_GERUDO_TRAINING_GROUND] = HintText(CustomMessage("Gerudo Training Ground",
                                                             /*german*/ "Gerudo-Trainingsgelände",
                                                             /*french*/ "le Gymnase Gerudo"),
                                                          // /*spanish*/el Centro de Instrucción Gerudo
@@ -2574,7 +2574,7 @@ void StaticData::HintTable_Init() {
                                                /*french*/ "Selon moi, #les sorcières jumelles# possède #[[1]]#.", {QM_RED, QM_GREEN})});
                                             // /*spanish*/las #hermanas hechiceras# portan #[[1]]#.
 
-    hintTextTable[RHT_GIFT_FROM_SAGES] = HintText(CustomMessage("They say that the #Sage of Light# gifts @ #[[1]]#.", {QM_RED, QM_GREEN}),
+    hintTextTable[RHT_GIFT_FROM_RAURU] = HintText(CustomMessage("They say that the #Sage of Light# gifts @ #[[1]]#.", {QM_RED, QM_GREEN}),
                                            {},
                                            {CustomMessage("They say that #a former owl# gifts @ #[[1]]#.", {QM_RED, QM_GREEN})});
 
