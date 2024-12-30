@@ -343,21 +343,26 @@ std::string AudioCollection::GetCvarLockKey(std::string sfxKey) {
 
 void AudioCollection::AddToCollection(char* otrPath, uint16_t seqNum) {
     std::string fileName = std::filesystem::path(otrPath).filename().string();
-    std::vector<std::string> splitFileName = StringHelper::Split(fileName, "_");
-    std::string sequenceName = splitFileName[0];
+    size_t underscorePos = fileName.find_last_of('_') + 1;
     SeqType type = SEQ_BGM_CUSTOM;
-    std::string typeString = splitFileName[splitFileName.size() - 1];
-    std::locale loc;
-    for (size_t i = 0; i < typeString.length(); i++) {
-        typeString[i] = std::tolower(typeString[i], loc);
+    if (underscorePos != std::string::npos) {
+        std::string typeString = fileName.substr(underscorePos);
+        std::locale loc;
+        for (size_t i = 0; i < typeString.length(); i++) {
+            typeString[i] = std::tolower(typeString[i], loc);
+        }
+        if (typeString == "fanfare") {
+            type = SEQ_FANFARE;
+        }
     }
-    if (typeString == "fanfare") {
-        type = SEQ_FANFARE;
-    }
-    SequenceInfo info = {seqNum,
-                         sequenceName,
-                         StringHelper::Replace(StringHelper::Replace(StringHelper::Replace(sequenceName, " ", "_"), "~", "-"),".", ""),
-                         type, false, true};
+    std::string sequenceName = fileName.substr(0, underscorePos - 1);
+    SequenceInfo info = { seqNum,
+                          sequenceName,
+                          StringHelper::Replace(
+                              StringHelper::Replace(StringHelper::Replace(sequenceName, " ", "_"), "~", "-"), ".", ""),
+                          type,
+                          false,
+                          true };
     sequenceMap.emplace(seqNum, info);
 }
 

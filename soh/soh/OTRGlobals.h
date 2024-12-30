@@ -155,6 +155,8 @@ void Gfx_TextureCacheDelete(const uint8_t* addr);
 void SaveManager_ThreadPoolWait();
 void CheckTracker_OnMessageClose();
 
+void Messagebox_ShowErrorBox(char* title, char* body);
+
 GetItemID RetrieveGetItemIDFromItemID(ItemID itemID);
 RandomizerGet RetrieveRandomizerGetFromItemID(ItemID itemID);
 #endif
