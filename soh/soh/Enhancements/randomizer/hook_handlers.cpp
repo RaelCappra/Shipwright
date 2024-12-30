@@ -13,6 +13,7 @@
 #include "soh/ImGuiUtils.h"
 #include "soh/Notification/Notification.h"
 #include "soh/SaveManager.h"
+#include "soh/Enhancements/randomizer/fairy_shuffle.h"
 
 extern "C" {
 #include "macros.h"
@@ -2406,6 +2407,8 @@ void RandomizerRegisterHooks() {
         shufflePotsOnActorInitHook = 0;
         shufflePotsOnVanillaBehaviorHook = 0;
 
+        FairyUnregisterHooks();
+
         if (!IS_RANDO) return;
 
         // ENTRTODO: Move all entrance rando handling to a dedicated file
@@ -2447,6 +2450,10 @@ void RandomizerRegisterHooks() {
         if (RAND_GET_OPTION(RSK_SHUFFLE_POTS) != RO_SHUFFLE_POTS_OFF) {
             shufflePotsOnActorInitHook = GameInteractor::Instance->RegisterGameHook<GameInteractor::OnActorInit>(ObjTsubo_RandomizerInit);
             shufflePotsOnVanillaBehaviorHook = GameInteractor::Instance->RegisterGameHook<GameInteractor::OnVanillaBehavior>(ShufflePots_OnVanillaBehaviorHandler);
+        }
+
+        if (RAND_GET_OPTION(RSK_SHUFFLE_FAIRIES)) {
+            FairyRegisterHooks();
         }
     });
 }

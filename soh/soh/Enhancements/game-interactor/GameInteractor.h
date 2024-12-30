@@ -510,6 +510,14 @@ typedef enum {
     // Vanilla condition: Actor is ACTOR_EN_ELF, ACTOR_EN_FISH, ACTOR_EN_ICE_HONO, or ACTOR_EN_INSECT
     // Opt: *Actor
     VB_BOTTLE_ACTOR,
+
+    /*** Fairy Shuffle ***/
+    // Opt: *EnElf
+    VB_SPAWN_FAIRY_GROUP,
+    // Opt: *EnElf
+    VB_FAIRY_HEAL,
+    // Opt: *ObjBean
+    VB_BEAN_SPAWN_FAIRIES,
 } GIVanillaBehavior;
 
 #ifdef __cplusplus
