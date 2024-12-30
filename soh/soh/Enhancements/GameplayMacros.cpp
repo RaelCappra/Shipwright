@@ -1,7 +1,7 @@
 #include "GameplayMacros.h"
 #include <fstream>
 
-static std::vector<const char*> macroFiles;
+std::vector<const char*> macroFiles;
 const std::filesystem::path macroFolderPath(Ship::Context::GetPathRelativeToAppDirectory("macros", appShortName));
 
 void GameplayMacros_RefreshMacroList() {
@@ -117,7 +117,7 @@ void GameplayMacros_SaveMacro(char* filePath, Macro* macro){
 }
 
 
-char* GameplayMacros_GetMacroPath() {
+const char* GameplayMacros_GetMacroPath() {
     if (macroFiles.size() > 0) {
         return macroFiles[CVarGetInteger("Macro.FileIndex", 0)]; 
     }
