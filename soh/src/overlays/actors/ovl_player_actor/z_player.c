@@ -14672,7 +14672,11 @@ void Player_Action_8084EAC0(Player* this, PlayState* play) {
         if ((gSaveContext.healthAccumulator == 0) && (gSaveContext.magicState != MAGIC_STATE_FILL)) {
             Player_AnimChangeOnceMorphAdjusted(play, this, &gPlayerAnim_link_bottle_drink_demo_end);
             this->av2.actionVar2 = 2;
-            Player_UpdateBottleHeld(play, this, ITEM_BOTTLE, PLAYER_IA_BOTTLE);
+            s32 item = ITEM_BOTTLE;
+            if (this->itemAction == PLAYER_IA_BOTTLE_MILK) {
+                item = ITEM_MILK_HALF;
+            }
+            Player_UpdateBottleHeld(play, this, item, PLAYER_IA_BOTTLE);
         }
         Player_PlayVoiceSfx(this, NA_SE_VO_LI_DRINK - SFX_FLAG);
     } else if ((this->av2.actionVar2 == 2) && LinkAnimation_OnFrame(&this->skelAnime, 29.0f)) {
