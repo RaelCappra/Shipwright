@@ -238,6 +238,28 @@ void PadMgr_ProcessInputs(PadMgr* padMgr) {
                     GameInteractor_SetEmulatedButtons(0);
                 }
 
+                // #region SOH [Enhancement]
+                f32 sensitivityMod = 1.0f;
+
+                if (CVarGetInteger(CVAR_SETTING("WalkModifier.Enabled"), 0) == 1) {
+                    if (CVarGetInteger(CVAR_SETTING("WalkModifier.SpeedToggle"), 0) == 1) {
+                        if (gWalkSpeedToggle1) {
+                            sensitivityMod *= CVarGetFloat(CVAR_SETTING("WalkModifier.SensitivityMapping1"), 1.0f);
+                        } else if (gWalkSpeedToggle2) {
+                            sensitivityMod *= CVarGetFloat(CVAR_SETTING("WalkModifier.SensitivityMapping2"), 1.0f);
+                        }
+                    } else {
+                        if (CHECK_BTN_ALL(input->cur.button, BTN_CUSTOM_MODIFIER1)) {
+                            sensitivityMod *= CVarGetFloat(CVAR_SETTING("WalkModifier.SensitivityMapping1"), 1.0f);
+                        } else if (CHECK_BTN_ALL(input->cur.button, BTN_CUSTOM_MODIFIER2)) {
+                            sensitivityMod *= CVarGetFloat(CVAR_SETTING("WalkModifier.SensitivityMapping2"), 1.0f);
+                        }
+                    }
+                }
+                input->cur.stick_x *= sensitivityMod;
+                input->cur.stick_y *= sensitivityMod;
+                // #endregion
+
                 if (GameInteractor_ReverseControlsActive()) {
                     if (input->cur.stick_x == -128) {
                         input->cur.stick_x = 127;
