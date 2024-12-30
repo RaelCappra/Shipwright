@@ -830,6 +830,11 @@ void DrawEnhancementsMenu() {
                 UIWidgets::Tooltip("Equip items and equipment on the D-pad\nIf used with \"D-pad on Pause Screen\", you "
                                    "must hold C-Up to equip instead of navigate");
                 UIWidgets::PaddedEnhancementCheckbox("Instant Putaway", CVAR_ENHANCEMENT("InstantPutaway"), true, false);
+                UIWidgets::PaddedEnhancementCheckbox("Turn Nayru's Love into Roc's Feather", "gRocsFeather", false, false);
+                UIWidgets::Tooltip(
+                    "Nayru's Love acts like Roc's Feather from the Indigo romhack instead. Grants a jump that can even "
+                    "be used in the air, "
+                    "but needs to recharge by touching the ground afterwards. Does not require magic to use.");
                 UIWidgets::Tooltip("Allow Link to put items away without having to wait around");
                 UIWidgets::PaddedEnhancementCheckbox("Instant Boomerang Recall", CVAR_ENHANCEMENT("FastBoomerang"), true, false);
                 UIWidgets::Tooltip("Instantly return the boomerang to Link by pressing its item button while it's in the air");
