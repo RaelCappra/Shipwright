@@ -1824,6 +1824,15 @@ void SohInputEditorWindow::DrawLinkTab() {
                                                         CVAR_SETTING("WalkModifier.SwimMapping2"), 0.0f, 5.0f, "", 1.0f,
                                                         true, true, false, true);
                 Ship::GuiWindow::EndGroupPanel(0);
+                Ship::GuiWindow::BeginGroupPanel("Sensitivity Modifier", ImGui::GetContentRegionAvail());
+                UIWidgets::PaddedEnhancementSliderFloat("Sensitivity Modifier 1: %.0f %%", "##SensitivityMod1",
+                                                        CVAR_SETTING("WalkModifier.SensitivityMapping1"), 0.0f, 1.0f, "", 1.0f,
+                                                        true, true, false, true);
+                UIWidgets::PaddedEnhancementSliderFloat("Sensitivity Modifier 2: %.0f %%", "##SensitivityMod2",
+                                                        CVAR_SETTING("WalkModifier.SensitivityMapping2"), 0.0f, 1.0f, "", 1.0f,
+                                                        true, true, false, true);
+
+                Ship::GuiWindow::EndGroupPanel(0);
                 Ship::GuiWindow::EndGroupPanel(0);
             }
             ImGui::EndDisabled();
