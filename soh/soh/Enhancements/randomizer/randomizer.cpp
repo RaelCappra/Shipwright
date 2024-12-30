@@ -3286,7 +3286,7 @@ CustomMessage Randomizer::GetGoronMessage(u16 index) {
 void Randomizer::CreateCustomMessages() {
     // RANDTODO: Translate into french and german and replace GIMESSAGE_UNTRANSLATED
     // with GIMESSAGE(getItemID, itemID, english, german, french).
-    const std::array<GetItemMessage, 85> getItemMessages = {{
+    const std::array<GetItemMessage, 86> getItemMessages = {{
         GIMESSAGE(RG_GREG_RUPEE, ITEM_MASK_GORON, 
 			"You found %gGreg%w!",
 			"%gGreg%w! Du hast ihn wirklich gefunden!",
@@ -3405,6 +3405,10 @@ void Randomizer::CreateCustomMessages() {
 			"You found a %rGanon's Castle &%wKeyring!",
 			"Du erhältst ein %rSchlüsselbund%w&für %rGanons Schloß%w!",
 			"Vous obtenez un trousseau de&clés du %rChâteau de Ganon%w!"),
+        GIMESSAGE(RG_TREASURE_GAME_KEY_RING, ITEM_KEY_SMALL, 
+			"You found a %rTreasure Chest Game &%wKeyring!",
+			"!!!",
+			"!!!"),
 
         GIMESSAGE(RG_FOREST_TEMPLE_BOSS_KEY, ITEM_KEY_BOSS,
 			"You found the %gForest Temple &%wBoss Key!",
@@ -3915,7 +3919,7 @@ extern "C" u16 Randomizer_Item_Give(PlayState* play, GetItemEntry giEntry) {
             } else if (OTRGlobals::Instance->gRandomizer->GetRandoSettingValue(RSK_INFINITE_UPGRADES)) {
                 Flags_SetRandomizerInf(RAND_INF_HAS_INFINITE_BOMBCHUS);
             } else {
-                AMMO(ITEM_BOMBCHU) += AMMO(ITEM_BOMBCHU) < 5 ? 10 : 5;
+                AMMO(ITEM_BOMBCHU) += 10;
                 if (AMMO(ITEM_BOMBCHU) > 50) {
                     AMMO(ITEM_BOMBCHU) = 50;
                 }
