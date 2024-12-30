@@ -114,6 +114,42 @@ void RandomizeGroup(SeqType type) {
     }
 }
 
+void RandomizeGroupMulti(std::vector<SeqType> types) {
+    std::vector<u16> values;
+    u32 authCount = 0;
+    for (SeqType type : types) {
+        authCount += AuthenticCountBySequenceType(type);
+    }
+    
+    // use a while loop to add duplicates if we don't have enough included sequences
+    while (values.size() < authCount) {
+        for (const auto& seqData : AudioCollection::Instance->GetIncludedSequences()) {
+            for (SeqType type : types) {
+                if (seqData->category & type) {
+                    values.push_back(seqData->sequenceId);
+                }
+            }
+        }
+
+        // if we didn't find any, return early without shuffling to prevent an infinite loop
+        if (!values.size()) return;
+    }
+    Shuffle(values);
+    for (const auto& [seqId, seqData] : AudioCollection::Instance->GetAllSequences()) {
+        const std::string cvarKey = "gAudioEditor.ReplacedSequences." + seqData.sfxKey;
+        SeqType type = types[0];
+        if (seqData.category & type) {
+            // Only save authentic sequence CVars
+            if (((seqData.category & SEQ_BGM_CUSTOM) || seqData.category == SEQ_FANFARE) && seqData.sequenceId >= MAX_AUTHENTIC_SEQID) {
+                continue;
+            }
+            const int randomValue = values.back();
+            CVarSetInteger(cvarKey.c_str(), randomValue);
+            values.pop_back();
+        }
+    }
+}
+
 void ResetGroup(const std::map<u16, SequenceInfo>& map, SeqType type) {
     for (const auto& [defaultValue, seqData] : map) {
         if (seqData.category == type) {
@@ -214,7 +250,13 @@ void Draw_SfxTab(const std::string& tabId, SeqType type) {
     if (ImGui::Button(randomizeAllButton.c_str())) {
         auto currentBGM = func_800FA0B4(SEQ_PLAYER_BGM_MAIN);
         auto prevReplacement = AudioCollection::Instance->GetReplacementSequence(currentBGM);
-        RandomizeGroup(type);
+        if (type != SEQ_OCARINA) {
+            RandomizeGroup(type);
+        } else {
+            std::vector<SeqType> types = {SEQ_OCARINA, SEQ_FANFARE};
+            RandomizeGroupMulti(types);
+        }
+        SohImGui::RequestCvarSaveOnNextTick();
         Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
         auto curReplacement = AudioCollection::Instance->GetReplacementSequence(currentBGM);
         if (type == SEQ_BGM_WORLD && prevReplacement != curReplacement) {
@@ -239,7 +281,9 @@ void Draw_SfxTab(const std::string& tabId, SeqType type) {
         UnlockGroup(map, type);
         Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
         auto curReplacement = AudioCollection::Instance->GetReplacementSequence(currentBGM);
+=======
         if (type == SEQ_BGM_WORLD && prevReplacement != curReplacement) {
+>>>>>>> feature/fanfares-in-ocarina
             ReplayCurrentBGM();
         }
     }
@@ -275,8 +319,8 @@ void Draw_SfxTab(const std::string& tabId, SeqType type) {
         const int initialValue = map.contains(currentValue) ? currentValue : defaultValue;
         if (ImGui::BeginCombo(hiddenKey.c_str(), map.at(initialValue).label.c_str())) {
             for (const auto& [value, seqData] : map) {
-                // If excluded as a replacement sequence, don't show in other dropdowns except the effect's own dropdown.
-                if (~(seqData.category) & type || (!seqData.canBeUsedAsReplacement && initialSfxKey != seqData.sfxKey)) {
+                if ((~(seqData.category) & type || (!seqData.canBeUsedAsReplacement && initialSfxKey != seqData.sfxKey)) &&
+                        (type != SEQ_OCARINA || ~(seqData.category) & SEQ_FANFARE)) {
                     continue;
                 }
 
@@ -311,7 +355,7 @@ void Draw_SfxTab(const std::string& tabId, SeqType type) {
         if (ImGui::Button(randomizeButton.c_str())) {
             std::vector<SequenceInfo*> validSequences = {};
             for (const auto seqInfo : AudioCollection::Instance->GetIncludedSequences()) {
-                if (seqInfo->category & type) {
+                if (seqInfo->category & type || (type == SEQ_OCARINA && (seqInfo->category) & SEQ_FANFARE)) {
                     validSequences.push_back(seqInfo);
                 }
             }
