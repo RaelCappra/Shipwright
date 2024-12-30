@@ -256,7 +256,6 @@ void Draw_SfxTab(const std::string& tabId, SeqType type) {
             std::vector<SeqType> types = {SEQ_OCARINA, SEQ_FANFARE};
             RandomizeGroupMulti(types);
         }
-        SohImGui::RequestCvarSaveOnNextTick();
         Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
         auto curReplacement = AudioCollection::Instance->GetReplacementSequence(currentBGM);
         if (type == SEQ_BGM_WORLD && prevReplacement != curReplacement) {
@@ -281,9 +280,7 @@ void Draw_SfxTab(const std::string& tabId, SeqType type) {
         UnlockGroup(map, type);
         Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
         auto curReplacement = AudioCollection::Instance->GetReplacementSequence(currentBGM);
-=======
         if (type == SEQ_BGM_WORLD && prevReplacement != curReplacement) {
->>>>>>> feature/fanfares-in-ocarina
             ReplayCurrentBGM();
         }
     }
