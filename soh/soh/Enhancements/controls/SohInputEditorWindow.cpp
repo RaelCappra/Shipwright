@@ -50,6 +50,7 @@ void SohInputEditorWindow::InitElement() {
     mDeviceIndexVisiblity.clear();
     mDeviceIndexVisiblity[Ship::ShipDeviceIndex::Keyboard] = true;
     mDeviceIndexVisiblity[Ship::ShipDeviceIndex::Blue] = true;
+    mDeviceIndexVisiblity[Ship::ShipDeviceIndex::Mouse] = true;
     for (auto index = 1; index < Ship::ShipDeviceIndex::Max; index++) {
         mDeviceIndexVisiblity[static_cast<Ship::ShipDeviceIndex>(index)] = false;
     }
@@ -176,6 +177,9 @@ void SohInputEditorWindow::DrawAnalogPreview(const char* label, ImVec2 stick, fl
 #define BUTTON_COLOR_KEYBOARD_BEIGE ImVec4(0.651f, 0.482f, 0.357f, 0.5f)
 #define BUTTON_COLOR_KEYBOARD_BEIGE_HOVERED ImVec4(0.651f, 0.482f, 0.357f, 1.0f)
 
+#define BUTTON_COLOR_MOUSE_BEIGE ImVec4(0.5f, 0.5f, 0.5f, 0.5f)
+#define BUTTON_COLOR_MOUSE_BEIGE_HOVERED ImVec4(0.5f, 0.5f, 0.5f, 1.0f)
+
 #define BUTTON_COLOR_GAMEPAD_BLUE ImVec4(0.0f, 0.255f, 0.976f, 0.5f)
 #define BUTTON_COLOR_GAMEPAD_BLUE_HOVERED ImVec4(0.0f, 0.255f, 0.976f, 1.0f)
 
@@ -197,6 +201,10 @@ void SohInputEditorWindow::GetButtonColorsForLUSDeviceIndex(Ship::ShipDeviceInde
         case Ship::ShipDeviceIndex::Keyboard:
             buttonColor = BUTTON_COLOR_KEYBOARD_BEIGE;
             buttonHoveredColor = BUTTON_COLOR_KEYBOARD_BEIGE_HOVERED;
+            break;
+        case Ship::ShipDeviceIndex::Mouse:
+            buttonColor = BUTTON_COLOR_MOUSE_BEIGE;
+            buttonHoveredColor = BUTTON_COLOR_MOUSE_BEIGE_HOVERED;
             break;
         case Ship::ShipDeviceIndex::Blue:
             buttonColor = BUTTON_COLOR_GAMEPAD_BLUE;
@@ -277,6 +285,7 @@ void SohInputEditorWindow::DrawButtonLineEditMappingButton(uint8_t port, N64Butt
             icon = ICON_FA_GAMEPAD;
             break;
         case MAPPING_TYPE_KEYBOARD:
+        case MAPPING_TYPE_MOUSE:
             icon = ICON_FA_KEYBOARD_O;
             break;
         case MAPPING_TYPE_UNKNOWN:
@@ -1259,6 +1268,7 @@ void SohInputEditorWindow::DrawGyroSection(uint8_t port) {
 void SohInputEditorWindow::DrawButtonDeviceIcons(uint8_t portIndex, std::set<N64ButtonMask> bitmasks) {
     std::set<Ship::ShipDeviceIndex> allLusDeviceIndices;
     allLusDeviceIndices.insert(Ship::ShipDeviceIndex::Keyboard);
+    allLusDeviceIndices.insert(Ship::ShipDeviceIndex::Mouse);
     for (auto [lusIndex, mapping] : Ship::Context::GetInstance()
                                         ->GetControlDeck()
                                         ->GetDeviceIndexMappingManager()
@@ -1307,6 +1317,7 @@ void SohInputEditorWindow::DrawButtonDeviceIcons(uint8_t portIndex, std::set<N64
 void SohInputEditorWindow::DrawAnalogStickDeviceIcons(uint8_t portIndex, Ship::StickIndex stickIndex) {
     std::set<Ship::ShipDeviceIndex> allLusDeviceIndices;
     allLusDeviceIndices.insert(Ship::ShipDeviceIndex::Keyboard);
+    allLusDeviceIndices.insert(Ship::ShipDeviceIndex::Mouse);
     for (auto [lusIndex, mapping] : Ship::Context::GetInstance()
                                         ->GetControlDeck()
                                         ->GetDeviceIndexMappingManager()
@@ -1345,7 +1356,7 @@ void SohInputEditorWindow::DrawAnalogStickDeviceIcons(uint8_t portIndex, Ship::S
         ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, buttonHoveredColor);
         ImGui::SameLine();
-        if (lusIndex == Ship::ShipDeviceIndex::Keyboard) {
+        if (lusIndex == Ship::ShipDeviceIndex::Keyboard || lusIndex == Ship::ShipDeviceIndex::Mouse) {
             ImGui::SmallButton(ICON_FA_KEYBOARD_O);
         } else {
             ImGui::SmallButton(connected ? ICON_FA_GAMEPAD : ICON_FA_CHAIN_BROKEN);
@@ -1692,6 +1703,19 @@ void SohInputEditorWindow::DrawDeviceVisibilityButtons() {
     ImGui::PopStyleColor();
     ImGui::PopStyleColor();
 
+    auto mouseButtonColor = ImGui::GetStyleColorVec4(ImGuiCol_Button);
+    auto mouseButtonHoveredColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered);
+    GetButtonColorsForLUSDeviceIndex(Ship::ShipDeviceIndex::Mouse, mouseButtonColor, mouseButtonHoveredColor);
+    ImGui::PushStyleColor(ImGuiCol_Button, mouseButtonColor);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, mouseButtonHoveredColor);
+    bool mouseVisible = mDeviceIndexVisiblity[Ship::ShipDeviceIndex::Mouse];
+    if (ImGui::Button(StringHelper::Sprintf("%s %s Mouse", mouseVisible ? ICON_FA_EYE : ICON_FA_EYE_SLASH,
+                                            ICON_FA_KEYBOARD_O)
+                          .c_str())) {
+        mDeviceIndexVisiblity[Ship::ShipDeviceIndex::Mouse] = !mouseVisible;
+    }
+    ImGui::PopStyleColor();
+    ImGui::PopStyleColor();
 
     for (auto [lusIndex, info] : indexMappings) {
         auto [name, sdlIndex] = info;
@@ -1824,6 +1848,8 @@ void SohInputEditorWindow::DrawLinkTab() {
                 UIWidgets::PaddedEnhancementSliderFloat("Swim Modifier 2: %.0f %%", "##SwimMod2",
                                                         CVAR_SETTING("WalkModifier.SwimMapping2"), 0.0f, 5.0f, "", 1.0f,
                                                         true, true, false, true);
+
+
                 Ship::GuiWindow::EndGroupPanel(0);
                 Ship::GuiWindow::EndGroupPanel(0);
             }
@@ -2050,6 +2076,33 @@ void SohInputEditorWindow::DrawSetDefaultsButton(uint8_t portIndex) {
             }
             ImGui::EndPopup();
         }
+        ImGui::PushStyleColor(ImGuiCol_Button, BUTTON_COLOR_MOUSE_BEIGE);
+
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, BUTTON_COLOR_MOUSE_BEIGE_HOVERED);
+        if (ImGui::Button(StringHelper::Sprintf("%s Mouse", ICON_FA_KEYBOARD_O).c_str())) {
+            ImGui::OpenPopup("Set Defaults for Mouse");
+        }
+        ImGui::PopStyleColor();
+        ImGui::PopStyleColor();
+        if (ImGui::BeginPopupModal("Set Defaults for Mouse", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("This will clear all existing mappings for\nMouse on port %d.\n\nContinue?", portIndex + 1);
+            if (ImGui::Button("Cancel")) {
+                shouldClose = true;
+                ImGui::CloseCurrentPopup();
+            }
+            if (ImGui::Button("Set defaults")) {
+                Ship::Context::GetInstance()
+                    ->GetControlDeck()
+                    ->GetControllerByPort(portIndex)
+                    ->ClearAllMappingsForDevice(Ship::ShipDeviceIndex::Mouse);
+                Ship::Context::GetInstance()->GetControlDeck()->GetControllerByPort(portIndex)->AddDefaultMappings(
+                    Ship::ShipDeviceIndex::Mouse);
+                shouldClose = true;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+
         for (auto [lusIndex, info] : indexMappings) {
             auto [name, sdlIndex] = info;
 
