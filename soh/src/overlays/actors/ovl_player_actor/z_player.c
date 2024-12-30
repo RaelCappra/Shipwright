@@ -2526,23 +2526,12 @@ void Player_ProcessItemButtons(Player* this, PlayState* play) {
     s32 item;
     s32 i;
 
-    if (this->currentMask != PLAYER_MASK_NONE && !CVarGetInteger(CVAR_ENHANCEMENT("PersistentMasks"), 0)) {
-        maskItemAction = this->currentMask - 1 + PLAYER_IA_MASK_KEATON;
-
     if (this->actor.bgCheckFlags & 1) {
         this->rocUseCount = 0;
     }
 
-    if (this->currentMask != PLAYER_MASK_NONE) {
-        if (CVarGetInteger("gMMBunnyHood", BUNNY_HOOD_VANILLA) != BUNNY_HOOD_VANILLA) {
-            s32 maskItem = this->currentMask - PLAYER_MASK_KEATON + ITEM_MASK_KEATON;
-            bool hasOnDpad = false;
-            if (CVarGetInteger("gDpadEquips", 0) != 0) {
-                for (int buttonIndex = 4; buttonIndex < 8; buttonIndex++) {
-                    hasOnDpad |= gSaveContext.equips.buttonItems[buttonIndex] == maskItem;
-                }
-            }
->>>>>>> 06c4e3c8e001b34e2c863d868e6677ffb1e45282
+    if (this->currentMask != PLAYER_MASK_NONE && !CVarGetInteger(CVAR_ENHANCEMENT("PersistentMasks"), 0)) {
+        maskItemAction = this->currentMask - 1 + PLAYER_IA_MASK_KEATON;
 
         bool hasOnDpad = false;
         if (CVarGetInteger(CVAR_ENHANCEMENT("DpadEquips"), 0) != 0) {
@@ -2599,7 +2588,7 @@ void Player_ProcessItemButtons(Player* this, PlayState* play) {
             this->rocUseCount++;
             this->linearVelocity = 5.0f;
             this->actor.velocity.y = 8.0f;
-            this->actor.world.rot.y = this->currentYaw = this->actor.shape.rot.y;
+            this->actor.world.rot.y = this->yaw = this->actor.shape.rot.y;
 
             func_80838940(this, D_80853D4C[2][0], !(2 & 1) ? 5.8f : 3.5f, play, /* NA_SE_VO_LI_SWORD_N*/ 0);
 
@@ -14710,7 +14699,7 @@ void Player_Action_8084EAC0(Player* this, PlayState* play) {
             Player_AnimChangeOnceMorphAdjusted(play, this, &gPlayerAnim_link_bottle_drink_demo_end);
             this->av2.actionVar2 = 2;
             s32 item = ITEM_BOTTLE;
-            if (this->itemAction == PLAYER_IA_BOTTLE_MILK) {
+            if (this->itemAction == PLAYER_IA_BOTTLE_MILK_FULL) {
                 item = ITEM_MILK_HALF;
             }
             Player_UpdateBottleHeld(play, this, item, PLAYER_IA_BOTTLE);

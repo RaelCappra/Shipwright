@@ -136,9 +136,10 @@ void RandomizeGroupMulti(std::vector<SeqType> types) {
     }
     Shuffle(values);
     for (const auto& [seqId, seqData] : AudioCollection::Instance->GetAllSequences()) {
-        const std::string cvarKey = "gAudioEditor.ReplacedSequences." + seqData.sfxKey;
+        const std::string cvarKey = AudioCollection::Instance->GetCvarKey(seqData.sfxKey);
+        const std::string cvarLockKey = AudioCollection::Instance->GetCvarLockKey(seqData.sfxKey);
         SeqType type = types[0];
-        if (seqData.category & type) {
+        if (seqData.category & type && CVarGetInteger(cvarLockKey.c_str(), 0) == 0) {
             // Only save authentic sequence CVars
             if (((seqData.category & SEQ_BGM_CUSTOM) || seqData.category == SEQ_FANFARE) && seqData.sequenceId >= MAX_AUTHENTIC_SEQID) {
                 continue;

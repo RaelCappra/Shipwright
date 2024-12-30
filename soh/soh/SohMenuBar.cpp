@@ -2050,7 +2050,7 @@ void DrawDeveloperToolsMenu() {
                 static std::string macroFile = {};
                 if (ImGui::InputText("##Macro File Name", (char*)macroFile.c_str(), 4096)) {
                     CVarSetString("Macro.File", macroFile.c_str());
-                    Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesOnNextTick();
+                    Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
                 }
                 if (ImGui::Button("Clear##MacroClear")) {
                     CVarSetInteger("Macro.Clear", 1);

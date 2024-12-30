@@ -1943,9 +1943,8 @@ void Player_PostLimbDrawGameplay(PlayState* play, s32 limbIndex, Gfx** dList, Ve
         }
 
         if (this->actor.scale.y >= 0.0f) {
-            if (!(this->stateFlags1 & (PLAYER_STATE1_29 | PLAYER_STATE1_28)) && 
-                    (this->heldItemAction == PLAYER_IA_HOOKSHOT) ||
-                (this->heldItemAction == PLAYER_IA_LONGSHOT)) {
+            if (!(this->stateFlags1 & (PLAYER_STATE1_IN_CUTSCENE | PLAYER_STATE1_IN_ITEM_CS)) &&  
+                Player_HoldsHookshot(this)) {
                 Matrix_MultVec3f(&D_80126184, &this->unk_3C8);
 
                 if (heldActor != NULL) {
