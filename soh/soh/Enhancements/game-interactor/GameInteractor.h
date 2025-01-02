@@ -511,13 +511,14 @@ typedef enum {
     // Opt: *Actor
     VB_BOTTLE_ACTOR,
 
-    /*** Fairy Shuffle ***/
+    /*** Shuffle Fairies ***/
     // Opt: *EnElf
-    VB_SPAWN_FAIRY_GROUP,
-    // Opt: *EnElf
+    VB_SPAWN_FOUNTAIN_FAIRIES,
     VB_FAIRY_HEAL,
     // Opt: *ObjBean
-    VB_BEAN_SPAWN_FAIRIES,
+    VB_SPAWN_BEAN_STALK_FAIRIES,
+    // Opt: *EnGs
+    VB_SPAWN_GOSSIP_STONE_FAIRY,
 } GIVanillaBehavior;
 
 #ifdef __cplusplus

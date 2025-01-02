@@ -702,7 +702,7 @@ void ObjBean_GrowWaterPhase3(ObjBean* this, PlayState* play) {
             itemDropPos.x = this->dyna.actor.world.pos.x;
             itemDropPos.y = this->dyna.actor.world.pos.y - 25.0f;
             itemDropPos.z = this->dyna.actor.world.pos.z;
-            if (GameInteractor_Should(VB_BEAN_SPAWN_FAIRIES, true, this)) {
+            if (GameInteractor_Should(VB_SPAWN_BEAN_STALK_FAIRIES, true, this)) {
                 for (i = 0; i < 3; i++) {
                     Item_DropCollectible(play, &itemDropPos, ITEM00_FLEXIBLE);
                 }
