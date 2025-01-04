@@ -626,7 +626,7 @@ static void PlaceVanillaOverworldFish() {
 
 static void PlaceVanillaFairies() {
   auto ctx = Rando::Context::GetInstance();
-  for (auto rc : Rando::StaticData::GetOverworldFairyLocations()) {
+  for (auto rc : Rando::StaticData::GetFairyLocations()) {
     ctx->PlaceItemInLocation(rc, GetJunkItem(), false, true);
   }
   if (ctx->GetDungeon(Rando::GANONS_CASTLE)->IsMQ()) {
@@ -1307,9 +1307,9 @@ void GenerateItemPool() {
     AddItemsToPool(ItemPool, shopsanityRupees); //Shopsanity gets extra large rupees
   }
 
-  //Fairysanity
+  // Shuffle Fairies
   if (ctx->GetOption(RSK_SHUFFLE_FAIRIES)) {
-    for (auto rc : Rando::StaticData::GetOverworldFairyLocations()) {
+    for (auto rc : Rando::StaticData::GetFairyLocations()) {
       AddItemToMainPool(GetJunkItem());
     }
     // 8 extra for Ganon's Castle + 2 Dodongo's Cavern Gossip Stone + 3 Shadow Temple

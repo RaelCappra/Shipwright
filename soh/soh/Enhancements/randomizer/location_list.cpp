@@ -103,7 +103,6 @@ std::vector<RandomizerCheck> Rando::StaticData::GetShopLocations() {
     return shopLocations;
 }
 
-
 std::vector<RandomizerCheck> Rando::StaticData::GetOverworldLocations() {
     //RANDOTODO better way of filling the initial location pool, among other things. 
     std::vector<RandomizerCheck> overworldLocations = {};
@@ -136,17 +135,15 @@ std::vector<RandomizerCheck> Rando::StaticData::GetAllDungeonLocations() {
     return dungeonLocations;
 }
 
-
-std::vector<RandomizerCheck> Rando::StaticData::GetOverworldFairyLocations() {
-    std::vector<RandomizerCheck> overworldPotLocations = {};
+std::vector<RandomizerCheck> Rando::StaticData::GetFairyLocations() {
+    std::vector<RandomizerCheck> fairyLocations = {};
     for (Location& location : locationTable) {
-        if (location.GetRCType() == RCTYPE_FAIRY && location.IsOverworld() && location.GetRandomizerCheck() != RC_UNKNOWN_CHECK) {
-            overworldPotLocations.push_back(location.GetRandomizerCheck());
+        if (location.GetRCType() == RCTYPE_FAIRY && location.GetRandomizerCheck() != RC_UNKNOWN_CHECK) {
+            fairyLocations.push_back(location.GetRandomizerCheck());
         }
     }
-    return overworldPotLocations;
+    return fairyLocations;
 }
-
 
 void Rando::StaticData::InitLocationTable() { //                                                      Randomizer Check                                                 Quest            Type                                Area                                 Actor ID              Scene ID                            Params                        Flags Short Name                                     Hint Text Key                                                    Vanilla Item                                                        Spoiler Collection Check                                                                                                      Vanilla Progression  Price
     // clang-format off
