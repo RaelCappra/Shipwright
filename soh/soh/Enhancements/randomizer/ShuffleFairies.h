@@ -9,5 +9,5 @@ typedef struct FairyIdentity {
     GetItemEntry itemEntry;
 } FairyIdentity;
 
-void FairyShuffleRegisterHooks();
-void FairyShuffleUnregisterHooks();
+void ShuffleFairies_RegisterHooks();
+void ShuffleFairies_UnregisterHooks();

@@ -2407,7 +2407,7 @@ void RandomizerRegisterHooks() {
         shufflePotsOnActorInitHook = 0;
         shufflePotsOnVanillaBehaviorHook = 0;
 
-        FairyShuffleUnregisterHooks();
+        ShuffleFairies_UnregisterHooks();
 
         if (!IS_RANDO) return;
 
@@ -2453,7 +2453,7 @@ void RandomizerRegisterHooks() {
         }
 
         if (RAND_GET_OPTION(RSK_SHUFFLE_FAIRIES)) {
-            FairyShuffleRegisterHooks();
+            ShuffleFairies_RegisterHooks();
         }
     });
 }

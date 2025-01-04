@@ -9,7 +9,7 @@
 
 #define FAIRY_FLAG_TIMED (1 << 8)
 
-void FairyShuffleDrawRandomizedItem(EnElf* enElf, PlayState* play) {
+void ShuffleFairies_DrawRandomizedItem(EnElf* enElf, PlayState* play) {
     GetItemEntry randoGetItem = enElf->sohFairyIdentity.itemEntry;
     if (CVarGetInteger(CVAR_RANDOMIZER_ENHANCEMENT("MysteriousShuffle"), 0)) {
         randoGetItem = GET_ITEM_MYSTERY;
@@ -21,7 +21,7 @@ void FairyShuffleDrawRandomizedItem(EnElf* enElf, PlayState* play) {
     Matrix_Pop();
 }
 
-bool FairyShuffleFairyExists(FairyIdentity fairyIdentity) {
+bool ShuffleFairies_FairyExists(FairyIdentity fairyIdentity) {
     Actor* actor = gPlayState->actorCtx.actorLists[ACTORCAT_ITEMACTION].head;
 
     while (actor != NULL) {
@@ -39,7 +39,7 @@ bool FairyShuffleFairyExists(FairyIdentity fairyIdentity) {
     return false;
 }
 
-FairyIdentity FairyShuffleGetIdentity(int32_t params) {
+FairyIdentity ShuffleFairies_GetFairyIdentity(int32_t params) {
     FairyIdentity fairyIdentity;
     s16 sceneNum = gPlayState->sceneNum;
     fairyIdentity.randomizerInf = RAND_INF_MAX;
@@ -61,20 +61,20 @@ FairyIdentity FairyShuffleGetIdentity(int32_t params) {
     return fairyIdentity;
 }
 
-bool FairyShuffleSpawnFairy(f32 posX, f32 posY, f32 posZ, int32_t params) {
-    FairyIdentity fairyIdentity = FairyShuffleGetIdentity(params);
+bool ShuffleFairies_SpawnFairy(f32 posX, f32 posY, f32 posZ, int32_t params) {
+    FairyIdentity fairyIdentity = ShuffleFairies_GetFairyIdentity(params);
     if (!Flags_GetRandomizerInf(fairyIdentity.randomizerInf)) {
         EnElf* fairy = (EnElf*)Actor_Spawn(&gPlayState->actorCtx, gPlayState, ACTOR_EN_ELF, posX, posY - 30.0f, posZ, 0,
                                            0, 0, FAIRY_HEAL, true);
         fairy->sohFairyIdentity = fairyIdentity;
-        fairy->actor.draw = (ActorFunc)FairyShuffleDrawRandomizedItem;
+        fairy->actor.draw = (ActorFunc)ShuffleFairies_DrawRandomizedItem;
         fairy->fairyFlags |= FAIRY_FLAG_TIMED;
         return true;
     }
     return false;
 }
 
-void FairyShuffleOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_list originalArgs) {
+void ShuffleFairies_OnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_list originalArgs) {
     va_list args;
     va_copy(args, originalArgs);
 
@@ -94,7 +94,7 @@ void FairyShuffleOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va
         s16 grottoId = (gPlayState->sceneNum == SCENE_FAIRYS_FOUNTAIN) ? Grotto_CurrentGrotto() : 0;
         for (s16 index = 0; index < 8; index++) {
             int32_t params = (grottoId << 8) | index;
-            if (FairyShuffleSpawnFairy(actor->world.pos.x, actor->world.pos.y, actor->world.pos.z,
+            if (ShuffleFairies_SpawnFairy(actor->world.pos.x, actor->world.pos.y, actor->world.pos.z,
                 params)) {
                 fairySpawned = true;
             }
@@ -108,7 +108,7 @@ void FairyShuffleOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va
         bool fairySpawned = false;
         for (s16 index = 0; index < 3; index++) {
             int32_t params = ((objBean->dyna.actor.params & 0x3F) << 8) | index;
-            if (FairyShuffleSpawnFairy(objBean->dyna.actor.world.pos.x, objBean->dyna.actor.world.pos.y,
+            if (ShuffleFairies_SpawnFairy(objBean->dyna.actor.world.pos.x, objBean->dyna.actor.world.pos.y,
                 objBean->dyna.actor.world.pos.z,
                 params)) {
                 fairySpawned = true;
@@ -150,9 +150,9 @@ void FairyShuffleOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va
         // stop spawning the vanilla fairy as well when these fairies exist, otherwise both
         // the randomized and the vanilla fairy will spawn. When the randomized fairy is already
         // collected, the vanilla code will handle that part automatically.
-        FairyIdentity fairyIdentity = FairyShuffleGetIdentity(params);
-        if (!FairyShuffleFairyExists(fairyIdentity)) {
-            if (FairyShuffleSpawnFairy(gossipStone->actor.world.pos.x, gossipStone->actor.world.pos.y,
+        FairyIdentity fairyIdentity = ShuffleFairies_GetFairyIdentity(params);
+        if (!ShuffleFairies_FairyExists(fairyIdentity)) {
+            if (ShuffleFairies_SpawnFairy(gossipStone->actor.world.pos.x, gossipStone->actor.world.pos.y,
                 gossipStone->actor.world.pos.z, params)) {
                 Audio_PlayActorSound2(&gossipStone->actor, NA_SE_EV_BUTTERFRY_TO_FAIRY);
                 // Set vanilla check for fairy spawned so it doesn't spawn the vanilla fairy afterwards as well.
@@ -167,11 +167,11 @@ void FairyShuffleOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va
 
 uint32_t onVanillaBehaviorHook = 0;
 
-void FairyShuffleRegisterHooks() {
-    onVanillaBehaviorHook = GameInteractor::Instance->RegisterGameHook<GameInteractor::OnVanillaBehavior>(FairyShuffleOnVanillaBehaviorHandler);
+void ShuffleFairies_RegisterHooks() {
+    onVanillaBehaviorHook = GameInteractor::Instance->RegisterGameHook<GameInteractor::OnVanillaBehavior>(ShuffleFairies_OnVanillaBehaviorHandler);
 }
 
-void FairyShuffleUnregisterHooks() {
+void ShuffleFairies_UnregisterHooks() {
     GameInteractor::Instance->UnregisterGameHook<GameInteractor::OnVanillaBehavior>(onVanillaBehaviorHook);
 
     onVanillaBehaviorHook = 0;

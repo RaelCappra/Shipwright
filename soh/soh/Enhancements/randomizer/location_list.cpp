@@ -135,7 +135,7 @@ std::vector<RandomizerCheck> Rando::StaticData::GetAllDungeonLocations() {
     return dungeonLocations;
 }
 
-std::vector<RandomizerCheck> Rando::StaticData::GetFairyLocations() {
+std::vector<RandomizerCheck> Rando::StaticData::GetOverworldFairyLocations() {
     std::vector<RandomizerCheck> fairyLocations = {};
     for (Location& location : locationTable) {
         if (location.GetRCType() == RCTYPE_FAIRY && location.GetRandomizerCheck() != RC_UNKNOWN_CHECK) {
