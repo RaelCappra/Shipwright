@@ -278,8 +278,8 @@ static std::map<std::string, CosmeticOption> cosmeticOptions = {
     COSMETIC_OPTION("Key.GanonsSmallBase",          "Ganon's Small Key",        COSMETICS_GROUP_KEY,          ColorRGBA8(255, 255, 255, 255), true, true, false),
     COSMETIC_OPTION("Key.GanonsIcon",               "Ganon's Key Gem/Icon",     COSMETICS_GROUP_KEY,          ColorRGBA8(255, 0,   0,   255), true, true, true),
     COSMETIC_OPTION("Key.GanonsBossBase",           "Ganon's Boss Key",         COSMETICS_GROUP_KEY,          ColorRGBA8(255, 255, 0,   255), true, true, false),
-    COSMETIC_OPTION("Key.ChestSmallBase",           "Chest Game Key",           COSMETICS_GROUP_KEY,          ColorRGBA8(255, 255, 255, 255), true, true, false),
-    COSMETIC_OPTION("Key.ChestIcon",                "Chest Game Key Icon",      COSMETICS_GROUP_KEY,          ColorRGBA8(255, 0,   0,   255), true, true, true),
+    //COSMETIC_OPTION("Key.ChestSmallBase",           "Chest Game Key",           COSMETICS_GROUP_KEY,          ColorRGBA8(255, 255, 255, 255), true, true, false),
+    //COSMETIC_OPTION("Key.ChestIcon",                "Chest Game Key Icon",      COSMETICS_GROUP_KEY,          ColorRGBA8(255, 0,   0,   255), true, true, true),
     COSMETIC_OPTION("Key.Skeleton",                 "Skeleton Key",             COSMETICS_GROUP_KEY,          ColorRGBA8(255, 255, 170, 255), true, true, false),
     
     COSMETIC_OPTION("HUD.AButton",                  "A Button",                 COSMETICS_GROUP_HUD,          ColorRGBA8( 90,  90, 255, 255), false, true, false),
@@ -1815,6 +1815,94 @@ static const char* colorSchemes[2] = {
     "Gamecube",
 };
 
+void CosmeticsEditorWindow::ApplyDungeonGemColors(){
+    CVarSetColor(cosmeticOptions["Key.ForestIcon"].cvar, Color_RGBA8(0, 255, 0, 255));
+    CVarSetInteger(cosmeticOptions["Key.ForestIcon"].changedCvar, 1);
+    cosmeticOptions["Key.ForestIcon"].currentColor = {0, 255/255.0f, 0, 255/255.0f};
+
+    CVarSetColor(cosmeticOptions["Key.FireIcon"].cvar, Color_RGBA8(255, 30, 0, 255));
+    CVarSetInteger(cosmeticOptions["Key.FireIcon"].changedCvar, 1);
+    cosmeticOptions["Key.FireIcon"].currentColor = {255/255.0f, 30/255.0f, 0, 255/255.0f};
+    
+    CVarSetColor(cosmeticOptions["Key.WaterIcon"].cvar, Color_RGBA8(0, 137, 255, 255));
+    CVarSetInteger(cosmeticOptions["Key.WaterIcon"].changedCvar, 1);
+    cosmeticOptions["Key.WaterIcon"].currentColor = {0, 137/255.0f, 255/255.0f, 255/255.0f};
+    
+    CVarSetColor(cosmeticOptions["Key.SpiritIcon"].cvar, Color_RGBA8(255, 85, 0, 255));
+    CVarSetInteger(cosmeticOptions["Key.SpiritIcon"].changedCvar, 1);
+    cosmeticOptions["Key.SpiritIcon"].currentColor = {255/255.0f, 85/255.0f, 0, 255/255.0f};
+    
+    CVarSetColor(cosmeticOptions["Key.ShadowIcon"].cvar, Color_RGBA8(153, 0, 255, 255));
+    CVarSetInteger(cosmeticOptions["Key.ShadowIcon"].changedCvar, 1);
+    cosmeticOptions["Key.ShadowIcon"].currentColor = {153/255.0f, 0, 255/255.0f, 255/255.0f};
+    
+    CVarSetColor(cosmeticOptions["Key.WellIcon"].cvar, Color_RGBA8( 255, 0, 188, 255));
+    CVarSetInteger(cosmeticOptions["Key.WellIcon"].changedCvar, 1);
+    cosmeticOptions["Key.WellIcon"].currentColor = {255/255.0f, 0, 188/255.0f, 255/255.0f};
+    
+    CVarSetColor(cosmeticOptions["Key.GTGIcon"].cvar, Color_RGBA8(255, 255, 0, 255));
+    CVarSetInteger(cosmeticOptions["Key.GTGIcon"].changedCvar, 1);
+    cosmeticOptions["Key.GTGIcon"].currentColor = {255/255.0f, 255/255.0f, 0, 255/255.0f};
+    
+    CVarSetColor(cosmeticOptions["Key.FortIcon"].cvar, Color_RGBA8(255, 255, 203, 255));
+    CVarSetInteger(cosmeticOptions["Key.FortIcon"].changedCvar, 1);
+    cosmeticOptions["Key.FortIcon"].currentColor = { 255/255.0f, 255/255.0f, 203/255.0f, 255/255.0f};
+    
+    CVarSetColor(cosmeticOptions["Key.GanonsIcon"].cvar, Color_RGBA8(255, 0, 0, 255));
+    CVarSetInteger(cosmeticOptions["Key.GanonsIcon"].changedCvar, 1);
+    cosmeticOptions["Key.GanonsIcon"].currentColor = {255/255.0f, 0, 0, 255/255.0f};
+
+    //CVarSetColor(cosmeticOptions["Key.ChestIcon"].cvar, Color_RGBA8(255, 255, 0, 255));
+    //CVarSetInteger(cosmeticOptions["Key.ChestIcon"].changedCvar, 1);
+    //cosmeticOptions["Key.ChestIcon"].currentColor = {255/255.0f, 255/255.0f, 0, 255/255.0f};
+}
+
+void CosmeticsEditorWindow::ApplyDungeonBaseColors(){
+    CVarSetColor(cosmeticOptions["Key.ForestSmallBase"].cvar, Color_RGBA8(4, 195, 46, 255));
+    CVarSetInteger(cosmeticOptions["Key.ForestSmallBase"].changedCvar, 1);
+    cosmeticOptions["Key.ForestSmallBase"].currentColor = {4/255.0f, 195/255.0f, 46/255.0f, 255/255.0f};
+
+    CVarSetColor(cosmeticOptions["Key.FireSmallBase"].cvar, Color_RGBA8(237, 95, 95, 255));
+    CVarSetInteger(cosmeticOptions["Key.FireSmallBase"].changedCvar, 1);
+    cosmeticOptions["Key.FireSmallBase"].currentColor = {237/255.0f, 95/255.0f, 95/255.0f, 255/255.0f};
+
+    CVarSetColor(cosmeticOptions["Key.WaterSmallBase"].cvar, Color_RGBA8(85, 180, 223, 255));
+    CVarSetInteger(cosmeticOptions["Key.WaterSmallBase"].changedCvar, 1);
+    cosmeticOptions["Key.WaterSmallBase"].currentColor = {85/255.0f, 180/255.0f, 223/255.0f, 255/255.0f};
+
+    CVarSetColor(cosmeticOptions["Key.SpiritSmallBase"].cvar, Color_RGBA8(222, 158, 47, 255));
+    CVarSetInteger(cosmeticOptions["Key.SpiritSmallBase"].changedCvar, 1);
+    cosmeticOptions["Key.SpiritSmallBase"].currentColor = {222/255.0f, 158/255.0f, 47/255.0f, 255/255.0f};
+
+    CVarSetColor(cosmeticOptions["Key.ShadowSmallBase"].cvar, Color_RGBA8(126, 16, 177, 255));
+    CVarSetInteger(cosmeticOptions["Key.ShadowSmallBase"].changedCvar, 1);
+    cosmeticOptions["Key.ShadowSmallBase"].currentColor = {126/255.0f, 16/255.0f, 177/255.0f, 255/255.0f};
+
+    CVarSetColor(cosmeticOptions["Key.WellSmallBase"].cvar, Color_RGBA8(227, 110, 255, 255));
+    CVarSetInteger(cosmeticOptions["Key.WellSmallBase"].changedCvar, 1);
+    cosmeticOptions["Key.WellSmallBase"].currentColor = {227/255.0f, 110/255.0f, 255/255.0f, 255/255.0f};
+
+    CVarSetColor(cosmeticOptions["Key.GTGSmallBase"].cvar, Color_RGBA8(221, 212, 60, 255));
+    CVarSetInteger(cosmeticOptions["Key.GTGSmallBase"].changedCvar, 1);
+    cosmeticOptions["Key.GTGSmallBase"].currentColor = {221/255.0f, 212/255.0f, 60/255.0f, 255/255.0f};
+
+    CVarSetColor(cosmeticOptions["Key.FortSmallBase"].cvar, Color_RGBA8(255, 255, 255, 255));
+    CVarSetInteger(cosmeticOptions["Key.FortSmallBase"].changedCvar, 1);
+    cosmeticOptions["Key.FortSmallBase"].currentColor = {255/255.0f, 255/255.0f, 255/255.0f, 255/255.0f};
+
+    CVarSetColor(cosmeticOptions["Key.GanonsSmallBase"].cvar, Color_RGBA8(80, 80, 80, 255));
+    CVarSetInteger(cosmeticOptions["Key.GanonsSmallBase"].changedCvar, 1);
+    cosmeticOptions["Key.GanonsSmallBase"].currentColor = {80/255.0f, 80/255.0f, 80/255.0f, 255/255.0f};
+
+    CVarSetColor(cosmeticOptions["Key.GanonsBossBase"].cvar, Color_RGBA8(80, 80, 80, 255));
+    CVarSetInteger(cosmeticOptions["Key.GanonsBossBase"].changedCvar, 1);
+    cosmeticOptions["Key.GanonsBossBase"].currentColor = {80/255.0f, 80/255.0f, 80/255.0f, 255/255.0f};
+
+    //CVarSetColor(cosmeticOptions["Key.ChestSmallBase"].cvar, Color_RGBA8(255, 255, 0, 255));
+    //CVarSetInteger(cosmeticOptions["Key.ChestSmallBase"].changedCvar, 1);
+    //cosmeticOptions["Key.ChestSmallBase"].currentColor = {255/255.0f, 255/255.0f, 0, 255/255.0f};
+}
+
 void CosmeticsEditorWindow::DrawElement() {
     ImGui::Text("Color Scheme");
     ImGui::SameLine();
@@ -1824,6 +1912,16 @@ void CosmeticsEditorWindow::DrawElement() {
         "Some cosmetic options may not apply if you have any mods that provide custom models for the cosmetic option.\n\n"
         "For example, if you have custom Link model, then the Link's Hair color option will most likely not apply."
     );
+
+    if (ImGui::Button("Apply Dungeon Gem/Icon Colors", ImVec2(ImGui::GetContentRegionAvail().x / 2, 30.0f))) {
+        ApplyDungeonGemColors();
+        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Apply Dungeon Base Colors", ImVec2(ImGui::GetContentRegionAvail().x, 30.0f))) {
+        ApplyDungeonBaseColors();
+        Ship::Context::GetInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
+    }
     if (CVarGetInteger(CVAR_COSMETIC("AdvancedMode"), 0)) {
         if (ImGui::Button("Lock All Advanced", ImVec2(ImGui::GetContentRegionAvail().x / 2, 30.0f))) {
             for (auto& [id, cosmeticOption] : cosmeticOptions) {
