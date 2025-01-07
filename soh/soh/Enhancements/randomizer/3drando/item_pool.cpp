@@ -1289,7 +1289,7 @@ void GenerateItemPool() {
     AddItemsToPool(ItemPool, shopsanityRupees); //Shopsanity gets extra large rupees
   }
 
-  //Fairysanity
+  // Shuffle Fairies
   if (ctx->GetOption(RSK_SHUFFLE_FAIRIES)) {
     for (auto rc : Rando::StaticData::GetOverworldFairyLocations()) {
       AddItemToMainPool(GetJunkItem());

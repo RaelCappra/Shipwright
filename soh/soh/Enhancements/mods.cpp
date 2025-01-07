@@ -5,6 +5,7 @@
 #include "soh/OTRGlobals.h"
 #include "soh/SaveManager.h"
 #include "soh/ResourceManagerHelpers.h"
+#include "soh/resource/type/Skeleton.h"
 #include "soh/Enhancements/boss-rush/BossRushTypes.h"
 #include "soh/Enhancements/boss-rush/BossRush.h"
 #include "soh/Enhancements/enhancementTypes.h"
@@ -39,6 +40,7 @@
 #include "src/overlays/actors/ovl_En_Elf/z_en_elf.h"
 #include "objects/object_link_boy/object_link_boy.h"
 #include "objects/object_link_child/object_link_child.h"
+#include "soh_assets.h"
 #include "kaleido.h"
 
 extern "C" {
@@ -144,21 +146,6 @@ void RegisterInfiniteNayrusLove() {
         }
     });
 }
-
-void RegisterMoonJumpOnL() {
-    GameInteractor::Instance->RegisterGameHook<GameInteractor::OnGameFrameUpdate>([]() {
-        if (!GameInteractor::IsSaveLoaded(true)) return;
-        
-        if (CVarGetInteger(CVAR_CHEAT("MoonJumpOnL"), 0) != 0) {
-            Player* player = GET_PLAYER(gPlayState);
-
-            if (CHECK_BTN_ANY(gPlayState->state.input[0].cur.button, BTN_L)) {
-                player->actor.velocity.y = 6.34375f;
-            }
-        }
-    });
-}
-
 
 void RegisterInfiniteISG() {
     GameInteractor::Instance->RegisterGameHook<GameInteractor::OnGameFrameUpdate>([]() {
@@ -1437,6 +1424,30 @@ void RegisterRandomizerCompasses() {
     });
 }
 
+void RegisterCustomSkeletons() {
+    static int8_t previousTunic = -1;
+
+    GameInteractor::Instance->RegisterGameHook<GameInteractor::OnGameFrameUpdate>([]() {
+
+        if (!GameInteractor::IsSaveLoaded() || gPlayState == NULL) {
+            return;
+        }
+
+        if (CUR_EQUIP_VALUE(EQUIP_TYPE_TUNIC) != previousTunic) {
+            SOH::SkeletonPatcher::UpdateCustomSkeletons();
+        }
+        previousTunic = CUR_EQUIP_VALUE(EQUIP_TYPE_TUNIC);
+    });
+
+    GameInteractor::Instance->RegisterGameHook<GameInteractor::OnAssetAltChange>([]() {
+        if (!GameInteractor::IsSaveLoaded() || gPlayState == NULL) {
+            return;
+        }
+
+        SOH::SkeletonPatcher::UpdateCustomSkeletons();
+    });
+}
+
 #define FAIRY_FLAG_BIG (1 << 9)
 
 
@@ -1473,7 +1484,6 @@ void InitMods() {
     RegisterInfiniteAmmo();
     RegisterInfiniteMagic();
     RegisterInfiniteNayrusLove();
-    RegisterMoonJumpOnL();
     RegisterInfiniteISG();
     RegisterEzQPA();
     RegisterUnrestrictedItems();
@@ -1506,4 +1516,5 @@ void InitMods() {
     RegisterPauseMenuHooks();
     RandoKaleido_RegisterHooks();
     RegisterFairyCustomization();
+    RegisterCustomSkeletons();
 }

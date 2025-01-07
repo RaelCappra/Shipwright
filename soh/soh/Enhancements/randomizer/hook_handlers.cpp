@@ -14,7 +14,7 @@
 #include "soh/ImGuiUtils.h"
 #include "soh/Notification/Notification.h"
 #include "soh/SaveManager.h"
-#include "soh/Enhancements/randomizer/fairy_shuffle.h"
+#include "soh/Enhancements/randomizer/ShuffleFairies.h"
 
 extern "C" {
 #include "macros.h"
@@ -2421,7 +2421,7 @@ void RandomizerRegisterHooks() {
         shufflePotsOnActorInitHook = 0;
         shufflePotsOnVanillaBehaviorHook = 0;
 
-        FairyUnregisterHooks();
+        ShuffleFairies_UnregisterHooks();
 
         if (!IS_RANDO) return;
 
@@ -2467,7 +2467,7 @@ void RandomizerRegisterHooks() {
         }
 
         if (RAND_GET_OPTION(RSK_SHUFFLE_FAIRIES)) {
-            FairyRegisterHooks();
+            ShuffleFairies_RegisterHooks();
         }
     });
 }
