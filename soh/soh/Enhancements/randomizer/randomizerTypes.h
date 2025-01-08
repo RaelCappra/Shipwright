@@ -2838,6 +2838,7 @@ typedef enum {
     RT_DAMAGE_BOOST_SIMPLE,
     RT_HOVER_BOOST_SIMPLE,
     RT_BOMBCHU_BEEHIVES,
+    RT_BLUE_FIRE_MUD_WALLS,
     RT_KF_ADULT_GS,                            // -- location tricks
     RT_LW_BRIDGE,
     RT_LW_MIDO_BACKFLIP,
@@ -2883,6 +2884,7 @@ typedef enum {
     RT_GV_CRATE_HOVERS,
     RT_GF_KITCHEN,
     RT_GF_JUMP,
+    RT_GF_WARRIOR_WITH_DIFFICULT_WEAPON,
     RT_HW_BUNNY_CROSSING,
     RT_HW_CROSSING,
     RT_LENS_HW,
@@ -5803,6 +5805,7 @@ typedef enum {
     RE_WHITE_WOLFOS,
     RE_STINGER,
     RE_BIG_OCTO,
+    RE_GERUDO_WARRIOR,
     RE_GIBDO,
     RE_GANONDORF,
     RE_GANON,
