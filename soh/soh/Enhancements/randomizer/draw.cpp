@@ -295,18 +295,11 @@ extern "C" void Randomizer_DrawKeyRing(PlayState* play, GetItemEntry* getItemEnt
         } else  {
             gSPDisplayList(POLY_OPA_DISP++, (Gfx*)CustomKeysDLs[slot]);
         }
-        
-        Gfx_SetupDL_25Opa(play->state.gfxCtx);
 
         Color_RGB8 ringColor = { 255, 255, 255 };
         ringColor = CVarGetColor24(CVAR_COSMETIC("Key.KeyringRing.Value"), ringColor);
-        //RANDOTODO see why this fails, is the model set up for it?
         gDPSetEnvColor(POLY_OPA_DISP++, ringColor.r, ringColor.g, ringColor.b, 255);
-
-        /*gDPSetGrayscaleColor(POLY_OPA_DISP++, ringColor.r, ringColor.g, ringColor.b, 255);
-        gSPGrayscale(POLY_OPA_DISP++, true);
         gSPDisplayList(POLY_OPA_DISP++, (Gfx*)gKeyringRingDL);
-        gSPGrayscale(POLY_OPA_DISP++, false);*/
 
         Color_RGB8 iconColor = { 255, 0, 0 };
         iconColor = CVarGetColor24(SmallIconCvarValue[slot], iconColor);
