@@ -150,6 +150,7 @@ namespace SohGui {
             Notification::Emit({ .message = "Press - to access enhancements menu", .remainingTime = 10.0f });
 #else
             Notification::Emit({ .message = "Press F1 to access enhancements menu", .remainingTime = 10.0f });
+            Notification::Emit({ .message = "Press F2 to enable mouse controls", .remainingTime = 10.0f });
 #endif
         }
 
