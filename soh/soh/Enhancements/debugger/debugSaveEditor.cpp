@@ -18,6 +18,7 @@ extern "C" {
 #include "variables.h"
 #include "functions.h"
 #include "macros.h"
+#include "soh/cvar_prefixes.h"
 #include "soh/Enhancements/randomizer/adult_trade_shuffle.h"
 extern PlayState* gPlayState;
 
@@ -1132,7 +1133,7 @@ void DrawEquipmentTab() {
         "20",
         "30",
     };
-    DrawUpgrade("Sticks", UPG_STICKS, stickNames);
+    DrawUpgrade("Deku Stick Capacity", UPG_STICKS, stickNames);
 
     const std::vector<std::string> nutNames = {
         "None",
@@ -1140,7 +1141,7 @@ void DrawEquipmentTab() {
         "30",
         "40",
     };
-    DrawUpgrade("Deku Nuts", UPG_NUTS, nutNames);
+    DrawUpgrade("Deku Nut Capacity", UPG_NUTS, nutNames);
 }
 
 // Draws a toggleable icon for a quest item that is faded when disabled
@@ -1206,7 +1207,7 @@ void DrawQuestStatusTab() {
     ImGui::SameLine();
     DrawQuestItemButton(QUEST_GERUDO_CARD);
 
-    for (const SongMapEntry& entry : songMapping) {
+    for (const auto& [quest, entry] : songMapping) {
         if ((entry.id != QUEST_SONG_MINUET) && (entry.id != QUEST_SONG_LULLABY)) {
             ImGui::SameLine();
         }

@@ -9,6 +9,18 @@ project(Ship VERSION 8.0.6 LANGUAGES C CXX)
 include(CMake/soh-cvars.cmake)
 include(CMake/lus-cvars.cmake)
 
+option(SUPPRESS_WARNINGS "Suppress warnings in LUS and src (decomp)" ON)
+if(SUPPRESS_WARNINGS)
+    MESSAGE("Suppressing warnings in LUS and src")
+    if(MSVC)
+        set(WARNING_OVERRIDE /w)
+    else()
+        set(WARNING_OVERRIDE -w)
+    endif()
+else()
+    MESSAGE("Skipping warning suppression")
+endif()
+
 set(NATO_PHONETIC_ALPHABET
   "Alfa" "Bravo" "Charlie" "Delta" "Echo" "Foxtrot" "Golf" "Hotel"
   "India" "Juliett" "Kilo" "Lima" "Mike" "November" "Oscar" "Papa"
@@ -67,12 +79,14 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(VCPKG_TARGET_TRIPLET x64-windows-static)
 
     vcpkg_bootstrap()
-    vcpkg_install_packages(zlib bzip2 libzip libpng sdl2 sdl2-net glew glfw3 nlohmann-json tinyxml2 spdlog)
+    vcpkg_install_packages(zlib bzip2 libzip libpng sdl2 sdl2-net glew glfw3 nlohmann-json tinyxml2 spdlog libogg libvorbis)
 
     if (CMAKE_C_COMPILER_LAUNCHER MATCHES "ccache|sccache")
         set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded)
     endif()
 endif()
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
 
 ################################################################################
 # Set target arch type if empty. Visual studio solution generator provides it.
@@ -148,6 +162,7 @@ add_compile_definitions(CONTROLLERBUTTONS_T=uint32_t)
 # Sub-projects
 ################################################################################
 add_subdirectory(libultraship ${CMAKE_BINARY_DIR}/libultraship)
+target_compile_options(libultraship PRIVATE "${WARNING_OVERRIDE}")
 add_subdirectory(ZAPDTR/ZAPD ${CMAKE_BINARY_DIR}/ZAPD)
 add_subdirectory(OTRExporter)
 add_subdirectory(soh)
