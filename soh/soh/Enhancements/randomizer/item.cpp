@@ -340,7 +340,7 @@ std::shared_ptr<GetItemEntry> Item::GetGIEntry() const { // NOLINT(*-no-recursio
            break;
         case RG_PROGRESSIVE_BOMBCHUS:
             if (logic->CurrentInventory(ITEM_BOMBCHU) == ITEM_NONE) {
-                actual = RG_BOMBCHU_20;
+                actual = RG_BOMBCHU_BAG;
             } else if (infiniteUpgrades != RO_INF_UPGRADES_OFF) {
                 actual = RG_BOMBCHU_INF;
             } else {

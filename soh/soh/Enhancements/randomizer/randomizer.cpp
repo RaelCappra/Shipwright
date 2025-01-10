@@ -3341,7 +3341,7 @@ CustomMessage Randomizer::GetGoronMessage(u16 index) {
 void Randomizer::CreateCustomMessages() {
     // RANDTODO: Translate into french and german and replace GIMESSAGE_UNTRANSLATED
     // with GIMESSAGE(getItemID, itemID, english, german, french).
-    const std::array<GetItemMessage, 111> getItemMessages = {{
+    const std::array<GetItemMessage, 112> getItemMessages = {{
         GIMESSAGE(RG_GREG_RUPEE, ITEM_MASK_GORON, 
 			"You found %gGreg%w!",
 			"%gGreg%w! Du hast ihn wirklich gefunden!",
@@ -3740,6 +3740,9 @@ void Randomizer::CreateCustomMessages() {
         GIMESSAGE_NO_GERMAN(RG_FISHING_POLE, ITEM_FISHING_POLE,
             "You found a lost %rFishing Pole%w!&Time to hit the pond!",
             "Vous avez trouvé une %rCanne à pêche%w perdue!&Il est temps d'aller à l'étang!"),
+        GIMESSAGE_NO_GERMAN(RG_BOMBCHU_BAG, ITEM_BOMBCHU,
+            "You found the %rBombchu Bag%w!",
+            "!!!"),
         GIMESSAGE_NO_GERMAN(RG_BOMB_BAG_INF, ITEM_BOMB_BAG_40,
             "You got an %rInfinite Bomb Bag%w!&Now you have %yinfinite bombs%w!",
             "Vous avez obtenu un %rSac à bombes à l'infini%w!&Vous avez maintenant des %ybombes à l'infini%w!"),
@@ -4116,6 +4119,7 @@ extern "C" u16 Randomizer_Item_Give(PlayState* play, GetItemEntry giEntry) {
 
             break;
         case RG_PROGRESSIVE_BOMBCHUS:
+        case RG_BOMBCHU_BAG:
             if (INV_CONTENT(ITEM_BOMBCHU) == ITEM_NONE) {
                 INV_CONTENT(ITEM_BOMBCHU) = ITEM_BOMBCHU;
                 AMMO(ITEM_BOMBCHU) = 20;

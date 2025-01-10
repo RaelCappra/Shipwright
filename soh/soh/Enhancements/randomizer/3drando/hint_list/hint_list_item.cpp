@@ -2078,6 +2078,12 @@ void StaticData::HintTable_Init_Item() {
                                                }, {
                                                CustomMessage("a fish-puller", /*german*/"ein Fischzieher", /*french*/"(canne à pêche)")});
                                                 // /*spanish*/(caña de pescar)
+
+    hintTextTable[RHT_BOMBCHU_BAG] = HintText(CustomMessage("", /*german*/"!!!", /*french*/"!!!"),
+                                              {
+                                              CustomMessage("", /*german*/"!!!", /*french*/"!!!"),
+                                              }, {
+                                              CustomMessage("", /*german*/"!!!", /*french*/"!!!")});
   
     hintTextTable[RHT_QUIVER_INF] = HintText(CustomMessage("", /*german*/"!!!", /*french*/"!!!"),
                                              {
