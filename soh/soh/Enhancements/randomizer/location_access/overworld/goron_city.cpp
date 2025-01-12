@@ -12,14 +12,14 @@ void RegionTable_Init_GoronCity() {
         EventAccess(&logic->GoronCityChildFire,        []{return logic->GoronCityChildFire        || (logic->IsChild && logic->CanUse(RG_DINS_FIRE));}),
         EventAccess(&logic->GCWoodsWarpOpen,           []{return logic->GCWoodsWarpOpen           || (logic->BlastOrSmash() || logic->CanUse(RG_DINS_FIRE) || logic->CanUse(RG_FAIRY_BOW) || logic->HasItem(RG_GORONS_BRACELET) || logic->GoronCityChildFire);}),
         EventAccess(&logic->GCDaruniasDoorOpenChild,   []{return logic->GCDaruniasDoorOpenChild   || (logic->IsChild && logic->CanUse(RG_ZELDAS_LULLABY));}),
-        EventAccess(&logic->StopGCRollingGoronAsAdult, []{return logic->StopGCRollingGoronAsAdult || (logic->IsAdult && (logic->HasItem(RG_GORONS_BRACELET) || logic->HasExplosives() || logic->CanUse(RG_FAIRY_BOW) || (ctx->GetTrickOption(RT_GC_LINK_GORON_DINS) && logic->CanUse(RG_DINS_FIRE))));}),
+        EventAccess(&logic->StopGCRollingGoronAsAdult, []{return logic->StopGCRollingGoronAsAdult || (logic->IsAdult && (logic->HasItem(RG_GORONS_BRACELET) || logic->HasExplosives() || logic->CanUse(RG_FAIRY_BOW) || (ctx->GetTrickOption(RT_GC_LINK_GORON_DINS) && logic->CanUse(RG_DINS_FIRE))));}, true),
     }, {
         //Locations
         LOCATION(RC_GC_MAZE_LEFT_CHEST,                 logic->CanUse(RG_MEGATON_HAMMER) || logic->CanUse(RG_SILVER_GAUNTLETS) || (ctx->GetTrickOption(RT_GC_LEFTMOST) && logic->HasExplosives() && logic->CanUse(RG_HOVER_BOOTS))),
         LOCATION(RC_GC_MAZE_CENTER_CHEST,               logic->BlastOrSmash()  || logic->CanUse(RG_SILVER_GAUNTLETS)),
         LOCATION(RC_GC_MAZE_RIGHT_CHEST,                logic->BlastOrSmash()  || logic->CanUse(RG_SILVER_GAUNTLETS)),
         LOCATION_NNL(RC_GC_POT_FREESTANDING_POH,        logic->IsChild && logic->GoronCityChildFire && (logic->CanUse(RG_BOMB_BAG) || (logic->HasItem(RG_GORONS_BRACELET) && ctx->GetTrickOption(RT_GC_POT_STRENGTH)) || (logic->CanUse(RG_BOMBCHU_5) && ctx->GetTrickOption(RT_GC_POT)))),
-        LOCATION(RC_GC_ROLLING_GORON_AS_CHILD,          logic->IsChild && (logic->HasExplosives() || (logic->HasItem(RG_GORONS_BRACELET) && ctx->GetTrickOption(RT_GC_ROLLING_STRENGTH)))),
+        LOCATION_NNL(RC_GC_ROLLING_GORON_AS_CHILD,      logic->IsChild && (logic->HasExplosives() || (logic->HasItem(RG_GORONS_BRACELET) && ctx->GetTrickOption(RT_GC_ROLLING_STRENGTH)))),
         LOCATION_NNL(RC_GC_ROLLING_GORON_AS_ADULT,      logic->StopGCRollingGoronAsAdult),
         LOCATION(RC_GC_GS_BOULDER_MAZE,                 logic->IsChild && logic->BlastOrSmash()),
         LOCATION_NNL(RC_GC_GS_CENTER_PLATFORM,          logic->IsAdult && logic->CanAttack()),
@@ -103,7 +103,7 @@ void RegionTable_Init_GoronCity() {
         LOCATION_NNL(RC_GC_DEKU_SCRUB_GROTTO_LEFT,   logic->CanStunDeku()),
         LOCATION_NNL(RC_GC_DEKU_SCRUB_GROTTO_RIGHT,  logic->CanStunDeku()),
         LOCATION_NNL(RC_GC_DEKU_SCRUB_GROTTO_CENTER, logic->CanStunDeku()),
-        LOCATION(RC_GC_GROTTO_BEEHIVE,           logic->CanBreakUpperBeehives()),
+        LOCATION(RC_GC_GROTTO_BEEHIVE,               logic->CanBreakUpperBeehives()),
     }, {
         //Exits
         Entrance(RR_GC_GROTTO_PLATFORM, []{return true;}),
