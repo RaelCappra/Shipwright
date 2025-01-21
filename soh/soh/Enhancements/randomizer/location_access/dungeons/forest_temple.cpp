@@ -297,7 +297,7 @@ void RegionTable_Init_ForestTemple() {
     }, {
         //Exits
         Entrance(RR_FOREST_TEMPLE_LOBBY,         []{return true;}),
-        Entrance(RR_FOREST_TEMPLE_BOSS_ENTRYWAY, []{return logic->HasItem(RG_FOREST_TEMPLE_BOSS_KEY);}),
+        Entrance(RR_FOREST_TEMPLE_BOSS_ENTRYWAY, []{return logic->HasItem(RG_FOREST_TEMPLE_BOSS_KEY);}, true),
     });
 
 #pragma endregion
