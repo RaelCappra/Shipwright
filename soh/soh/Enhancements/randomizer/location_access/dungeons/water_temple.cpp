@@ -276,7 +276,7 @@ void RegionTable_Init_WaterTemple() {
     }, {
         //Exits
         Entrance(RR_WATER_TEMPLE_LOBBY,         []{return true;}),
-        Entrance(RR_WATER_TEMPLE_BOSS_ENTRYWAY, []{return logic->HasItem(RG_WATER_TEMPLE_BOSS_KEY);}),
+        Entrance(RR_WATER_TEMPLE_BOSS_ENTRYWAY, []{return logic->HasItem(RG_WATER_TEMPLE_BOSS_KEY);}, true),
     });
 
 #pragma endregion
@@ -364,7 +364,7 @@ void RegionTable_Init_WaterTemple() {
     areaTable[RR_WATER_TEMPLE_MQ_BOSS_DOOR] = Region("Water Temple MQ Main", "Water Temple", {RA_WATER_TEMPLE}, NO_DAY_NIGHT_CYCLE, {}, {}, {
         //Exits
         Entrance(RR_WATER_TEMPLE_MQ_3F_NORTH_LEDGE, []{return logic->CanUse(RG_ICE_ARROWS) || logic->TakeDamage();}),
-        Entrance(RR_WATER_TEMPLE_BOSS_ENTRYWAY,     []{return logic->HasItem(RG_WATER_TEMPLE_BOSS_KEY);}),
+        Entrance(RR_WATER_TEMPLE_BOSS_ENTRYWAY,     []{return logic->HasItem(RG_WATER_TEMPLE_BOSS_KEY);}, true),
     });
 
     areaTable[RR_WATER_TEMPLE_MQ_EAST_TOWER] = Region("Water Temple MQ East Tower", "Water Temple", {RA_WATER_TEMPLE}, NO_DAY_NIGHT_CYCLE, {
@@ -379,7 +379,7 @@ void RegionTable_Init_WaterTemple() {
         //Locations
         LOCATION(RC_WATER_TEMPLE_MQ_MAP_CHEST,           logic->MQWaterLevel(WL_HIGH) && logic->HasFireSource() && logic->CanUse(RG_HOOKSHOT)),
         //easy to get at WL_HIGH with the hook-the-underwater-chest glitch
-        LOCATION(RC_WATER_TEMPLE_MQ_LONGSHOT_CHEST,      logic->MQWaterLevel(WL_MID) && logic->CanUse(RG_HOOKSHOT)),
+        LOCATION_NNL(RC_WATER_TEMPLE_MQ_LONGSHOT_CHEST,  (logic->MQWaterLevel(WL_MID) || logic->IsNNL()) && logic->CanUse(RG_HOOKSHOT)),
         LOCATION(RC_WATER_TEMPLE_MQ_LOWER_TORCHES_POT_1, (logic->MQWaterLevel(WL_LOW) && logic->CanBreakPots()) || (logic->CanUse(RG_IRON_BOOTS) && logic->CanUse(RG_HOOKSHOT) && logic->WaterTimer() >= 16)),
         LOCATION(RC_WATER_TEMPLE_MQ_LOWER_TORCHES_POT_2, (logic->MQWaterLevel(WL_LOW) && logic->CanBreakPots()) || (logic->CanUse(RG_IRON_BOOTS) && logic->CanUse(RG_HOOKSHOT) && logic->WaterTimer() >= 16)),
     }, {
