@@ -8,7 +8,7 @@ void RegionTable_Init_Market() {
         //Exits
         Entrance(RR_HYRULE_FIELD,       []{return logic->IsAdult || logic->AtDay;}, true),
         Entrance(RR_THE_MARKET,         []{return true;}),
-        Entrance(RR_MARKET_GUARD_HOUSE, []{return logic->CanOpenOverworldDoor(RG_GUARD_HOUSE_KEY);}),
+        Entrance(RR_MARKET_GUARD_HOUSE, []{return logic->CanOpenOverworldDoor(RG_GUARD_HOUSE_KEY);}, true),
     });
 
     areaTable[RR_THE_MARKET] = Region("Market", "Market", {RA_THE_MARKET}, NO_DAY_NIGHT_CYCLE, {}, {}, {
@@ -16,21 +16,21 @@ void RegionTable_Init_Market() {
         Entrance(RR_MARKET_ENTRANCE,            []{return true;}),
         Entrance(RR_TOT_ENTRANCE,               []{return true;}),
         Entrance(RR_CASTLE_GROUNDS,             []{return true;}),
-        Entrance(RR_MARKET_BAZAAR,              []{return logic->IsChild && logic->AtDay && logic->CanOpenOverworldDoor(RG_MARKET_BAZAAR_KEY);}),
-        Entrance(RR_MARKET_MASK_SHOP,           []{return logic->IsChild && logic->AtDay && logic->CanOpenOverworldDoor(RG_MASK_SHOP_KEY);}),
-        Entrance(RR_MARKET_SHOOTING_GALLERY,    []{return logic->IsChild && logic->AtDay && logic->CanOpenOverworldDoor(RG_MARKET_SHOOTING_GALLERY_KEY);}),
-        Entrance(RR_MARKET_BOMBCHU_BOWLING,     []{return logic->IsChild && logic->CanOpenOverworldDoor(RG_BOMBCHU_BOWLING_KEY);}),
-        Entrance(RR_MARKET_TREASURE_CHEST_GAME, []{return logic->IsChild && logic->AtNight && logic->CanOpenOverworldDoor(RG_TREASURE_CHEST_GAME_BUILDING_KEY);}),
-        Entrance(RR_MARKET_POTION_SHOP,         []{return logic->IsChild && logic->AtDay && logic->CanOpenOverworldDoor(RG_MARKET_POTION_SHOP_KEY);}),
-        Entrance(RR_MARKET_BACK_ALLEY,          []{return logic->IsChild;}),
+        Entrance(RR_MARKET_BAZAAR,              []{return logic->IsChild && logic->AtDay && logic->CanOpenOverworldDoor(RG_MARKET_BAZAAR_KEY);}, true),
+        Entrance(RR_MARKET_MASK_SHOP,           []{return logic->IsChild && logic->AtDay && logic->CanOpenOverworldDoor(RG_MASK_SHOP_KEY);}, true),
+        Entrance(RR_MARKET_SHOOTING_GALLERY,    []{return logic->IsChild && logic->AtDay && logic->CanOpenOverworldDoor(RG_MARKET_SHOOTING_GALLERY_KEY);}, true),
+        Entrance(RR_MARKET_BOMBCHU_BOWLING,     []{return logic->IsChild && logic->CanOpenOverworldDoor(RG_BOMBCHU_BOWLING_KEY);}, true),
+        Entrance(RR_MARKET_TREASURE_CHEST_GAME, []{return logic->IsChild && logic->AtNight && logic->CanOpenOverworldDoor(RG_TREASURE_CHEST_GAME_BUILDING_KEY);}, true),
+        Entrance(RR_MARKET_POTION_SHOP,         []{return logic->IsChild && logic->AtDay && logic->CanOpenOverworldDoor(RG_MARKET_POTION_SHOP_KEY);}, true),
+        Entrance(RR_MARKET_BACK_ALLEY,          []{return logic->IsChild;}, true),
     });
 
     areaTable[RR_MARKET_BACK_ALLEY] = Region("Market Back Alley", "Market", {RA_THE_MARKET}, NO_DAY_NIGHT_CYCLE, {}, {}, {
         //Exits
         Entrance(RR_THE_MARKET,                []{return true;}),
-        Entrance(RR_MARKET_BOMBCHU_SHOP,       []{return logic->AtNight && logic->CanOpenOverworldDoor(RG_BOMBCHU_SHOP_KEY);}),
-        Entrance(RR_MARKET_DOG_LADY_HOUSE,     []{return logic->CanOpenOverworldDoor(RG_RICHARDS_HOUSE_KEY);}),
-        Entrance(RR_MARKET_MAN_IN_GREEN_HOUSE, []{return logic->AtNight && logic->CanOpenOverworldDoor(RG_ALLEY_HOUSE_KEY);}),
+        Entrance(RR_MARKET_BOMBCHU_SHOP,       []{return logic->AtNight && logic->CanOpenOverworldDoor(RG_BOMBCHU_SHOP_KEY);}, true),
+        Entrance(RR_MARKET_DOG_LADY_HOUSE,     []{return logic->CanOpenOverworldDoor(RG_RICHARDS_HOUSE_KEY);}, true),
+        Entrance(RR_MARKET_MAN_IN_GREEN_HOUSE, []{return logic->AtNight && logic->CanOpenOverworldDoor(RG_ALLEY_HOUSE_KEY);}, true),
     });
 
     areaTable[RR_MARKET_GUARD_HOUSE] = Region("Market Guard House", "Market Guard House", {}, NO_DAY_NIGHT_CYCLE, {
@@ -98,7 +98,7 @@ void RegionTable_Init_Market() {
         LOCATION_NNL(RC_MK_GUARD_HOUSE_ADULT_POT_11, logic->IsAdult && logic->CanBreakPots()),
     }, {
         //Exits
-        Entrance(RR_MARKET_ENTRANCE, []{return logic->CanOpenOverworldDoor(RG_GUARD_HOUSE_KEY);}),
+        Entrance(RR_MARKET_ENTRANCE, []{return logic->CanOpenOverworldDoor(RG_GUARD_HOUSE_KEY);}, true),
     });
 
     areaTable[RR_MARKET_BAZAAR] = Region("Market Bazaar", "Market Bazaar", {}, NO_DAY_NIGHT_CYCLE, {}, {
@@ -133,19 +133,19 @@ void RegionTable_Init_Market() {
         LOCATION_NNL(RC_MARKET_SHOOTING_GALLERY_REWARD, logic->IsChild && logic->HasItem(RG_CHILD_WALLET)),
     }, {
         //Exits
-        Entrance(RR_THE_MARKET, []{return logic->CanOpenOverworldDoor(RG_MARKET_SHOOTING_GALLERY_KEY);}),
+        Entrance(RR_THE_MARKET, []{return logic->CanOpenOverworldDoor(RG_MARKET_SHOOTING_GALLERY_KEY);}, true),
     });
 
     areaTable[RR_MARKET_BOMBCHU_BOWLING] = Region("Market Bombchu Bowling", "Market Bombchu Bowling", {}, NO_DAY_NIGHT_CYCLE, {
         //Events
-        EventAccess(&logic->CouldPlayBowling, []{return (logic->HasItem(RG_CHILD_WALLET));}, true),
+        EventAccess(&logic->CouldPlayBowling, []{return logic->HasItem(RG_CHILD_WALLET);}, true),
     }, {
         //Locations
         LOCATION_NNL(RC_MARKET_BOMBCHU_BOWLING_FIRST_PRIZE,  logic->CouldPlayBowling && logic->BombchusEnabled()),
         LOCATION_NNL(RC_MARKET_BOMBCHU_BOWLING_SECOND_PRIZE, logic->CouldPlayBowling && logic->BombchusEnabled()),
     }, {
         //Exits
-        Entrance(RR_THE_MARKET, []{return logic->CanOpenOverworldDoor(RG_BOMBCHU_BOWLING_KEY);}),
+        Entrance(RR_THE_MARKET, []{return logic->CanOpenOverworldDoor(RG_BOMBCHU_BOWLING_KEY);}, true),
     });
 
     areaTable[RR_MARKET_POTION_SHOP] = Region("Market Potion Shop", "Market Potion Shop", {}, NO_DAY_NIGHT_CYCLE, {}, {
@@ -179,7 +179,7 @@ void RegionTable_Init_Market() {
         LOCATION_NNL(RC_MARKET_TREASURE_CHEST_GAME_ITEM_5, logic->HasItem(RG_CHILD_WALLET) && ((ctx->GetOption(RSK_SHUFFLE_CHEST_MINIGAME).Is(RO_CHEST_GAME_SINGLE_KEYS) && logic->SmallKeys(RR_MARKET_TREASURE_CHEST_GAME, 5)) || (ctx->GetOption(RSK_SHUFFLE_CHEST_MINIGAME).Is(RO_CHEST_GAME_PACK) && logic->SmallKeys(RR_MARKET_TREASURE_CHEST_GAME, 1)) || (logic->CanUse(RG_LENS_OF_TRUTH) && !ctx->GetOption(RSK_SHUFFLE_CHEST_MINIGAME)))),
     }, {
         //Exits
-        Entrance(RR_THE_MARKET, []{return logic->CanOpenOverworldDoor(RG_TREASURE_CHEST_GAME_BUILDING_KEY);}),
+        Entrance(RR_THE_MARKET, []{return logic->CanOpenOverworldDoor(RG_TREASURE_CHEST_GAME_BUILDING_KEY);}, true),
     });
 
     areaTable[RR_MARKET_BOMBCHU_SHOP] = Region("Market Bombchu Shop", "Market Bombchu Shop", {}, NO_DAY_NIGHT_CYCLE, {}, {
@@ -202,7 +202,7 @@ void RegionTable_Init_Market() {
         LOCATION_NNL(RC_MARKET_LOST_DOG, logic->IsChild && logic->AtNight),
     }, {
         //Exits
-        Entrance(RR_MARKET_BACK_ALLEY, []{return logic->CanOpenOverworldDoor(RG_RICHARDS_HOUSE_KEY);}),
+        Entrance(RR_MARKET_BACK_ALLEY, []{return logic->CanOpenOverworldDoor(RG_RICHARDS_HOUSE_KEY);}, true),
     });
 
     areaTable[RR_MARKET_MAN_IN_GREEN_HOUSE] = Region("Market Man in Green House", "Market Man in Green House", {}, NO_DAY_NIGHT_CYCLE, {}, {
@@ -212,6 +212,6 @@ void RegionTable_Init_Market() {
         LOCATION(RC_MK_BACK_ALLEY_HOUSE_POT_3, logic->CanBreakPots()),
     }, {
         //Exits
-        Entrance(RR_MARKET_BACK_ALLEY, []{return logic->CanOpenOverworldDoor(RG_ALLEY_HOUSE_KEY);}),
+        Entrance(RR_MARKET_BACK_ALLEY, []{return logic->CanOpenOverworldDoor(RG_ALLEY_HOUSE_KEY);}, true),
     });
 }
