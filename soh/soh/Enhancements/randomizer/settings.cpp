@@ -127,6 +127,7 @@ void Settings::CreateOptions() {
     mOptions[RSK_GANONS_TRIALS] = Option::U8("Ganon's Trials", {"Skip", "Set Number", "Random Number"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("GanonTrial"), mOptionDescriptions[RSK_GANONS_TRIALS], WidgetType::Combobox, RO_GANONS_TRIALS_SET_NUMBER);
     mOptions[RSK_TRIAL_COUNT] = Option::U8("Ganon's Trials Count", {NumOpts(0, 6)}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("GanonTrialCount"), mOptionDescriptions[RSK_TRIAL_COUNT], WidgetType::Slider, 6, true);
     mOptions[RSK_STARTING_AGE] = Option::U8("Starting Age", {"Child", "Adult", "Random"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("StartingAge"), mOptionDescriptions[RSK_STARTING_AGE], WidgetType::Combobox, RO_AGE_CHILD);
+    mOptions[RSK_SELECTED_STARTING_AGE] = Option::U8("Selected Starting Age", {"Child", "Adult"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("SelectedStartingAge"), mOptionDescriptions[RSK_STARTING_AGE], WidgetType::Combobox, RO_AGE_CHILD);
     mOptions[RSK_SHUFFLE_ENTRANCES] = Option::Bool("Shuffle Entrances");
     mOptions[RSK_SHUFFLE_DUNGEON_ENTRANCES] = Option::U8("Dungeon Entrances", {"Off", "On", "On + Ganon"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("ShuffleDungeonsEntrances"), mOptionDescriptions[RSK_SHUFFLE_DUNGEON_ENTRANCES], WidgetType::Combobox, RO_DUNGEON_ENTRANCE_SHUFFLE_OFF);
     mOptions[RSK_SHUFFLE_BOSS_ENTRANCES] = Option::U8("Boss Entrances", {"Off", "Age Restricted", "Full"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("ShuffleBossEntrances"), mOptionDescriptions[RSK_SHUFFLE_BOSS_ENTRANCES], WidgetType::Combobox, RO_BOSS_ROOM_ENTRANCE_SHUFFLE_OFF);
@@ -249,6 +250,8 @@ void Settings::CreateOptions() {
     mOptions[RSK_KEYRINGS_BOTTOM_OF_THE_WELL] = Option::U8("Bottom of the Well Keyring", {"No", "Random", "Yes"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("ShuffleKeyRingsBottomOfTheWell"), "", WidgetType::TristateCheckbox, 0);
     mOptions[RSK_KEYRINGS_GTG] = Option::U8("Gerudo Training Ground Keyring", {"No", "Random", "Yes"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("ShuffleKeyRingsGTG"), "", WidgetType::TristateCheckbox, 0);
     mOptions[RSK_KEYRINGS_GANONS_CASTLE] = Option::U8("Ganon's Castle Keyring", {"No", "Random", "Yes"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("ShuffleKeyRingsGanonsCastle"), "", WidgetType::TristateCheckbox, 0);
+    //Dummied out due to redundancy with TimeSavers.SkipChildStealth until such a time that logic needs to consider child stealth e.g. because it's freestanding checks are added to freestanding shuffle.
+    //To undo this dummying, readd this setting to an OptionGroup so it appears in the UI, then edit the timesaver check hooks to look at this, and the timesaver setting to lock itself as needed.
     mOptions[RSK_SKIP_CHILD_STEALTH] = Option::Bool("Skip Child Stealth", {"Don't Skip", "Skip"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("SkipChildStealth"), mOptionDescriptions[RSK_SKIP_CHILD_STEALTH], WidgetType::Checkbox, RO_GENERIC_DONT_SKIP);
     mOptions[RSK_SKIP_CHILD_ZELDA] = Option::Bool("Skip Child Zelda", {"Don't Skip", "Skip"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("SkipChildZelda"), mOptionDescriptions[RSK_SKIP_CHILD_ZELDA], WidgetType::Checkbox, RO_GENERIC_DONT_SKIP);
     mOptions[RSK_SKIP_EPONA_RACE] = Option::Bool("Skip Epona Race", {"Don't Skip", "Skip"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("SkipEponaRace"), mOptionDescriptions[RSK_SKIP_EPONA_RACE], WidgetType::Checkbox, RO_GENERIC_DONT_SKIP);
@@ -256,7 +259,6 @@ void Settings::CreateOptions() {
     mOptions[RSK_BIG_POE_COUNT] = Option::U8("Big Poe Target Count", {NumOpts(1, 10)}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("BigPoeTargetCount"), mOptionDescriptions[RSK_BIG_POE_COUNT], WidgetType::Slider, 9);
     mOptions[RSK_CUCCO_COUNT] = Option::U8("Cuccos to return", {NumOpts(0, 7)}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("CuccosToReturn"), mOptionDescriptions[RSK_CUCCO_COUNT], WidgetType::Slider, 7);
     mOptions[RSK_COMPLETE_MASK_QUEST] = Option::Bool("Complete Mask Quest", CVAR_RANDOMIZER_SETTING("CompleteMaskQuest"), mOptionDescriptions[RSK_COMPLETE_MASK_QUEST]);
-    mOptions[RSK_ENABLE_GLITCH_CUTSCENES] = Option::Bool("Enable Glitch-Useful Cutscenes", CVAR_RANDOMIZER_SETTING("EnableGlitchCutscenes"), mOptionDescriptions[RSK_ENABLE_GLITCH_CUTSCENES]);
     mOptions[RSK_GOSSIP_STONE_HINTS] = Option::U8("Gossip Stone Hints", {"No Hints", "Need Nothing", "Mask of Truth", "Stone of Agony"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("GossipStoneHints"), mOptionDescriptions[RSK_GOSSIP_STONE_HINTS], WidgetType::Combobox, RO_GOSSIP_STONES_NEED_NOTHING, false, IMFLAG_NONE);
     mOptions[RSK_HINT_CLARITY] = Option::U8("Hint Clarity", {"Obscure", "Ambiguous", "Clear"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("HintClarity"), mOptionDescriptions[RSK_HINT_CLARITY], WidgetType::Combobox, RO_HINT_CLARITY_CLEAR, true, IMFLAG_INDENT);
     mOptions[RSK_HINT_DISTRIBUTION] = Option::U8("Hint Distribution", {"Useless", "Balanced", "Strong", "Very Strong"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("HintDistribution"), mOptionDescriptions[RSK_HINT_DISTRIBUTION], WidgetType::Combobox, RO_HINT_DIST_BALANCED, true, IMFLAG_UNINDENT);
@@ -315,7 +317,7 @@ void Settings::CreateOptions() {
     mOptions[RSK_STARTING_SKULLTULA_TOKEN] = Option::U8("Gold Skulltula Tokens", {NumOpts(0, 100)}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("StartingSkulltulaToken"), "", WidgetType::Slider);
     mOptions[RSK_STARTING_HEARTS] = Option::U8("Starting Hearts", {NumOpts(1, 20)}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("StartingHearts"), "", WidgetType::Slider, 2);
     // TODO: Remainder of Starting Items
-    mOptions[RSK_LOGIC_RULES] = Option::U8("Logic", {"Glitchless", "Glitched", "No Logic", "Vanilla"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("LogicRules"), mOptionDescriptions[RSK_LOGIC_RULES], WidgetType::Combobox, RO_LOGIC_GLITCHLESS);
+    mOptions[RSK_LOGIC_RULES] = Option::U8("Logic", {"Glitchless", "No Logic", "Vanilla"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("LogicRules"), mOptionDescriptions[RSK_LOGIC_RULES], WidgetType::Combobox, RO_LOGIC_GLITCHLESS);
     mOptions[RSK_ALL_LOCATIONS_REACHABLE] = Option::Bool("All Locations Reachable", {"Off", "On"}, OptionCategory::Setting, CVAR_RANDOMIZER_SETTING("AllLocationsReachable"), mOptionDescriptions[RSK_ALL_LOCATIONS_REACHABLE], WidgetType::Checkbox, RO_GENERIC_ON);
     mOptions[RSK_SKULLS_SUNS_SONG] = Option::Bool("Night Skulltula's Expect Sun's Song", CVAR_RANDOMIZER_SETTING("GsExpectSunsSong"), mOptionDescriptions[RSK_SKULLS_SUNS_SONG]);
     mOptions[RSK_DAMAGE_MULTIPLIER] = Option::U8("Damage Multiplier", {"x1/2", "x1", "x2", "x4", "x8", "x16", "OHKO"}, OptionCategory::Setting, "", "", WidgetType::Slider, RO_DAMAGE_MULTIPLIER_DEFAULT);
@@ -532,189 +534,18 @@ void Settings::CreateOptions() {
         &mOptions[RSK_SKULLS_SUNS_SONG],
     });
     // TODO: Exclude Locations Menus
-    mOptionGroups[RSG_TRICKS] = OptionGroup::SubGroup("Logical Tricks", {
-        &mTrickOptions[RT_VISIBLE_COLLISION],
-        &mTrickOptions[RT_GROTTOS_WITHOUT_AGONY],
-        &mTrickOptions[RT_FEWER_TUNIC_REQUIREMENTS],
-        &mTrickOptions[RT_RUSTED_SWITCHES],
-        &mTrickOptions[RT_FLAMING_CHESTS],
-        &mTrickOptions[RT_BUNNY_HOOD_JUMPS],
-        &mTrickOptions[RT_DAMAGE_BOOST_SIMPLE],
-        &mTrickOptions[RT_HOVER_BOOST_SIMPLE],
-        &mTrickOptions[RT_KF_ADULT_GS],
-        &mTrickOptions[RT_LW_BRIDGE],
-        &mTrickOptions[RT_LW_MIDO_BACKFLIP],
-        &mTrickOptions[RT_LW_GS_BEAN],
-        &mTrickOptions[RT_HC_STORMS_GS],
-        &mTrickOptions[RT_KAK_MAN_ON_ROOF],
-        &mTrickOptions[RT_KAK_TOWER_GS],
-        &mTrickOptions[RT_KAK_ADULT_WINDMILL_POH],
-        &mTrickOptions[RT_KAK_CHILD_WINDMILL_POH],
-        &mTrickOptions[RT_KAK_ROOFTOP_GS],
-        &mTrickOptions[RT_GY_POH],
-        &mTrickOptions[RT_GY_CHILD_DAMPE_RACE_POH],
-        &mTrickOptions[RT_GY_SHADOW_FIRE_ARROWS],
-        &mTrickOptions[RT_DMT_SOIL_GS],
-        &mTrickOptions[RT_DMT_BOMBABLE],
-        &mTrickOptions[RT_DMT_HOOKSHOT_LOWER_GS],
-        &mTrickOptions[RT_DMT_HOVERS_LOWER_GS],
-        &mTrickOptions[RT_DMT_BEAN_LOWER_GS],
-        &mTrickOptions[RT_DMT_JS_LOWER_GS],
-        &mTrickOptions[RT_DMT_CLIMB_HOVERS],
-        &mTrickOptions[RT_DMT_UPPER_GS],
-        &mTrickOptions[RT_DMT_BOLERO_BIGGORON],
-        &mTrickOptions[RT_GC_POT],
-        &mTrickOptions[RT_GC_POT_STRENGTH],
-        &mTrickOptions[RT_GC_ROLLING_STRENGTH],
-        &mTrickOptions[RT_GC_LEFTMOST],
-        &mTrickOptions[RT_GC_GROTTO],
-        &mTrickOptions[RT_GC_LINK_GORON_DINS],
-        &mTrickOptions[RT_DMC_HOVER_BEAN_POH],
-        &mTrickOptions[RT_DMC_BOLERO_JUMP],
-        &mTrickOptions[RT_DMC_BOULDER_JS],
-        &mTrickOptions[RT_DMC_BOULDER_SKIP],
-        &mTrickOptions[RT_ZR_LOWER],
-        &mTrickOptions[RT_ZR_UPPER],
-        &mTrickOptions[RT_ZR_HOVERS],
-        &mTrickOptions[RT_ZR_CUCCO],
-        &mTrickOptions[RT_ZD_KING_ZORA_SKIP],
-        &mTrickOptions[RT_ZD_GS],
-        &mTrickOptions[RT_ZF_GREAT_FAIRY_WITHOUT_EXPLOSIVES],
-        &mTrickOptions[RT_LH_LAB_WALL_GS],
-        &mTrickOptions[RT_LH_LAB_DIVING],
-        &mTrickOptions[RT_LH_WATER_HOOKSHOT],
-        &mTrickOptions[RT_GV_CRATE_HOVERS],
-        &mTrickOptions[RT_GF_KITCHEN],
-        &mTrickOptions[RT_GF_JUMP],
-        &mTrickOptions[RT_HW_BUNNY_CROSSING],
-        &mTrickOptions[RT_HW_CROSSING],
-        &mTrickOptions[RT_LENS_HW],
-        &mTrickOptions[RT_HW_REVERSE],
-        &mTrickOptions[RT_COLOSSUS_GS],
-        &mTrickOptions[RT_DEKU_BASEMENT_GS],
-        &mTrickOptions[RT_DEKU_B1_SKIP],
-        &mTrickOptions[RT_DEKU_B1_BOW_WEBS],
-        &mTrickOptions[RT_DEKU_B1_BACKFLIP_OVER_SPIKED_LOG],
-        &mTrickOptions[RT_DEKU_MQ_COMPASS_GS],
-        &mTrickOptions[RT_DEKU_MQ_LOG],
-        &mTrickOptions[RT_DC_SCARECROW_GS],
-        &mTrickOptions[RT_DC_VINES_GS],
-        &mTrickOptions[RT_DC_STAIRCASE],
-        &mTrickOptions[RT_DC_SLINGSHOT_SKIP],
-        &mTrickOptions[RT_DC_SCRUB_ROOM],
-        &mTrickOptions[RT_DC_JUMP],
-        &mTrickOptions[RT_DC_HAMMER_FLOOR],
-        &mTrickOptions[RT_DC_MQ_CHILD_BOMBS],
-        &mTrickOptions[RT_DC_MQ_CHILD_EYES],
-        &mTrickOptions[RT_DC_MQ_ADULT_EYES],
-        &mTrickOptions[RT_JABU_ALCOVE_JUMP_DIVE],
-        &mTrickOptions[RT_JABU_BOSS_HOVER],
-        &mTrickOptions[RT_JABU_NEAR_BOSS_RANGED],
-        &mTrickOptions[RT_JABU_NEAR_BOSS_EXPLOSIVES],
-        &mTrickOptions[RT_LENS_JABU_MQ],
-        &mTrickOptions[RT_JABU_MQ_RANG_JUMP],
-        &mTrickOptions[RT_JABU_MQ_SOT_GS],
-        &mTrickOptions[RT_LENS_BOTW],
-        &mTrickOptions[RT_BOTW_CHILD_DEADHAND],
-        &mTrickOptions[RT_BOTW_BASEMENT],
-        &mTrickOptions[RT_BOTW_MQ_PITS],
-        &mTrickOptions[RT_BOTW_MQ_DEADHAND_KEY],
-        &mTrickOptions[RT_FOREST_FIRST_GS],
-        &mTrickOptions[RT_FOREST_OUTDOORS_EAST_GS],
-        &mTrickOptions[RT_FOREST_VINES],
-        &mTrickOptions[RT_FOREST_OUTDOORS_LEDGE],
-        &mTrickOptions[RT_FOREST_DOORFRAME],
-        &mTrickOptions[RT_FOREST_OUTSIDE_BACKDOOR],
-        &mTrickOptions[RT_FOREST_OUTDOORS_HEARTS_BOOMERANG],
-        &mTrickOptions[RT_FOREST_MQ_WELL_SWIM],
-        &mTrickOptions[RT_FOREST_MQ_BLOCK_PUZZLE],
-        &mTrickOptions[RT_FOREST_MQ_JS_HALLWAY_SWITCH],
-        &mTrickOptions[RT_FOREST_MQ_HOOKSHOT_HALLWAY_SWITCH],
-        &mTrickOptions[RT_FOREST_MQ_RANG_HALLWAY_SWITCH],
-        &mTrickOptions[RT_FIRE_BOSS_DOOR_JUMP],
-        &mTrickOptions[RT_FIRE_SOT],
-        &mTrickOptions[RT_FIRE_STRENGTH],
-        &mTrickOptions[RT_FIRE_SCARECROW],
-        &mTrickOptions[RT_FIRE_FLAME_MAZE],
-        &mTrickOptions[RT_FIRE_MQ_NEAR_BOSS],
-        &mTrickOptions[RT_FIRE_MQ_BLOCKED_CHEST],
-        &mTrickOptions[RT_FIRE_MQ_BK_CHEST],
-        &mTrickOptions[RT_FIRE_MQ_CLIMB],
-        &mTrickOptions[RT_FIRE_MQ_MAZE_SIDE_ROOM],
-        &mTrickOptions[RT_FIRE_MQ_MAZE_HOVERS],
-        &mTrickOptions[RT_FIRE_MQ_MAZE_JUMP],
-        &mTrickOptions[RT_FIRE_MQ_ABOVE_MAZE_GS],
-        &mTrickOptions[RT_FIRE_MQ_FLAME_MAZE],
-        &mTrickOptions[RT_WATER_LONGSHOT_TORCH],
-        &mTrickOptions[RT_WATER_CRACKED_WALL_HOVERS],
-        &mTrickOptions[RT_WATER_CRACKED_WALL],
-        &mTrickOptions[RT_WATER_BK_REGION],
-        &mTrickOptions[RT_WATER_NORTH_BASEMENT_LEDGE_JUMP],
-        &mTrickOptions[RT_WATER_BK_JUMP_DIVE],
-        &mTrickOptions[RT_WATER_FW_CENTRAL_GS],
-        &mTrickOptions[RT_WATER_IRONS_CENTRAL_GS],
-        &mTrickOptions[RT_WATER_CENTRAL_BOW],
-        &mTrickOptions[RT_WATER_HOOKSHOT_FALLING_PLATFORM_GS],
-        &mTrickOptions[RT_WATER_RANG_FALLING_PLATFORM_GS],
-        &mTrickOptions[RT_WATER_RIVER_GS],
-        &mTrickOptions[RT_WATER_DRAGON_JUMP_DIVE],
-        &mTrickOptions[RT_WATER_ADULT_DRAGON],
-        &mTrickOptions[RT_WATER_CHILD_DRAGON],
-        &mTrickOptions[RT_WATER_MQ_CENTRAL_PILLAR],
-        &mTrickOptions[RT_WATER_MQ_LOCKED_GS],
-        &mTrickOptions[RT_LENS_SHADOW],
-        &mTrickOptions[RT_LENS_SHADOW_PLATFORM],
-        &mTrickOptions[RT_LENS_BONGO],
-        &mTrickOptions[RT_SHADOW_UMBRELLA],
-        &mTrickOptions[RT_SHADOW_UMBRELLA_GS],
-        &mTrickOptions[RT_SHADOW_FREESTANDING_KEY],
-        &mTrickOptions[RT_SHADOW_STATUE],
-        &mTrickOptions[RT_SHADOW_BONGO],
-        &mTrickOptions[RT_LENS_SHADOW_MQ],
-        &mTrickOptions[RT_LENS_SHADOW_MQ_INVISIBLE_BLADES],
-        &mTrickOptions[RT_LENS_SHADOW_MQ_PLATFORM],
-        &mTrickOptions[RT_LENS_SHADOW_MQ_DEADHAND],
-        &mTrickOptions[RT_SHADOW_MQ_GAP],
-        &mTrickOptions[RT_SHADOW_MQ_INVISIBLE_BLADES],
-        &mTrickOptions[RT_SHADOW_MQ_HUGE_PIT],
-        &mTrickOptions[RT_SHADOW_MQ_WINDY_WALKWAY],
-        &mTrickOptions[RT_LENS_SPIRIT],
-        &mTrickOptions[RT_SPIRIT_CHILD_CHU],
-        &mTrickOptions[RT_SPIRIT_LOBBY_GS],
-        &mTrickOptions[RT_SPIRIT_LOWER_ADULT_SWITCH],
-        &mTrickOptions[RT_SPIRIT_LOBBY_JUMP],
-        &mTrickOptions[RT_SPIRIT_PLATFORM_HOOKSHOT],
-        &mTrickOptions[RT_SPIRIT_MAP_CHEST],
-        &mTrickOptions[RT_SPIRIT_SUN_CHEST],
-        &mTrickOptions[RT_SPIRIT_WALL],
-        &mTrickOptions[RT_LENS_SPIRIT_MQ],
-        &mTrickOptions[RT_SPIRIT_MQ_SUN_BLOCK_SOT],
-        &mTrickOptions[RT_SPIRIT_MQ_SUN_BLOCK_GS],
-        &mTrickOptions[RT_SPIRIT_MQ_LOWER_ADULT],
-        &mTrickOptions[RT_SPIRIT_MQ_FROZEN_EYE],
-        &mTrickOptions[RT_ICE_BLOCK_GS],
-        &mTrickOptions[RT_ICE_MQ_RED_ICE_GS],
-        &mTrickOptions[RT_ICE_MQ_SCARECROW],
-        &mTrickOptions[RT_LENS_GTG],
-        &mTrickOptions[RT_GTG_WITHOUT_HOOKSHOT],
-        &mTrickOptions[RT_GTG_FAKE_WALL],
-        &mTrickOptions[RT_LENS_GTG_MQ],
-        &mTrickOptions[RT_GTG_MQ_WITH_HOOKSHOT],
-        &mTrickOptions[RT_GTG_MQ_WIHTOUT_HOOKSHOT],
-        &mTrickOptions[RT_LENS_GANON],
-        &mTrickOptions[RT_GANON_SPIRIT_TRIAL_HOOKSHOT],
-        &mTrickOptions[RT_LENS_GANON_MQ],
-        &mTrickOptions[RT_GANON_MQ_FIRE_TRIAL],
-        &mTrickOptions[RT_GANON_MQ_SHADOW_TRIAL],
-        &mTrickOptions[RT_GANON_MQ_LIGHT_TRIAL],
-    });
+    mTricksByArea.clear();
+    std::vector<Option*> tricksOption;
+    tricksOption.reserve(mTrickOptions.size());
     for (int i = 0; i < RT_MAX; i++) {
-        auto& trick = mTrickOptions[i];
-        if (!trick.GetName().empty()) {
-            mTrickNameToEnum[std::string(trick.GetName())] = static_cast<RandomizerTrick>(i);
+        auto trick = &mTrickOptions[i];
+        if (!trick->GetName().empty()) {
+            tricksOption.push_back(trick);
+            mTrickNameToEnum[std::string(trick->GetName())] = static_cast<RandomizerTrick>(i);
+            mTricksByArea[trick->GetArea()].push_back(static_cast<RandomizerTrick>(i));
         }
-        mTricksByArea[trick.GetArea()].push_back(static_cast<RandomizerTrick>(i));
     }
+    mOptionGroups[RSG_TRICKS] = OptionGroup::SubGroup("Logical Tricks", tricksOption);
     // TODO: Glitches
     mOptionGroups[RSG_AREA_ACCESS_IMGUI] = OptionGroup::SubGroup("Area Access", {
         &mOptions[RSK_FOREST],
@@ -875,7 +706,6 @@ void Settings::CreateOptions() {
     mOptionGroups[RSG_TIMESAVERS_IMGUI] = OptionGroup::SubGroup("Timesavers", {
         &mOptions[RSK_CUCCO_COUNT],
         &mOptions[RSK_BIG_POE_COUNT],
-        &mOptions[RSK_SKIP_CHILD_STEALTH],
         &mOptions[RSK_SKIP_CHILD_ZELDA],
         &mOptions[RSK_SKIP_EPONA_RACE],
         &mOptions[RSK_COMPLETE_MASK_QUEST],
@@ -1149,14 +979,12 @@ void Settings::CreateOptions() {
         &mOptionGroups[RSG_STARTING_OTHER],
     }, OptionGroupType::DEFAULT);
     mOptionGroups[RSG_TIMESAVERS] = OptionGroup("Timesaver Settings", {
-        &mOptions[RSK_SKIP_CHILD_STEALTH],
         &mOptions[RSK_SKIP_CHILD_ZELDA],
         &mOptions[RSK_SKIP_EPONA_RACE],
         &mOptions[RSK_SKIP_SCARECROWS_SONG],
         &mOptions[RSK_BIG_POE_COUNT],
         &mOptions[RSK_CUCCO_COUNT],
         &mOptions[RSK_COMPLETE_MASK_QUEST],
-        &mOptions[RSK_ENABLE_GLITCH_CUTSCENES],
     });
     mOptionGroups[RSG_MISC] = OptionGroup("Miscellaneous Settings", {
         &mOptions[RSK_GOSSIP_STONE_HINTS],
@@ -1329,11 +1157,6 @@ std::vector<Option *>& Settings::GetExcludeOptionsForArea(const RandomizerCheckA
 const std::vector<std::vector<Option *>>& Settings::GetExcludeLocationsOptions() const {
     return mExcludeLocationsOptionsAreas;
 }
-
-RandoOptionStartingAge Settings::ResolvedStartingAge() const {
-    return mResolvedStartingAge;
-}
-
 RandoOptionLACSCondition Settings::LACSCondition() const {
     return mLACSCondition;
 }
@@ -2370,12 +2193,12 @@ void Settings::FinalizeSettings(const std::set<RandomizerCheck>& excludedLocatio
 
     if (mOptions[RSK_STARTING_AGE].Is(RO_AGE_RANDOM)) {
         if (const uint32_t choice = Random(0, 2); choice == 0) {
-            mResolvedStartingAge = RO_AGE_CHILD;
+            mOptions[RSK_SELECTED_STARTING_AGE].SetContextIndex(RO_AGE_CHILD);
         } else {
-            mResolvedStartingAge = RO_AGE_ADULT;
+            mOptions[RSK_SELECTED_STARTING_AGE].SetContextIndex(RO_AGE_ADULT);
         }
     } else {
-        mResolvedStartingAge = static_cast<RandoOptionStartingAge>(mOptions[RSK_STARTING_AGE].GetContextOptionIndex());
+        mOptions[RSK_SELECTED_STARTING_AGE].SetContextIndex(mOptions[RSK_STARTING_AGE].GetContextOptionIndex());
     }
 
     // TODO: Random Starting Time

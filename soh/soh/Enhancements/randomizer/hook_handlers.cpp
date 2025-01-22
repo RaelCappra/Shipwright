@@ -56,7 +56,6 @@ extern "C" {
 #include "src/overlays/actors/ovl_En_Xc/z_en_xc.h"
 #include "src/overlays/actors/ovl_Fishing/z_fishing.h"
 #include "src/overlays/actors/ovl_En_Mk/z_en_mk.h"
-#include "src/overlays/actors/ovl_En_Door/z_en_door.h"
 #include "adult_trade_shuffle.h"
 #include "draw.h"
 
@@ -279,6 +278,7 @@ void RandomizerOnPlayerUpdateForRCQueueHandler() {
     if (loc->HasObtained()) {
         SPDLOG_INFO("RC {} already obtained, skipping", static_cast<uint32_t>(rc));
     } else {
+        iceTrapScale = 0.0f;
         randomizerQueuedCheck = rc;
         randomizerQueuedItemEntry = getItemEntry;
         SPDLOG_INFO("Queueing Item mod {} item {} from RC {}", getItemEntry.modIndex, getItemEntry.itemId, static_cast<uint32_t>(rc));
@@ -406,7 +406,8 @@ void EnItem00_DrawRandomizedItem(EnItem00* enItem00, PlayState* play) {
     f32 mtxScale = CVarGetFloat(CVAR_ENHANCEMENT("TimeSavers.SkipGetItemAnimationScale"), 10.0f);
     Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
     GetItemEntry randoItem = enItem00->itemEntry;
-    if (CVarGetInteger(CVAR_RANDOMIZER_ENHANCEMENT("MysteriousShuffle"), 0)) {
+    if (CVarGetInteger(CVAR_RANDOMIZER_ENHANCEMENT("MysteriousShuffle"), 0) &&
+        enItem00->actor.params != ITEM00_SOH_GIVE_ITEM_ENTRY) {
         randoItem = GET_ITEM_MYSTERY;
     }
     EnItem00_CustomItemsParticles(&enItem00->actor, play, randoItem);
@@ -1011,7 +1012,7 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
                     Item_Give(gPlayState, item00->itemEntry.itemId);
                 } else if (item00->itemEntry.modIndex == MOD_RANDOMIZER) {
                     if (item00->itemEntry.getItemId == RG_ICE_TRAP) {
-                        gSaveContext.pendingIceTrapCount++;
+                        gSaveContext.ship.pendingIceTrapCount++;
                     } else {
                         Randomizer_Item_Give(gPlayState, item00->itemEntry);
                     }
@@ -1113,7 +1114,7 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
                 enJs->actor.parent = NULL;
                 enJs->actor.textId = TEXT_CARPET_SALESMAN_ARMS_DEALER;
                 enJs->actionFunc = (EnJsActionFunc)func_80A890C0;
-                enJs->actor.flags |= ACTOR_FLAG_WILL_TALK;
+                enJs->actor.flags |= ACTOR_FLAG_TALK_OFFER_AUTO_ACCEPTED;
                 Flags_SetRandomizerInf(RAND_INF_MERCHANTS_CARPET_SALESMAN);
                 *should = true;
             }
@@ -1196,7 +1197,7 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
             Flags_SetItemGetInf(ITEMGETINF_30);
             granny->actor.textId = 0x504F;
             granny->actionFunc = (EnDsActionFunc)EnDs_TalkAfterGiveOddPotion;
-            granny->actor.flags &= ~ACTOR_FLAG_PLAYER_TALKED_TO;
+            granny->actor.flags &= ~ACTOR_FLAG_TALK;
             *should = false;
             break;
         }
@@ -1418,14 +1419,6 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
             }
             break;
         }
-        case VB_CONSUME_SMALL_KEY: {
-            EnDoor* enDoor = va_arg(args, EnDoor*);
-            if (enDoor->randomizerInf >= RAND_INF_GUARD_HOUSE_UNLOCKED && enDoor->randomizerInf <= RAND_INF_FISHING_HOLE_KEY_OBTAINED) {
-                Flags_SetRandomizerInf(enDoor->randomizerInf);
-                *should = false;
-            }
-            break;
-        }
         case VB_GERUDOS_BE_FRIENDLY: {
             *should = CHECK_QUEST_ITEM(QUEST_GERUDO_CARD);
             break;
@@ -1594,7 +1587,7 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
         case VB_TRADE_TIMER_EYEDROPS:{
             EnMk* enMk = va_arg(args, EnMk*);
             Flags_SetRandomizerInf(RAND_INF_ADULT_TRADES_LH_TRADE_FROG);
-            enMk->actor.flags &= ~ACTOR_FLAG_WILL_TALK;
+            enMk->actor.flags &= ~ACTOR_FLAG_TALK_OFFER_AUTO_ACCEPTED;
             enMk->actionFunc = EnMk_Wait;
             enMk->flags |= 1;
             *should = false;
@@ -1640,17 +1633,9 @@ void RandomizerOnVanillaBehaviorHandler(GIVanillaBehavior id, bool* should, va_l
             }
             break;
         }
-        case VB_NOT_HAVE_SMALL_KEY: {
-            EnDoor* enDoor = va_arg(args, EnDoor*);
-            if (enDoor->randomizerInf >= RAND_INF_GUARD_HOUSE_UNLOCKED && enDoor->randomizerInf <= RAND_INF_FISHING_HOLE_KEY_OBTAINED) {
-                *should = !Flags_GetRandomizerInf((RandomizerInf)(enDoor->randomizerInf + 1));
-            }
-            break;
-        }
-        case VB_DOOR_BE_LOCKED: {
-            EnDoor* enDoor = va_arg(args, EnDoor*);
-            if (enDoor->randomizerInf >= RAND_INF_GUARD_HOUSE_UNLOCKED && enDoor->randomizerInf <= RAND_INF_FISHING_HOLE_KEY_OBTAINED) {
-                *should = !Flags_GetRandomizerInf(enDoor->randomizerInf);
+        case VB_HEALTH_METER_BE_CRITICAL: {
+            if (gSaveContext.health == gSaveContext.healthCapacity) {
+                *should = false;
             }
             break;
         }
@@ -1869,77 +1854,6 @@ void ObjComb_RandomizerWait(ObjComb* objComb, PlayState* play) {
     }    
 }
 
-using SceneDoorParamsPair = std::pair<int, int>;
-std::map<SceneDoorParamsPair, RandomizerInf> lookupTable = {
-    {{ SCENE_MARKET_ENTRANCE_DAY, 447 },         RAND_INF_GUARD_HOUSE_UNLOCKED },
-    {{ SCENE_MARKET_ENTRANCE_NIGHT, 447 },       RAND_INF_GUARD_HOUSE_UNLOCKED },
-    {{ SCENE_MARKET_ENTRANCE_RUINS, 447 },       RAND_INF_GUARD_HOUSE_UNLOCKED },
-    {{ SCENE_MARKET_GUARD_HOUSE, 447 },          RAND_INF_GUARD_HOUSE_UNLOCKED },
-    {{ SCENE_MARKET_DAY, 4543 },                 RAND_INF_MARKET_BAZAAR_UNLOCKED },
-    {{ SCENE_MARKET_NIGHT, 4753 },               RAND_INF_MARKET_BAZAAR_UNLOCKED },
-    {{ SCENE_MARKET_DAY, 1471 },                 RAND_INF_MARKET_POTION_SHOP_UNLOCKED },
-    {{ SCENE_MARKET_NIGHT, 1678 },               RAND_INF_MARKET_POTION_SHOP_UNLOCKED },
-    {{ SCENE_MARKET_DAY, 3519 },                 RAND_INF_MASK_SHOP_UNLOCKED },
-    {{ SCENE_MARKET_NIGHT, 3728 },               RAND_INF_MASK_SHOP_UNLOCKED },
-    {{ SCENE_MARKET_DAY, 2495 },                 RAND_INF_MARKET_SHOOTING_GALLERY_UNLOCKED },
-    {{ SCENE_MARKET_NIGHT, 2703 },               RAND_INF_MARKET_SHOOTING_GALLERY_UNLOCKED },
-    {{ SCENE_SHOOTING_GALLERY, 447 },            RAND_INF_MARKET_SHOOTING_GALLERY_UNLOCKED },
-    {{ SCENE_MARKET_DAY, 5567 },                 RAND_INF_BOMBCHU_BOWLING_UNLOCKED },
-    {{ SCENE_MARKET_NIGHT, 5567 },               RAND_INF_BOMBCHU_BOWLING_UNLOCKED },
-    {{ SCENE_BOMBCHU_BOWLING_ALLEY, 447 },       RAND_INF_BOMBCHU_BOWLING_UNLOCKED },
-    {{ SCENE_MARKET_DAY, 653 },                  RAND_INF_TREASURE_CHEST_GAME_BUILDING_UNLOCKED },
-    {{ SCENE_MARKET_NIGHT, 447 },                RAND_INF_TREASURE_CHEST_GAME_BUILDING_UNLOCKED },
-    {{ SCENE_TREASURE_BOX_SHOP, 6591 },          RAND_INF_TREASURE_CHEST_GAME_BUILDING_UNLOCKED },
-    {{ SCENE_BACK_ALLEY_DAY, 2689 },             RAND_INF_BOMBCHU_SHOP_UNLOCKED },
-    {{ SCENE_BACK_ALLEY_NIGHT, 2495 },           RAND_INF_BOMBCHU_SHOP_UNLOCKED },
-    {{ SCENE_BACK_ALLEY_DAY, 447 },              RAND_INF_RICHARDS_HOUSE_UNLOCKED },
-    {{ SCENE_BACK_ALLEY_NIGHT, 447 },            RAND_INF_RICHARDS_HOUSE_UNLOCKED },
-    {{ SCENE_DOG_LADY_HOUSE, 447 },              RAND_INF_RICHARDS_HOUSE_UNLOCKED },
-    {{ SCENE_DOG_LADY_HOUSE, 447 },              RAND_INF_RICHARDS_HOUSE_UNLOCKED },
-    {{ SCENE_BACK_ALLEY_HOUSE, 447 },            RAND_INF_ALLEY_HOUSE_UNLOCKED },
-    {{ SCENE_BACK_ALLEY_DAY, 1665 },             RAND_INF_ALLEY_HOUSE_UNLOCKED },
-    {{ SCENE_BACK_ALLEY_NIGHT, 1471 },           RAND_INF_ALLEY_HOUSE_UNLOCKED },
-    {{ SCENE_KAKARIKO_VILLAGE, 6801 },           RAND_INF_KAK_BAZAAR_UNLOCKED }, // Adult Night
-    {{ SCENE_KAKARIKO_VILLAGE, 6591 },           RAND_INF_KAK_BAZAAR_UNLOCKED }, // Adult Day
-    {{ SCENE_KAKARIKO_VILLAGE, 6813 },           RAND_INF_KAK_BAZAAR_UNLOCKED }, // Child Day
-    {{ SCENE_KAKARIKO_VILLAGE, 6814 },           RAND_INF_KAK_BAZAAR_UNLOCKED }, // Child Night
-    {{ SCENE_KAKARIKO_VILLAGE, 8871 },           RAND_INF_KAK_POTION_SHOP_UNLOCKED }, // Child Day/Night Rear
-    {{ SCENE_KAKARIKO_VILLAGE, 8846 },           RAND_INF_KAK_POTION_SHOP_UNLOCKED }, // Adult Night Rear
-    {{ SCENE_KAKARIKO_VILLAGE, 8639 },           RAND_INF_KAK_POTION_SHOP_UNLOCKED }, // Adult Day Rear
-    {{ SCENE_KAKARIKO_VILLAGE, 7822 },           RAND_INF_KAK_POTION_SHOP_UNLOCKED }, // Adult Night
-    {{ SCENE_KAKARIKO_VILLAGE, 7615 },           RAND_INF_KAK_POTION_SHOP_UNLOCKED }, // Child Day/Night and Adult Day
-    {{ SCENE_KAKARIKO_VILLAGE, 2495 },           RAND_INF_BOSS_HOUSE_UNLOCKED },
-    {{ SCENE_KAKARIKO_CENTER_GUEST_HOUSE, 447 }, RAND_INF_BOSS_HOUSE_UNLOCKED },
-    {{ SCENE_KAKARIKO_VILLAGE, 3750 },           RAND_INF_GRANNYS_POTION_SHOP_UNLOCKED }, // Child
-    {{ SCENE_KAKARIKO_VILLAGE, 3519 },           RAND_INF_GRANNYS_POTION_SHOP_UNLOCKED }, // Adult
-    {{ SCENE_POTION_SHOP_GRANNY, 447 },          RAND_INF_GRANNYS_POTION_SHOP_UNLOCKED },
-    {{ SCENE_KAKARIKO_VILLAGE, 5567 },           RAND_INF_SKULLTULA_HOUSE_UNLOCKED },
-    {{ SCENE_HOUSE_OF_SKULLTULA, 447 },          RAND_INF_SKULLTULA_HOUSE_UNLOCKED },
-    {{ SCENE_KAKARIKO_VILLAGE, 1471 },           RAND_INF_IMPAS_HOUSE_UNLOCKED },
-    {{ SCENE_IMPAS_HOUSE, 447 },                 RAND_INF_IMPAS_HOUSE_UNLOCKED },
-    {{ SCENE_KAKARIKO_VILLAGE, 447 },            RAND_INF_WINDMILL_UNLOCKED },
-    {{ SCENE_WINDMILL_AND_DAMPES_GRAVE, 2495 },  RAND_INF_WINDMILL_UNLOCKED },
-    {{ SCENE_KAKARIKO_VILLAGE, 4543 },           RAND_INF_KAK_SHOOTING_GALLERY_UNLOCKED }, // Day
-    {{ SCENE_KAKARIKO_VILLAGE, 4751 },           RAND_INF_KAK_SHOOTING_GALLERY_UNLOCKED }, // Night
-    {{ SCENE_SHOOTING_GALLERY, 447 },            RAND_INF_KAK_SHOOTING_GALLERY_UNLOCKED },
-    {{ SCENE_GRAVEYARD, 645 },                   RAND_INF_DAMPES_HUT_UNLOCKED }, // Child Day
-    {{ SCENE_GRAVEYARD, 447 },                   RAND_INF_DAMPES_HUT_UNLOCKED }, // Child Evening & Adult
-    {{ SCENE_GRAVEYARD, 774 },                   RAND_INF_DAMPES_HUT_UNLOCKED }, // Child Night (After Dampes Tour)
-    {{ SCENE_GRAVEKEEPERS_HUT, 447 },            RAND_INF_DAMPES_HUT_UNLOCKED },
-    {{ SCENE_LON_LON_RANCH, 2495 },              RAND_INF_TALONS_HOUSE_UNLOCKED },
-    {{ SCENE_LON_LON_RANCH, 2473 },              RAND_INF_TALONS_HOUSE_UNLOCKED },
-    {{ SCENE_LON_LON_RANCH, 2729 },              RAND_INF_TALONS_HOUSE_UNLOCKED },
-    {{ SCENE_LON_LON_BUILDINGS, 1471 },          RAND_INF_TALONS_HOUSE_UNLOCKED },
-    {{ SCENE_LON_LON_RANCH, 1471 },              RAND_INF_STABLES_UNLOCKED },
-    {{ SCENE_STABLE, 447 },                      RAND_INF_STABLES_UNLOCKED },
-    {{ SCENE_LON_LON_RANCH, 447 },               RAND_INF_BACK_TOWER_UNLOCKED },
-    {{ SCENE_LON_LON_BUILDINGS, 447 },           RAND_INF_BACK_TOWER_UNLOCKED },
-    {{ SCENE_LAKE_HYLIA, 447 },                  RAND_INF_HYLIA_LAB_UNLOCKED },
-    {{ SCENE_LAKESIDE_LABORATORY, 447 },         RAND_INF_HYLIA_LAB_UNLOCKED },
-    {{ SCENE_LAKE_HYLIA, 1471 },                 RAND_INF_FISHING_HOLE_UNLOCKED },
-    {{ SCENE_FISHING_POND, 447 },                RAND_INF_FISHING_HOLE_UNLOCKED },
-};
-
 void RandomizerOnActorInitHandler(void* actorRef) {
     Actor* actor = static_cast<Actor*>(actorRef);
 
@@ -1949,30 +1863,6 @@ void RandomizerOnActorInitHandler(void* actorRef) {
             EnSi* enSi = static_cast<EnSi*>(actorRef);
             enSi->sohGetItemEntry = Rando::Context::GetInstance()->GetFinalGIEntry(rc, true, (GetItemID)Rando::StaticData::GetLocation(rc)->GetVanillaItem());
             actor->draw = (ActorFunc)EnSi_DrawRandomizedItem;
-        }
-    }
-
-    if (actor->id == ACTOR_EN_DOOR) {
-        EnDoor* enDoor = static_cast<EnDoor*>(actorRef);
-        enDoor->randomizerInf = RAND_INF_MAX;
-
-        auto it = lookupTable.find({gPlayState->sceneNum, actor->params});
-        if (it != lookupTable.end() && RAND_GET_OPTION(RSK_LOCK_OVERWORLD_DOORS)) {
-            if (it->second == RAND_INF_MARKET_SHOOTING_GALLERY_UNLOCKED && gSaveContext.entranceIndex == 0x3B) {
-                // Adult shooting gallery uses same scene and door params as child, so we manually handle it
-                enDoor->randomizerInf = RAND_INF_KAK_SHOOTING_GALLERY_UNLOCKED;
-            } else {
-                enDoor->randomizerInf = it->second;
-            }
-            if (!Flags_GetRandomizerInf(enDoor->randomizerInf)) {
-                // We don't want to override checkable doors, we still want those to not be openable even if they have a key
-                if (((actor->params >> 7) & 7) != DOOR_CHECKABLE) {
-                    actor->params = (actor->params & ~0x380) | (DOOR_LOCKED << 7);
-                    enDoor->actionFunc = EnDoor_SetupType;
-                } else {
-                    enDoor->lockTimer = 10;
-                }
-            }
         }
     }
 
@@ -2480,6 +2370,8 @@ void RandomizerRegisterHooks() {
     static uint32_t shuffleFreestandingOnVanillaBehaviorHook = 0;
 
     GameInteractor::Instance->RegisterGameHook<GameInteractor::OnLoadGame>([](int32_t fileNum) {
+        ShipInit::Init("IS_RANDO");
+
         randomizerQueuedChecks = std::queue<RandomizerCheck>();
         randomizerQueuedCheck = RC_UNKNOWN_CHECK;
         randomizerQueuedItemEntry = GET_ITEM_NONE;
@@ -2510,7 +2402,7 @@ void RandomizerRegisterHooks() {
         GameInteractor::Instance->UnregisterGameHook<GameInteractor::OnActorInit>(shufflePotsOnActorInitHook);
         GameInteractor::Instance->UnregisterGameHook<GameInteractor::OnVanillaBehavior>(shufflePotsOnVanillaBehaviorHook);
 
-        GameInteractor::Instance->UnregisterGameHook<GameInteractor::OnActorInit>(shuffleFreestandingOnVanillaBehaviorHook);
+        GameInteractor::Instance->UnregisterGameHook<GameInteractor::OnVanillaBehavior>(shuffleFreestandingOnVanillaBehaviorHook);
 
         onFlagSetHook = 0;
         onSceneFlagSetHook = 0;

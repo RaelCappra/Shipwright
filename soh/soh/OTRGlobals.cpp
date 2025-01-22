@@ -341,7 +341,6 @@ OTRGlobals::OTRGlobals() {
         BTN_CUSTOM_OCARINA_PITCH_DOWN,
     }));
     context->InitControlDeck(controlDeck);
-    context->GetControlDeck()->SetSinglePlayerMappingMode(true);
 
     context->InitCrashHandler();
     context->InitConsole();
@@ -1358,14 +1357,20 @@ extern "C" void Graph_StartFrame() {
         CVarClear(CVAR_NEW_FILE_DROPPED);
         CVarClear(CVAR_DROPPED_FILE);
     }
-
-    OTRGlobals::Instance->context->GetWindow()->StartFrame();
 }
 
 void RunCommands(Gfx* Commands, const std::vector<std::unordered_map<Mtx*, MtxF>>& mtx_replacements) {
+    auto wnd = std::dynamic_pointer_cast<Fast::Fast3dWindow>(OTRGlobals::Instance->context->GetWindow());
+
+    if (wnd == nullptr) {
+        return;
+    }
+
+    // Process window events for resize, mouse, keyboard events
+    wnd->HandleEvents();
+
     for (const auto& m : mtx_replacements) {
-        gfx_run(Commands, m);
-        gfx_end_frame();
+        wnd->DrawAndRunGraphicsCommands(Commands, m);
     }
 }
 
@@ -1777,17 +1782,25 @@ extern "C" void Messagebox_ShowErrorBox(char* title, char* body) {
 }
 
 extern "C" int Controller_ShouldRumble(size_t slot) {
-    for (auto [id, mapping] : Ship::Context::GetInstance()
-                                  ->GetControlDeck()
-                                  ->GetControllerByPort(static_cast<uint8_t>(slot))
-                                  ->GetRumble()
-                                  ->GetAllRumbleMappings()) {
-        if (mapping->PhysicalDeviceIsConnected()) {
-            return 1;
-        }
+    // don't rumble if we don't have rumble mappings
+    if (Ship::Context::GetInstance()
+            ->GetControlDeck()
+            ->GetControllerByPort(static_cast<uint8_t>(slot))
+            ->GetRumble()
+            ->GetAllRumbleMappings().empty()) {
+        return 0;
     }
 
-    return 0;
+    // don't rumble if we don't have connected gamepads
+    if (Ship::Context::GetInstance()
+            ->GetControlDeck()
+            ->GetConnectedPhysicalDeviceManager()
+            ->GetConnectedSDLGamepadsForPort(slot).empty()) {
+        return 0;
+    }
+
+    // rumble
+    return 1;
 }
 
 extern "C" void* getN64WeirdFrame(s32 i) {
@@ -2263,10 +2276,10 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
             messageEntry = CustomMessageManager::Instance->RetrieveMessage(customMessageTableID, textId, MF_FORMATTED);
     } else if (textId == TEXT_HEART_CONTAINER && CVarGetInteger(CVAR_ENHANCEMENT("InjectItemCounts.HeartContainer"), 0)) {
         messageEntry = CustomMessageManager::Instance->RetrieveMessage(customMessageTableID, TEXT_HEART_CONTAINER, MF_FORMATTED);
-        messageEntry.Replace("[[heartContainerCount]]", std::to_string(gSaveContext.sohStats.heartContainers + 1));
+        messageEntry.Replace("[[heartContainerCount]]", std::to_string(gSaveContext.ship.stats.heartContainers + 1));
     } else if (textId >= TEXT_HEART_PIECE && textId < TEXT_HEART_CONTAINER && CVarGetInteger(CVAR_ENHANCEMENT("InjectItemCounts.HeartPiece"), 0)) {
         messageEntry = CustomMessageManager::Instance->RetrieveMessage(customMessageTableID, TEXT_HEART_PIECE, MF_FORMATTED);
-        messageEntry.Replace("[[heartPieceCount]]", std::to_string(gSaveContext.sohStats.heartPieces + 1));
+        messageEntry.Replace("[[heartPieceCount]]", std::to_string(gSaveContext.ship.stats.heartPieces + 1));
     } else if (textId == TEXT_MARKET_GUARD_NIGHT && CVarGetInteger(CVAR_ENHANCEMENT("MarketSneak"), 0) && play->sceneNum == SCENE_MARKET_ENTRANCE_NIGHT) {
         messageEntry = CustomMessageManager::Instance->RetrieveMessage(customMessageTableID, TEXT_MARKET_GUARD_NIGHT, MF_FORMATTED);
     }
@@ -2372,6 +2385,10 @@ void SoH_ProcessDroppedFiles(std::string filePath) {
                 CVarSetFloat(path.c_str(), value.get<float>());
             }
         }
+
+        auto randoCtx = Rando::Context::GetInstance();
+        randoCtx->GetSettings()->UpdateOptionProperties();
+        randoCtx->GetSettings()->SetAllFromCVar();
 
         auto gui = Ship::Context::GetInstance()->GetWindow()->GetGui();
         gui->GetGuiWindow("Console")->Hide();

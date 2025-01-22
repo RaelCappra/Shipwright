@@ -10,33 +10,21 @@
 namespace Rando {
 EntranceLinkInfo NO_RETURN_ENTRANCE = { EntranceType::None, RR_NONE, RR_NONE, -1 };
 
-Entrance::Entrance(RandomizerRegion connectedRegion_, std::vector<ConditionFn> conditions_met_, bool spreadsAreasWithPriority_)
-    : connectedRegion(connectedRegion_),  spreadsAreasWithPriority(spreadsAreasWithPriority_){
+Entrance::Entrance(RandomizerRegion connectedRegion_, ConditionFn condition_function_, bool spreadsAreasWithPriority_)
+    : connectedRegion(connectedRegion_), condition_function(condition_function_),  spreadsAreasWithPriority(spreadsAreasWithPriority_){
     originalConnectedRegion = connectedRegion_;
-    conditions_met.resize(2);
-    for (size_t i = 0; i < conditions_met_.size(); i++) {
-        conditions_met[i] = conditions_met_[i];
-    }
 }
 
 void Entrance::SetCondition(ConditionFn newCondition) {
-    conditions_met[0] = newCondition;
+    condition_function = newCondition;
 }
 
 bool Entrance::GetConditionsMet() const {
-    auto ctx = Rando::Context::GetInstance();
-    if (ctx->GetOption(RSK_LOGIC_RULES).Is(RO_LOGIC_NO_LOGIC) || ctx->GetOption(RSK_LOGIC_RULES).Is(RO_LOGIC_VANILLA)) {
-        return true;
-    } else if (ctx->GetOption(RSK_LOGIC_RULES).Is(RO_LOGIC_GLITCHLESS)) {
-        return conditions_met[0]();
-    } else if (ctx->GetOption(RSK_LOGIC_RULES).Is(RO_LOGIC_GLITCHED)) {
-        if (conditions_met[0]()) {
-            return true;
-        } else if (conditions_met[1] != NULL) {
-            return conditions_met[1]();
-        }
-    }
-    return false;
+  auto ctx = Rando::Context::GetInstance();
+  if (ctx->GetOption(RSK_LOGIC_RULES).Is(RO_LOGIC_GLITCHLESS)) {
+    return condition_function();
+  }
+  return true;
 }
 
 std::string Entrance::to_string() const {
@@ -544,10 +532,10 @@ static bool ValidateWorld(Entrance* entrancePlaced) {
 
             // The player should be able to get back to ToT after going through time, without having collected any items
             // This is important to ensure that the player never loses access to the pedestal after going through time
-            if (ctx->GetSettings()->ResolvedStartingAge() == RO_AGE_CHILD && !RegionTable(RR_TEMPLE_OF_TIME)->Adult()) {
+            if (ctx->GetOption(RSK_SELECTED_STARTING_AGE).Is(RO_AGE_CHILD) && !RegionTable(RR_TEMPLE_OF_TIME)->Adult()) {
                 SPDLOG_DEBUG("Path to Temple of Time as adult is not guaranteed\n");
                 return false;
-            } else if (ctx->GetSettings()->ResolvedStartingAge() == RO_AGE_ADULT &&
+            } else if (ctx->GetOption(RSK_SELECTED_STARTING_AGE).Is(RO_AGE_ADULT) &&
                        !RegionTable(RR_TEMPLE_OF_TIME)->Child()) {
                 SPDLOG_DEBUG("Path to Temple of Time as child is not guaranteed\n");
                 return false;

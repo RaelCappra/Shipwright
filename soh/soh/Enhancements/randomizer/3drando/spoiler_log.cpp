@@ -9,6 +9,7 @@
 #include "hints.hpp"
 #include "pool_functions.hpp"
 #include "soh/Enhancements/randomizer/randomizer_check_objects.h"
+#include "soh/Enhancements/randomizer/randomizer_entrance_tracker.h"
 #include <nlohmann/json.hpp>
 
 #include <cstdio>
@@ -91,8 +92,8 @@ static void WriteShuffledEntrance(std::string sphereString, Entrance* entrance) 
   int16_t destinationIndex = -1;
   int16_t replacementIndex = entrance->GetReplacement()->GetIndex();
   int16_t replacementDestinationIndex = -1;
-  std::string name = entrance->GetName();
-  std::string text = entrance->GetConnectedRegion()->regionName + " from " + entrance->GetReplacement()->GetParentRegion()->regionName;
+  std::string name = GetEntranceData(originalIndex)->source;
+  std::string text = GetEntranceData(replacementIndex)->destination;
 
   // Track the reverse destination, useful for savewarp handling
   if (entrance->GetReverse() != nullptr) {
@@ -206,14 +207,19 @@ static void WriteMasterQuestDungeons() {
 }
 
 // Writes the required trials to the spoiler log, if there are any.
-static void WriteRequiredTrials() {
-    auto ctx = Rando::Context::GetInstance();
-    for (const auto& trial : ctx->GetTrials()->GetTrialList()) {
-        if (trial->IsRequired()) {
-            std::string trialName = trial->GetName().GetForCurrentLanguage(MF_CLEAN);
-            jsonData["requiredTrials"].push_back(RemoveLineBreaks(trialName));
-        }
+static void WriteChosenOptions() {
+  auto ctx = Rando::Context::GetInstance();
+  for (const auto& trial : ctx->GetTrials()->GetTrialList()) {
+    if (trial->IsRequired()) {
+      std::string trialName = trial->GetName().GetForCurrentLanguage(MF_CLEAN);
+      jsonData["requiredTrials"].push_back(RemoveLineBreaks(trialName));
     }
+  }
+  if (ctx->GetOption(RSK_SELECTED_STARTING_AGE).Is(RO_AGE_ADULT)){
+    jsonData["SelectedStartingAge"] = "Adult";
+  } else {
+    jsonData["SelectedStartingAge"] = "Child";
+  }
 }
 
 // Writes the intended playthrough to the spoiler log, separated into spheres.
@@ -331,7 +337,7 @@ const char* SpoilerLog_Write() {
     WriteStartingInventory();
     WriteEnabledTricks(); 
     WriteMasterQuestDungeons();
-    WriteRequiredTrials();
+    WriteChosenOptions();
     WritePlaythrough();
 
     ctx->playthroughLocations.clear();

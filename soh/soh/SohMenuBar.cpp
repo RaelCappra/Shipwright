@@ -1,7 +1,4 @@
 #include "SohMenuBar.h"
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif
 #include <imgui.h>
 #include "regex"
 #include "public/bridge/consolevariablebridge.h"
@@ -777,8 +774,10 @@ void DrawEnhancementsMenu() {
                 UIWidgets::Tooltip("The default response to Kaepora Gaebora is always that you understood what he said");
                 UIWidgets::PaddedEnhancementCheckbox("Exit Market at Night", CVAR_ENHANCEMENT("MarketSneak"), true, false);
                 UIWidgets::Tooltip("Allows exiting Hyrule Castle Market Town to Hyrule Field at night by speaking to the guard next to the gate.");
-                UIWidgets::PaddedEnhancementCheckbox("Shops and Games Always Open", CVAR_ENHANCEMENT("OpenAllHours"), true, false);
-                UIWidgets::Tooltip("Shops and minigames are open both day and night. Requires scene reload to take effect.\n\nNote: This is not compatible with Locked Overworld Doors in Rando");
+                bool randoLockedOverworldDoors = IS_RANDO && OTRGlobals::Instance->gRandomizer->GetRandoSettingValue(RSK_LOCK_OVERWORLD_DOORS);
+                UIWidgets::PaddedEnhancementCheckbox("Shops and Games Always Open", CVAR_ENHANCEMENT("OpenAllHours"), true, false, randoLockedOverworldDoors, 
+                    "This is not compatible with the Locked Overworld Doors Randomizer option", UIWidgets::CheckboxGraphics::Checkmark);
+                UIWidgets::Tooltip("Shops and minigames are open both day and night. Requires scene reload to take effect.");
                 UIWidgets::PaddedEnhancementCheckbox("Link as default file name", CVAR_ENHANCEMENT("LinkDefaultName"), true, false);
                 UIWidgets::Tooltip("Allows you to have \"Link\" as a premade file name");
 				UIWidgets::PaddedEnhancementCheckbox("Quit Fishing At Door", CVAR_ENHANCEMENT("QuitFishingAtDoor"), true, false);
@@ -2320,6 +2319,12 @@ void DrawRandomizerMenu() {
                 "Displays a \"Mystery Item\" model in place of any freestanding/GS/shop items that were shuffled, "
                 "and replaces item names for them and scrubs and merchants, regardless of hint settings, "
                 "so you never know what you're getting.");
+            UIWidgets::PaddedEnhancementCheckbox("Simpler Boss Soul Models",
+                                                 CVAR_RANDOMIZER_ENHANCEMENT("SimplerBossSoulModels"), true, false);
+            UIWidgets::Tooltip(
+                "When shuffling boss souls, they'll appear as a simpler model instead of showing the boss' models."
+                "This might make boss souls more distinguishable from a distance, and can help with performance."
+            );
             ImGui::EndMenu();
         }
 
