@@ -20,14 +20,16 @@ void RegionTable_Init_CastleGrounds() {
         EventAccess(&logic->BugRock,          []{return true;}),
     }, {
         //Locations
-        LOCATION(RC_HC_MALON_EGG,                            true),
+        LOCATION(RC_HC_MALON_EGG,                        true),
         LOCATION_NNL(RC_HC_GS_TREE,                          logic->IsChild && logic->CanAttack()),
         LOCATION_NNL(RC_HC_MALON_GOSSIP_STONE_FAIRY,         logic->CallGossipFairy()),
         LOCATION_NNL(RC_HC_MALON_GOSSIP_STONE_FAIRY_BIG,     logic->CanUse(RG_SONG_OF_STORMS)),
         LOCATION_NNL(RC_HC_ROCK_WALL_GOSSIP_STONE_FAIRY,     logic->CallGossipFairy()),
         LOCATION_NNL(RC_HC_ROCK_WALL_GOSSIP_STONE_FAIRY_BIG, logic->CanUse(RG_SONG_OF_STORMS)),
-        LOCATION(RC_HC_MALON_GOSSIP_STONE,                   true),
-        LOCATION(RC_HC_ROCK_WALL_GOSSIP_STONE,               true),
+        LOCATION(RC_HC_MALON_GOSSIP_STONE,               true),
+        LOCATION(RC_HC_ROCK_WALL_GOSSIP_STONE,           true),
+        LOCATION(RC_HC_GRASS_1,                          logic->CanCutShrubs()),
+        LOCATION(RC_HC_GRASS_2,                          logic->CanCutShrubs()),
     }, {
         //Exits
         Entrance(RR_CASTLE_GROUNDS,          []{return true;}),

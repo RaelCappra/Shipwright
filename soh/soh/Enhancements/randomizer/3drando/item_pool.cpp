@@ -930,6 +930,15 @@ void GenerateItemPool() {
   if (overworldPotsActive || dungeonPotsActive) {
     PlaceItemsForType(RCTYPE_POT, overworldPotsActive, dungeonPotsActive, false);
   }
+
+  // Grassanity
+  bool overworldGrassActive = ctx->GetOption(RSK_GRASSANITY).Is(RO_SHUFFLE_GRASS_OVERWORLD) ||
+                              ctx->GetOption(RSK_GRASSANITY).Is(RO_SHUFFLE_GRASS_ALL);
+  bool dungeonGrassActive = ctx->GetOption(RSK_GRASSANITY).Is(RO_SHUFFLE_GRASS_DUNGEONS) ||
+                            ctx->GetOption(RSK_GRASSANITY).Is(RO_SHUFFLE_GRASS_ALL);
+  if (overworldGrassActive || dungeonGrassActive) {
+      PlaceItemsForType(RCTYPE_GRASS, overworldGrassActive, dungeonGrassActive, false);
+  }
   
   auto fsMode = ctx->GetOption(RSK_FISHSANITY);
   if (fsMode.IsNot(RO_FISHSANITY_OFF)) {

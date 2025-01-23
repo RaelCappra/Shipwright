@@ -72,6 +72,8 @@ void RegionTable_Init_DeathMountainTrail() {
         LOCATION(RC_DMT_COW_GROTTO_RUPEE_6,            true),
         LOCATION(RC_DMT_COW_GROTTO_RED_RUPEE,          true),
         LOCATION(RC_DMT_COW_GROTTO_STORMS_FAIRY,       logic->CanUse(RG_SONG_OF_STORMS)),
+        LOCATION(RC_DMT_COW_GROTTO_GRASS_1,            logic->CanCutShrubs()),
+        LOCATION(RC_DMT_COW_GROTTO_GRASS_2,            logic->CanCutShrubs()),
     }, {
         //Exits
         Entrance(RR_DEATH_MOUNTAIN_SUMMIT, []{return true;}),
@@ -79,13 +81,17 @@ void RegionTable_Init_DeathMountainTrail() {
 
     areaTable[RR_DMT_STORMS_GROTTO] = Region("DMT Storms Grotto", "DMT Storms Grotto", {}, NO_DAY_NIGHT_CYCLE, grottoEvents, {
         //Locations
-        LOCATION(RC_DMT_STORMS_GROTTO_CHEST,                      true),
+        LOCATION(RC_DMT_STORMS_GROTTO_CHEST,                  true),
         LOCATION_NNL(RC_DMT_STORMS_GROTTO_FISH,                   logic->HasBottle()),
         LOCATION_NNL(RC_DMT_STORMS_GROTTO_GOSSIP_STONE_FAIRY,     logic->CallGossipFairy()),
         LOCATION_NNL(RC_DMT_STORMS_GROTTO_GOSSIP_STONE_FAIRY_BIG, logic->CanUse(RG_SONG_OF_STORMS)),
-        LOCATION(RC_DMT_STORMS_GROTTO_GOSSIP_STONE,               true),
-        LOCATION(RC_DMT_STORMS_GROTTO_BEEHIVE_LEFT,               logic->CanBreakLowerBeehives()),
-        LOCATION(RC_DMT_STORMS_GROTTO_BEEHIVE_RIGHT,              logic->CanBreakLowerBeehives()),
+        LOCATION(RC_DMT_STORMS_GROTTO_GOSSIP_STONE,           true),
+        LOCATION(RC_DMT_STORMS_GROTTO_BEEHIVE_LEFT,           logic->CanBreakLowerBeehives()),
+        LOCATION(RC_DMT_STORMS_GROTTO_BEEHIVE_RIGHT,          logic->CanBreakLowerBeehives()),
+        LOCATION(RC_DMT_STORMS_GROTTO_GRASS_1,                logic->CanCutShrubs()),
+        LOCATION(RC_DMT_STORMS_GROTTO_GRASS_2,                logic->CanCutShrubs()),
+        LOCATION(RC_DMT_STORMS_GROTTO_GRASS_3,                logic->CanCutShrubs()),
+        LOCATION(RC_DMT_STORMS_GROTTO_GRASS_4,                logic->CanCutShrubs()),
     }, {
         //Exits
         Entrance(RR_DEATH_MOUNTAIN_TRAIL, []{return true;}),

@@ -30,6 +30,14 @@ void RegionTable_Init_Kakariko() {
         LOCATION_NNL(RC_KAK_NEAR_GUARDS_HOUSE_POT_1,     logic->IsChild && logic->CanBreakPots()),
         LOCATION_NNL(RC_KAK_NEAR_GUARDS_HOUSE_POT_2,     logic->IsChild && logic->CanBreakPots()),
         LOCATION_NNL(RC_KAK_NEAR_GUARDS_HOUSE_POT_3,     logic->IsChild && logic->CanBreakPots()),
+        LOCATION(RC_KAK_GRASS_1,                     logic->CanCutShrubs()),
+        LOCATION(RC_KAK_GRASS_2,                     logic->CanCutShrubs()),
+        LOCATION(RC_KAK_GRASS_3,                     logic->CanCutShrubs()),
+        LOCATION(RC_KAK_GRASS_4,                     logic->CanCutShrubs()),
+        LOCATION(RC_KAK_GRASS_5,                     logic->CanCutShrubs()),
+        LOCATION(RC_KAK_GRASS_6,                     logic->CanCutShrubs()),
+        LOCATION(RC_KAK_GRASS_7,                     logic->CanCutShrubs()),
+        LOCATION(RC_KAK_GRASS_8,                     logic->CanCutShrubs()),
     }, {
         //Exits
         Entrance(RR_HYRULE_FIELD,             []{return true;}),
@@ -216,13 +224,17 @@ void RegionTable_Init_Kakariko() {
 
     areaTable[RR_KAK_OPEN_GROTTO] = Region("Kak Open Grotto", "Kak Open Grotto", {}, NO_DAY_NIGHT_CYCLE, grottoEvents, {
         //Locations
-        LOCATION(RC_KAK_OPEN_GROTTO_CHEST,                      true),
+        LOCATION(RC_KAK_OPEN_GROTTO_CHEST,                  true),
         LOCATION_NNL(RC_KAK_OPEN_GROTTO_FISH,                   logic->HasBottle()),
         LOCATION_NNL(RC_KAK_OPEN_GROTTO_GOSSIP_STONE_FAIRY,     logic->CallGossipFairy()),
         LOCATION_NNL(RC_KAK_OPEN_GROTTO_GOSSIP_STONE_FAIRY_BIG, logic->CanUse(RG_SONG_OF_STORMS)),
-        LOCATION(RC_KAK_OPEN_GROTTO_GOSSIP_STONE,               true),
-        LOCATION(RC_KAK_OPEN_GROTTO_BEEHIVE_LEFT,               logic->CanBreakLowerBeehives()),
-        LOCATION(RC_KAK_OPEN_GROTTO_BEEHIVE_RIGHT,              logic->CanBreakLowerBeehives()),
+        LOCATION(RC_KAK_OPEN_GROTTO_GOSSIP_STONE,           true),
+        LOCATION(RC_KAK_OPEN_GROTTO_BEEHIVE_LEFT,           logic->CanBreakLowerBeehives()),
+        LOCATION(RC_KAK_OPEN_GROTTO_BEEHIVE_RIGHT,          logic->CanBreakLowerBeehives()),
+        LOCATION(RC_KAK_OPEN_GROTTO_GRASS_1,                logic->CanCutShrubs()),
+        LOCATION(RC_KAK_OPEN_GROTTO_GRASS_2,                logic->CanCutShrubs()),
+        LOCATION(RC_KAK_OPEN_GROTTO_GRASS_3,                logic->CanCutShrubs()),
+        LOCATION(RC_KAK_OPEN_GROTTO_GRASS_4,                logic->CanCutShrubs()),
     }, {
         //Exits
         Entrance(RR_KAK_BACKYARD, []{return true;}),
