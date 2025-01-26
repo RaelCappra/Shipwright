@@ -1183,11 +1183,11 @@ std::map<RandomizerCheck, RandomizerInf> rcToRandomizerInf = {
     { RC_ZR_GRASS_10,                                      RAND_INF_ZR_GRASS_10 },
     { RC_ZR_GRASS_11,                                      RAND_INF_ZR_GRASS_11 },
     { RC_ZR_GRASS_12,                                      RAND_INF_ZR_GRASS_12 },
-    { RC_ZR_GRASS_13,                                      RAND_INF_ZR_GRASS_13 },
+    { RC_ZR_NEAR_FREESTANDING_POH_GRASS,                   RAND_INF_ZR_NEAR_FREESTANDING_POH_GRASS },
     // Grotto Grass
+    { RC_KF_STORMS_GROTTO_GRASS_1,                         RAND_INF_KF_STORMS_GROTTO_GRASS_1 },
     { RC_KF_STORMS_GROTTO_GRASS_2,                         RAND_INF_KF_STORMS_GROTTO_GRASS_2 },
     { RC_KF_STORMS_GROTTO_GRASS_3,                         RAND_INF_KF_STORMS_GROTTO_GRASS_3 },
-    { RC_KF_STORMS_GROTTO_GRASS_4,                         RAND_INF_KF_STORMS_GROTTO_GRASS_4 },
     { RC_KF_STORMS_GROTTO_GRASS_4,                         RAND_INF_KF_STORMS_GROTTO_GRASS_4 },
     { RC_LW_NEAR_SHORTCUTS_GROTTO_GRASS_1,                 RAND_INF_LW_NEAR_SHORTCUTS_GROTTO_GRASS_1 },
     { RC_LW_NEAR_SHORTCUTS_GROTTO_GRASS_2,                 RAND_INF_LW_NEAR_SHORTCUTS_GROTTO_GRASS_2 },
@@ -1206,7 +1206,7 @@ std::map<RandomizerCheck, RandomizerInf> rcToRandomizerInf = {
     { RC_HF_SOUTHEAST_GROTTO_GRASS_3,                      RAND_INF_HF_SOUTHEAST_GROTTO_GRASS_3 },
     { RC_HF_SOUTHEAST_GROTTO_GRASS_4,                      RAND_INF_HF_SOUTHEAST_GROTTO_GRASS_4 },
     { RC_HF_COW_GROTTO_GRASS_1,                            RAND_INF_HF_COW_GROTTO_GRASS_1 },
-    { RC_HF_COW_GROTTO_GRASS_1,                            RAND_INF_HF_COW_GROTTO_GRASS_2 },
+    { RC_HF_COW_GROTTO_GRASS_2,                            RAND_INF_HF_COW_GROTTO_GRASS_2 },
     { RC_KAK_OPEN_GROTTO_GRASS_1,                          RAND_INF_KAK_OPEN_GROTTO_GRASS_1 },
     { RC_KAK_OPEN_GROTTO_GRASS_2,                          RAND_INF_KAK_OPEN_GROTTO_GRASS_2 },
     { RC_KAK_OPEN_GROTTO_GRASS_3,                          RAND_INF_KAK_OPEN_GROTTO_GRASS_3 },
@@ -1308,7 +1308,7 @@ std::map<RandomizerCheck, RandomizerInf> rcToRandomizerInf = {
     { RC_DEKU_TREE_MQ_BASEMENT_TORCHES_GRASS_3,            RAND_INF_DEKU_TREE_MQ_BASEMENT_TORCHES_GRASS_3 },
     { RC_DEKU_TREE_MQ_BASEMENT_TORCHES_GRASS_4,            RAND_INF_DEKU_TREE_MQ_BASEMENT_TORCHES_GRASS_4 },
     { RC_DEKU_TREE_MQ_BASEMENT_LARVAE_GRASS_1,             RAND_INF_DEKU_TREE_MQ_BASEMENT_LARVAE_GRASS_1 },
-    { RC_DEKU_TREE_MQ_BASEMENT_LARVAE_GRASS_2,             RAND_INF_DEKU_TREE_MQ_BASEMENT_LARVAE_GRASS_1 },
+    { RC_DEKU_TREE_MQ_BASEMENT_LARVAE_GRASS_2,             RAND_INF_DEKU_TREE_MQ_BASEMENT_LARVAE_GRASS_2 },
     { RC_DEKU_TREE_MQ_BASEMENT_GRAVES_GRASS_1,             RAND_INF_DEKU_TREE_MQ_BASEMENT_GRAVES_GRASS_1 },
     { RC_DEKU_TREE_MQ_BASEMENT_GRAVES_GRASS_2,             RAND_INF_DEKU_TREE_MQ_BASEMENT_GRAVES_GRASS_2 },
     { RC_DEKU_TREE_MQ_BASEMENT_GRAVES_GRASS_3,             RAND_INF_DEKU_TREE_MQ_BASEMENT_GRAVES_GRASS_3 },
@@ -2198,8 +2198,37 @@ GrassIdentity Randomizer::IdentifyGrass(s32 sceneNum, s32 posX, s32 posZ, s32 re
         // We'll just pretend it's always daytime for our market bushes.
         if (sceneNum == SCENE_MARKET_NIGHT) {
             sceneNum = SCENE_MARKET_DAY;
+
+            /*
+                The two bushes by the tree are not in the same spot
+                between night and day. We'll assume the coordinates
+                of the daytime bushes so that we can count them as
+                the same locations.
+            */
+            if (posX == -74) {
+                posX = -106;
+                posZ = 277;
+            }
+            if (posX == -87) {
+                posX = -131;
+                posZ = 225;
+            }
         }
 
+        /*
+            Same as with Market. ZR has a bush slightly off pos
+            between Child and Adult. This is to merge them into
+            a single location.
+        */
+        if (sceneNum == SCENE_ZORAS_RIVER) {
+            if (posX == 233) {
+                posX = 231;
+                posZ = -1478;
+            }
+        }
+
+        // The two bushes behind the sign in KF should be separated
+        // locations between Child and Adult.
         if (sceneNum == SCENE_KOKIRI_FOREST && linkAge == 0) {
             if (posX == -498 || posX == -523) {
                 posZ = 0xFF;
