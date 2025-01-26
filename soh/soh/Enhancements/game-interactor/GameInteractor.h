@@ -286,6 +286,7 @@ typedef enum {
     VB_RENDER_YES_ON_CONTINUE_PROMPT,
     // Vanilla condition: CHECK_BTN_ALL(input->press.button, BTN_START)
     VB_CLOSE_PAUSE_MENU,
+    VB_KALEIDO_UNPAUSE_CLOSE,
     // Vanilla condition: true
     VB_SPAWN_BLUE_WARP,
     // Vanilla condition: this->warpTimer > sWarpTimerTarget && gSaveContext.nextCutsceneIndex == 0xFFEF
@@ -391,6 +392,7 @@ typedef enum {
 
     /*** Give Items ***/
 
+    VB_SHORT_CIRCUIT_GIVE_ITEM_PROCESS,
     VB_FREEZE_ON_SKULL_TOKEN,
     // Opt: *EnBox
     VB_GIVE_ITEM_FROM_CHEST,

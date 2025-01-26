@@ -68,7 +68,6 @@ namespace SohGui {
     static const char* subSubPowers[7] = { allPowers[0], allPowers[1], allPowers[2], allPowers[3], allPowers[4], allPowers[5], allPowers[6] };
     static const char* zFightingOptions[3] = { "Disabled", "Consistent Vanish", "No Vanish" };
     static const char* autosaveLabels[6] = { "Off", "New Location + Major Item", "New Location + Any Item", "New Location", "Major Item", "Any Item" };
-    static const char* FastFileSelect[5] = { "File N.1", "File N.2", "File N.3", "Zelda Map Select (require OoT Debug Mode)", "File select" };
     static const char* bonkDamageValues[8] = {
         "No Damage",
         "0.25 Heart",
@@ -141,6 +140,7 @@ namespace SohGui {
 #ifdef ENABLE_REMOTE_CONTROL    
     std::shared_ptr<AnchorRoomWindow> mAnchorRoomWindow;
 #endif
+    std::shared_ptr<AboutWindow> mAboutWindow;
 
     void SetupGuiElements() {
         auto gui = Ship::Context::GetInstance()->GetWindow()->GetGui();
@@ -233,6 +233,8 @@ namespace SohGui {
         mAnchorRoomWindow = std::make_shared<AnchorRoomWindow>(CVAR_WINDOW("AnchorRoom"), "Anchor Room");
         gui->AddGuiWindow(mAnchorRoomWindow);
 #endif
+        mAboutWindow = std::make_shared<AboutWindow>(CVAR_WINDOW("AboutWindow"), "About");
+        gui->AddGuiWindow(mAboutWindow);
     }
 
     void Destroy() {
@@ -272,6 +274,7 @@ namespace SohGui {
 #ifdef ENABLE_REMOTE_CONTROL
         mAnchorRoomWindow = nullptr;
 #endif
+        mAboutWindow = nullptr;
     }
 
     void RegisterPopup(std::string title, std::string message, std::string button1, std::string button2, std::function<void()> button1callback, std::function<void()> button2callback) {
