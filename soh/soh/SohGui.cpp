@@ -8,9 +8,6 @@
 #include "SohGui.hpp"
 
 #include <spdlog/spdlog.h>
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <libultraship/libultraship.h>
@@ -33,15 +30,15 @@
 #include "soh/resource/type/Skeleton.h"
 #include "libultraship/libultraship.h"
 
-#ifdef ENABLE_REMOTE_CONTROL
-#include "Enhancements/crowd-control/CrowdControl.h"
-#include "Enhancements/game-interactor/GameInteractor_Sail.h"
-#endif
-
 #include "Enhancements/game-interactor/GameInteractor.h"
 #include "Enhancements/cosmetics/authenticGfxPatches.h"
 #include "Enhancements/resolution-editor/ResolutionEditor.h"
 #include "Enhancements/debugger/MessageViewer.h"
+#include "soh/Notification/Notification.h"
+#include "soh/Enhancements/TimeDisplay/TimeDisplay.h"
+#ifdef ENABLE_REMOTE_CONTROL
+#include "soh/Network/Anchor/Anchor.h"
+#endif
 
 bool isBetaQuestEnabled = false;
 
@@ -71,7 +68,6 @@ namespace SohGui {
     static const char* subSubPowers[7] = { allPowers[0], allPowers[1], allPowers[2], allPowers[3], allPowers[4], allPowers[5], allPowers[6] };
     static const char* zFightingOptions[3] = { "Disabled", "Consistent Vanish", "No Vanish" };
     static const char* autosaveLabels[6] = { "Off", "New Location + Major Item", "New Location + Any Item", "New Location", "Major Item", "Any Item" };
-    static const char* FastFileSelect[5] = { "File N.1", "File N.2", "File N.3", "Zelda Map Select (require OoT Debug Mode)", "File select" };
     static const char* bonkDamageValues[8] = {
         "No Damage",
         "0.25 Heart",
@@ -134,9 +130,17 @@ namespace SohGui {
     std::shared_ptr<EntranceTrackerWindow> mEntranceTrackerWindow;
     std::shared_ptr<ItemTrackerSettingsWindow> mItemTrackerSettingsWindow;
     std::shared_ptr<ItemTrackerWindow> mItemTrackerWindow;
+    std::shared_ptr<TimeSplitWindow> mTimeSplitWindow;
+    std::shared_ptr<PlandomizerWindow> mPlandomizerWindow;
     std::shared_ptr<RandomizerSettingsWindow> mRandomizerSettingsWindow;
     std::shared_ptr<AdvancedResolutionSettings::AdvancedResolutionSettingsWindow> mAdvancedResolutionSettingsWindow;
     std::shared_ptr<SohModalWindow> mModalWindow;
+    std::shared_ptr<Notification::Window> mNotificationWindow;
+    std::shared_ptr<TimeDisplayWindow> mTimeDisplayWindow;
+#ifdef ENABLE_REMOTE_CONTROL    
+    std::shared_ptr<AnchorRoomWindow> mAnchorRoomWindow;
+#endif
+    std::shared_ptr<AboutWindow> mAboutWindow;
 
     void SetupGuiElements() {
         auto gui = Ship::Context::GetInstance()->GetWindow()->GetGui();
@@ -146,9 +150,10 @@ namespace SohGui {
 
         if (gui->GetMenuBar() && !gui->GetMenuBar()->IsVisible()) {
 #if defined(__SWITCH__) || defined(__WIIU__)
-            gui->GetGameOverlay()->TextDrawNotification(30.0f, true, "Press - to access enhancements menu");
+            Notification::Emit({ .message = "Press - to access enhancements menu", .remainingTime = 10.0f });
 #else
-            gui->GetGameOverlay()->TextDrawNotification(30.0f, true, "Press F1 to access enhancements menu");
+            Notification::Emit({ .message = "Press F1 to access enhancements menu", .remainingTime = 10.0f });
+            Notification::Emit({ .message = "Press F2 to enable mouse controls", .remainingTime = 10.0f });
 #endif
         }
 
@@ -210,17 +215,33 @@ namespace SohGui {
         gui->AddGuiWindow(mItemTrackerSettingsWindow);
         mRandomizerSettingsWindow = std::make_shared<RandomizerSettingsWindow>(CVAR_WINDOW("RandomizerSettings"), "Randomizer Settings", ImVec2(920, 600));
         gui->AddGuiWindow(mRandomizerSettingsWindow);
+        mTimeSplitWindow = std::make_shared<TimeSplitWindow>(CVAR_WINDOW("TimeSplitEnabled"), "Time Splits", ImVec2(450, 660));
+        gui->AddGuiWindow(mTimeSplitWindow);
+        mPlandomizerWindow = std::make_shared<PlandomizerWindow>(CVAR_WINDOW("PlandomizerWindow"), "Plandomizer Editor", ImVec2(850, 760));
+        gui->AddGuiWindow(mPlandomizerWindow);
         mAdvancedResolutionSettingsWindow = std::make_shared<AdvancedResolutionSettings::AdvancedResolutionSettingsWindow>(CVAR_WINDOW("AdvancedResolutionEditor"), "Advanced Resolution Settings", ImVec2(497, 599));
         gui->AddGuiWindow(mAdvancedResolutionSettingsWindow);
         mModalWindow = std::make_shared<SohModalWindow>(CVAR_WINDOW("ModalWindow"), "Modal Window");
         gui->AddGuiWindow(mModalWindow);
         mModalWindow->Show();
+        mNotificationWindow = std::make_shared<Notification::Window>(CVAR_WINDOW("Notifications"), "Notifications Window");
+        gui->AddGuiWindow(mNotificationWindow);
+        mNotificationWindow->Show();
+        mTimeDisplayWindow = std::make_shared<TimeDisplayWindow>(CVAR_WINDOW("TimeDisplayEnabled"), "Additional Timers");
+        gui->AddGuiWindow(mTimeDisplayWindow);
+#ifdef ENABLE_REMOTE_CONTROL
+        mAnchorRoomWindow = std::make_shared<AnchorRoomWindow>(CVAR_WINDOW("AnchorRoom"), "Anchor Room");
+        gui->AddGuiWindow(mAnchorRoomWindow);
+#endif
+        mAboutWindow = std::make_shared<AboutWindow>(CVAR_WINDOW("AboutWindow"), "About");
+        gui->AddGuiWindow(mAboutWindow);
     }
 
     void Destroy() {
         auto gui = Ship::Context::GetInstance()->GetWindow()->GetGui();
         gui->RemoveAllGuiWindows();
         
+        mNotificationWindow = nullptr;
         mModalWindow = nullptr;
         mAdvancedResolutionSettingsWindow = nullptr;
         mRandomizerSettingsWindow = nullptr;
@@ -247,9 +268,20 @@ namespace SohGui {
         mSohMenuBar = nullptr;
         mInputViewer = nullptr;
         mInputViewerSettings = nullptr;
+        mTimeSplitWindow = nullptr;
+        mPlandomizerWindow = nullptr;
+        mTimeDisplayWindow = nullptr;
+#ifdef ENABLE_REMOTE_CONTROL
+        mAnchorRoomWindow = nullptr;
+#endif
+        mAboutWindow = nullptr;
     }
 
     void RegisterPopup(std::string title, std::string message, std::string button1, std::string button2, std::function<void()> button1callback, std::function<void()> button2callback) {
         mModalWindow->RegisterPopup(title, message, button1, button2, button1callback, button2callback);
+    }
+
+    void ShowRandomizerSettingsMenu() {
+        mRandomizerSettingsWindow->Show();
     }
 }

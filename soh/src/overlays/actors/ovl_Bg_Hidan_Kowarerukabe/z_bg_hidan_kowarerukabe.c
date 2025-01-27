@@ -303,7 +303,9 @@ void BgHidanKowarerukabe_Update(Actor* thisx, PlayState* play) {
     BgHidanKowarerukabe* this = (BgHidanKowarerukabe*)thisx;
     s32 pad;
 
-    if (Actor_GetCollidedExplosive(play, &this->collider.base) != NULL) {
+    // #region SOH [Co-op]
+    if ((Actor_GetCollidedExplosive(play, &this->collider.base) != NULL) || Flags_GetSwitch(play, (this->dyna.actor.params >> 8) & 0x3F)) {
+    // #endregion
         BgHidanKowarerukabe_Break(this, play);
         Flags_SetSwitch(play, (this->dyna.actor.params >> 8) & 0x3F);
 
@@ -313,7 +315,7 @@ void BgHidanKowarerukabe_Update(Actor* thisx, PlayState* play) {
             SoundSource_PlaySfxAtFixedWorldPos(play, &this->dyna.actor.world.pos, 40, NA_SE_EV_WALL_BROKEN);
         }
 
-        func_80078884(NA_SE_SY_CORRECT_CHIME);
+        Sfx_PlaySfxCentered(NA_SE_SY_CORRECT_CHIME);
         Actor_Kill(&this->dyna.actor);
         return;
     }

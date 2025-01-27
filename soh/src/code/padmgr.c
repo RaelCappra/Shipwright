@@ -3,6 +3,9 @@
 #include <string.h>
 
 #include "soh/Enhancements/game-interactor/GameInteractor.h"
+#include "soh/Enhancements/controls/Mouse.h"
+#include "soh/OTRGlobals.h"
+#include "soh/ResourceManagerHelpers.h"
 
 s32 D_8012D280 = 1;
 
@@ -235,6 +238,28 @@ void PadMgr_ProcessInputs(PadMgr* padMgr) {
                     GameInteractor_SetEmulatedButtons(0);
                 }
 
+                // #region SOH [Enhancement]
+                f32 sensitivityMod = 1.0f;
+
+                if (CVarGetInteger(CVAR_SETTING("WalkModifier.Enabled"), 0) == 1) {
+                    if (CVarGetInteger(CVAR_SETTING("WalkModifier.SpeedToggle"), 0) == 1) {
+                        if (gWalkSpeedToggle1) {
+                            sensitivityMod *= CVarGetFloat(CVAR_SETTING("WalkModifier.SensitivityMapping1"), 1.0f);
+                        } else if (gWalkSpeedToggle2) {
+                            sensitivityMod *= CVarGetFloat(CVAR_SETTING("WalkModifier.SensitivityMapping2"), 1.0f);
+                        }
+                    } else {
+                        if (CHECK_BTN_ALL(input->cur.button, BTN_CUSTOM_MODIFIER1)) {
+                            sensitivityMod *= CVarGetFloat(CVAR_SETTING("WalkModifier.SensitivityMapping1"), 1.0f);
+                        } else if (CHECK_BTN_ALL(input->cur.button, BTN_CUSTOM_MODIFIER2)) {
+                            sensitivityMod *= CVarGetFloat(CVAR_SETTING("WalkModifier.SensitivityMapping2"), 1.0f);
+                        }
+                    }
+                }
+                input->cur.stick_x *= sensitivityMod;
+                input->cur.stick_y *= sensitivityMod;
+                // #endregion
+
                 if (GameInteractor_ReverseControlsActive()) {
                     if (input->cur.stick_x == -128) {
                         input->cur.stick_x = 127;
@@ -268,6 +293,7 @@ void PadMgr_ProcessInputs(PadMgr* padMgr) {
                 input->cur.button = 0;
                 input->cur.stick_x = 0;
                 input->cur.stick_y = 0;
+
                 input->cur.err_no = padnow1->err_no;
                 if (padMgr->ctrlrIsConnected[i]) {
                     padMgr->ctrlrIsConnected[i] = false;
@@ -284,13 +310,6 @@ void PadMgr_ProcessInputs(PadMgr* padMgr) {
                 Fault_AddHungupAndCrash(__FILE__, __LINE__);
         }
 
-        // When 3 frames are left on easy pause buffer, re-apply the last held inputs to the prev inputs
-        // to compute the pressed difference. This makes it so previously held inputs are continued as "held",
-        // but new inputs when unpausing are "pressed" out of the pause menu.
-        if (CVarGetInteger(CVAR_GENERAL("CheatEasyPauseBufferTimer"), 0) == 3) {
-            input->prev.button = CVarGetInteger(CVAR_GENERAL("CheatEasyPauseBufferLastInputs"), 0);
-        }
-
         buttonDiff = input->prev.button ^ input->cur.button;
         input->press.button |= (u16)(buttonDiff & input->cur.button);
         input->rel.button |= (u16)(buttonDiff & input->prev.button);
@@ -302,6 +321,7 @@ void PadMgr_ProcessInputs(PadMgr* padMgr) {
         input->press.right_stick_x += (s8)(input->cur.right_stick_x - input->prev.right_stick_x);
         input->press.right_stick_y += (s8)(input->cur.right_stick_y - input->prev.right_stick_y);
         // #endregion
+
     }
 
     uint8_t rumble = (padMgr->rumbleEnable[0] > 0);
@@ -321,6 +341,8 @@ void PadMgr_HandleRetraceMsg(PadMgr* padMgr) {
     }
     osRecvMesg(queue, NULL, OS_MESG_BLOCK);
     osContGetReadData(padMgr->pads);
+
+    Mouse_UpdateAll();
 
     for (i = 0; i < __osMaxControllers; i++) {
         padMgr->padStatus[i].status = Controller_ShouldRumble(i);

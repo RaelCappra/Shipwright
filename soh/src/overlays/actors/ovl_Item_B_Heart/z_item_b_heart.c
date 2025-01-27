@@ -6,6 +6,7 @@
 
 #include "z_item_b_heart.h"
 #include "objects/object_gi_hearts/object_gi_hearts.h"
+#include "soh/OTRGlobals.h"
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
 
 #define FLAGS 0
@@ -53,6 +54,13 @@ void ItemBHeart_Destroy(Actor* thisx, PlayState* play) {
 
 void ItemBHeart_Update(Actor* thisx, PlayState* play) {
     ItemBHeart* this = (ItemBHeart*)thisx;
+
+    // #region SOH [Co-op]
+    if (Flags_GetCollectible(play, 0x1F)) {
+        Actor_Kill(&this->actor);
+        return;
+    }
+    // #endregion
 
     func_80B85264(this, play);
     Actor_UpdateBgCheckInfo(play, &this->actor, 0.0f, 0.0f, 0.0f, 4);

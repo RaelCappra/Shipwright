@@ -1,5 +1,6 @@
 #include "z_bg_ice_shelter.h"
 #include "objects/object_ice_objects/object_ice_objects.h"
+#include "soh/OTRGlobals.h"
 
 #define FLAGS 0
 
@@ -332,10 +333,12 @@ void func_8089107C(BgIceShelter* this, PlayState* play) {
         MeltOnIceArrowHit(this, this->cylinder2, type, play);
     }
     // Default blue fire check
-    if (this->cylinder1.base.acFlags & AC_HIT) {
+    // #region SOH [Co-op]
+    if ((this->cylinder1.base.acFlags & AC_HIT) || Flags_GetSwitch(play, this->dyna.actor.params & 0x3F)) {
         this->cylinder1.base.acFlags &= ~AC_HIT;
 
-        if ((this->cylinder1.base.ac != NULL) && (this->cylinder1.base.ac->id == ACTOR_EN_ICE_HONO)) {
+        if (((this->cylinder1.base.ac != NULL) && (this->cylinder1.base.ac->id == ACTOR_EN_ICE_HONO)) || Flags_GetSwitch(play, this->dyna.actor.params & 0x3F)) {
+    // #endregion
             if (type == 4) {
                 if (this->dyna.actor.parent != NULL) {
                     this->dyna.actor.parent->freezeTimer = 50;
@@ -428,7 +431,7 @@ void func_808911D4(BgIceShelter* this, PlayState* play) {
         }
 
         if (type == 4) {
-            func_80078884(NA_SE_SY_CORRECT_CHIME);
+            Sfx_PlaySfxCentered(NA_SE_SY_CORRECT_CHIME);
         }
 
         Actor_Kill(&this->dyna.actor);

@@ -1,7 +1,7 @@
 #include "z_bg_jya_bombchuiwa.h"
 #include "overlays/effects/ovl_Effect_Ss_Kakera/z_eff_ss_kakera.h"
 #include "objects/object_jya_obj/object_jya_obj.h"
-#define FLAGS ACTOR_FLAG_TARGETABLE
+#define FLAGS ACTOR_FLAG_ATTENTION_ENABLED
 
 void BgJyaBombchuiwa_Init(Actor* thisx, PlayState* play);
 void BgJyaBombchuiwa_Destroy(Actor* thisx, PlayState* play);
@@ -142,7 +142,9 @@ void BgJyaBombchuiwa_SetupWaitForExplosion(BgJyaBombchuiwa* this, PlayState* pla
 }
 
 void BgJyaBombchuiwa_WaitForExplosion(BgJyaBombchuiwa* this, PlayState* play) {
-    if ((this->collider.base.acFlags & AC_HIT) || (this->timer > 0)) {
+    // #region SOH [Co-op]
+    if (((this->collider.base.acFlags & AC_HIT) || (this->timer > 0)) || Flags_GetSwitch(play, this->actor.params & 0x3F)) {
+    // #endregion
         if (this->timer == 0) {
             OnePointCutscene_Init(play, 3410, -99, &this->actor, MAIN_CAM);
         }
@@ -163,7 +165,7 @@ void BgJyaBombchuiwa_CleanUpAfterExplosion(BgJyaBombchuiwa* this, PlayState* pla
     BgJyaBombchuiwa_SetDrawFlags(this, 4);
     this->lightRayIntensity = 0.3f;
     this->timer = 0;
-    this->actor.flags &= ~ACTOR_FLAG_TARGETABLE;
+    this->actor.flags &= ~ACTOR_FLAG_ATTENTION_ENABLED;
 }
 
 void func_808949B8(BgJyaBombchuiwa* this, PlayState* play) {

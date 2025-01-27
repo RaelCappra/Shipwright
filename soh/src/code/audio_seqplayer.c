@@ -4,6 +4,7 @@
 #include "global.h"
 
 #include "soh/Enhancements/audio/AudioEditor.h"
+#include "soh/ResourceManagerHelpers.h"
 
 extern char** sequenceMap;
 
@@ -788,7 +789,7 @@ s32 AudioSeq_SeqLayerProcessScriptStep4(SequenceLayer* layer, s32 cmd) {
     layer->freqScale *= layer->unk_34;
     if (layer->delay == 0) {
         if (layer->sound != NULL) {
-            time = (f32)layer->sound->sample->loop->end;
+            time = (f32)layer->sound->sample->loop->loopEnd;
         } else {
             time = 0.0f;
         }

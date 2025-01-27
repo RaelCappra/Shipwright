@@ -9,7 +9,7 @@
 #include "objects/object_spot11_obj/object_spot11_obj.h"
 #include "objects/gameplay_field_keep/gameplay_field_keep.h"
 
-#define FLAGS (ACTOR_FLAG_UPDATE_WHILE_CULLED | ACTOR_FLAG_DRAW_WHILE_CULLED)
+#define FLAGS (ACTOR_FLAG_UPDATE_CULLING_DISABLED | ACTOR_FLAG_DRAW_CULLING_DISABLED)
 
 void BgSpot11Bakudankabe_Init(Actor* thisx, PlayState* play);
 void BgSpot11Bakudankabe_Destroy(Actor* thisx, PlayState* play);
@@ -135,11 +135,13 @@ void BgSpot11Bakudankabe_Destroy(Actor* thisx, PlayState* play) {
 void BgSpot11Bakudankabe_Update(Actor* thisx, PlayState* play) {
     BgSpot11Bakudankabe* this = (BgSpot11Bakudankabe*)thisx;
 
-    if (this->collider.base.acFlags & AC_HIT) {
+    // #region SOH [Co-op]
+    if ((this->collider.base.acFlags & AC_HIT) || Flags_GetSwitch(play, (this->dyna.actor.params & 0x3F))) {
+    // #endregion
         func_808B2218(this, play);
         Flags_SetSwitch(play, (this->dyna.actor.params & 0x3F));
         SoundSource_PlaySfxAtFixedWorldPos(play, &D_808B2738, 40, NA_SE_EV_WALL_BROKEN);
-        func_80078884(NA_SE_SY_CORRECT_CHIME);
+        Sfx_PlaySfxCentered(NA_SE_SY_CORRECT_CHIME);
         Actor_Kill(&this->dyna.actor);
         return;
     }

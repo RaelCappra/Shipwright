@@ -8,7 +8,7 @@
 #include "objects/object_spot02_objects/object_spot02_objects.h"
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
 
-#define FLAGS (ACTOR_FLAG_UPDATE_WHILE_CULLED | ACTOR_FLAG_DRAW_WHILE_CULLED)
+#define FLAGS (ACTOR_FLAG_UPDATE_CULLING_DISABLED | ACTOR_FLAG_DRAW_CULLING_DISABLED)
 
 void BgSpot02Objects_Init(Actor* thisx, PlayState* play);
 void BgSpot02Objects_Destroy(Actor* thisx, PlayState* play);
@@ -57,6 +57,15 @@ void BgSpot02Objects_Init(Actor* thisx, PlayState* play) {
     DynaPolyActor_Init(&this->dyna, 0);
     this->unk_16B = (u16)(thisx->params >> 8);
     thisx->params = (u16)(thisx->params & 0xFF);
+
+    if (thisx->params == 2){ //Royal Tombstone
+        play->stairsCount++;
+        if (play->stairsCount >= 13){
+            Actor_Kill(thisx);
+            return;
+        }
+
+    }
 
     switch (thisx->params) {
         case 0:
@@ -214,7 +223,7 @@ void func_808ACC34(BgSpot02Objects* this, PlayState* play) {
     }
 
     if (play->csCtx.frames == 245 || play->csCtx.frames == 351) {
-        func_800788CC(NA_SE_EV_LIGHTNING);
+        Sfx_PlaySfxCentered2(NA_SE_EV_LIGHTNING);
     }
 }
 
