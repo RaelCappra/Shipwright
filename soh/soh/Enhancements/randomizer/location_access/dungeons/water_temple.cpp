@@ -442,7 +442,7 @@ void RegionTable_Init_WaterTemple() {
 
     areaTable[RR_WATER_TEMPLE_MQ_CENTRAL_PILLAR_B1_FINAL] = Region("Water Temple MQ Central Pillar B1 Final", "Water Temple", {RA_WATER_TEMPLE}, NO_DAY_NIGHT_CYCLE, {}, {
         //Locations
-        LOCATION(RC_WATER_TEMPLE_MQ_CENTRAL_PILLAR_CHEST, logic->CanUse(RG_HOOKSHOT)),
+        LOCATION_NNL(RC_WATER_TEMPLE_MQ_CENTRAL_PILLAR_CHEST, logic->CanUse(RG_HOOKSHOT)),
     }, {});
 
     //Region exists to add crate/pot/box locations
